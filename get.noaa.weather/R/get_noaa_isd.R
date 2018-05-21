@@ -124,6 +124,7 @@ download_isd <- function(station_to_download, year, start, end) {
   })
 }
 
+## fixme: change documentation to distinct it from the download_isd function
 #' Download isd files to cache directory, and record station mappings to feather files
 #'
 #' This function downloads unique stations in lat_lon_df to a cache directory in
