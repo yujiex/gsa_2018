@@ -1,0 +1,105 @@
+.Rhistory
+.RData
+csv/
+csv_FY/
+plot_FY/
+plot_dynamic/
+plot_FY_cal/
+plot_interval/
+plot_interval_hour/
+plot_FY_annual/quant/
+plot_FY_annual/quant_data/
+plot_FY_annual/table/
+plot_FY_annual/
+plot_FY_pie/
+plot_FY_weather/
+input/
+plot2/
+plot/
+manual/
+remove_outlier_elec/
+remove_outlier_gas/
+css_template/
+flowChart/
+intermediate/
+ppt/
+presentation/
+writeup/
+seeddb/
+
+# webpages #
+###################
+*.html
+*.json
+*.js
+*.woff
+*.woff2
+*.tff
+*.svg
+*.eot
+*.css
+
+# backup files #
+###################
+*~
+
+# plots #
+###################
+*.png
+
+# pdf #
+###################
+*.pdf
+*.aux
+*.out
+
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pyc
+*.py~
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases #
+######################
+*.log
+*.sql
+*.sqlite
+*.swp
+*.db
+*.csv
+*.txt
+*.xlsx
+*.xls
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# temporary files #
+######################
+\#*#
+.\#*
