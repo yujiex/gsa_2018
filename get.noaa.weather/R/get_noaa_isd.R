@@ -1,7 +1,7 @@
 #' Get a data frame of nearby weather stations
 #'
 #' This function get a data frame of nearby stations, with columns: usaf, wban,
-#' begin, end, and distance
+#' begin, end, distance, and Building_Number
 #' @param lat_lon_df a data frame containing a column "latitude", and a column
 #'   "longitude"
 #' @param isd_data returned by rnoaa::isd_stations(refresh = TRUE)
@@ -19,7 +19,13 @@
 #' @examples
 #' get_nearby_isd_stations(lat_lon_df, isd_data=isd_data, radius = 100, limit=5,
 #'   date_min = 20150101, date_max = 20151231)
-get_nearby_isd_stations <- function (lat_lon_df, isd_data, radius, limit, date_min, date_max) {
+get_nearby_isd_stations <- function (lat_lon_df, isd_data, radius, limit, date_min, date_max, year) {
+  if (missing(isd_data)) {
+    isd_data = rnoaa::isd_stations(refresh = TRUE)
+  }
+  if (missing(lat_lon_df)) {
+    lat_lon_df = db.interface::get_lat_lon_df()
+  }
   v_isd_stations_search = Vectorize(rnoaa::isd_stations_search)
   result = v_isd_stations_search(lat = lat_lon_df$latitude, lon = lat_lon_df$longitude, radius = radius)
   acc = lapply(1:ncol(result), function(i){
@@ -50,66 +56,102 @@ get_nearby_isd_stations <- function (lat_lon_df, isd_data, radius, limit, date_m
       dplyr::ungroup() %>%
       {.}
   }
+  if (!missing(year)) {
+    date_min = year * 10000 + 0101
+    date_max = year * 10000 + 1231
+    nearby_stations_isd <- nearby_stations_isd %>%
+      dplyr::filter(`begin` < date_min) %>%
+      dplyr::filter(`end` > date_max) %>%
+      {.}
+  }
   return(nearby_stations_isd)
 }
 
-get_nearby_isd_station_by_year <- function(year) {
-  date_min = year * 10000 + 0101
-  date_max = year * 10000 + 1231
-  lat_lon_df = get_lat_lon_df()
-  station_df = get_nearby_isd_stations(lat_lon_df, isd_data=isd_data, radius = 100, limit=5, date_min = date_min,
-                                       date_max = date_max)
-  return(station_df)
+#' Get unique station ids in two columns: usaf, and wban
+#'
+#' This function get a data frame of unique isd stations, with columns: usaf, wban,
+#' @param station_df a data frame containing at least the two columns: usaf, and wban
+#' @keywords nearby isd
+#' @export
+#' @examples
+#' lat_lon_df = db.interface::get_lat_lon_df()
+#' get_unique_stations(lat_lon_df)
+get_unique_stations <- function(station_df) {
+  station_to_download = station_df %>%
+    dplyr::select(`usaf`, `wban`) %>%
+    dplyr::group_by(`usaf`, `wban`) %>%
+    slice(1) %>%
+    ungroup() %>%
+    {.}
+  return(station_to_download)
 }
 
-## ## document and try out functions below
-## get_station_to_download <- function(station_df) {
-##   station_to_download = station_df %>%
-##     dplyr::select(`usaf`, `wban`) %>%
-##     dplyr::group_by(`usaf`, `wban`) %>%
-##     slice(1) %>%
-##     ungroup() %>%
-##     {.}
-##   return(station_to_download)
-## }
+#' Download isd files to cache directory, with error handler for download failure
+#'
+#' This function downloads unique stations in station_to_download to a cache
+#' directory in rnoaa
+#' @param station_to_download required, a data frame with two columns "usaf",
+#'   and "wban"
+#' @param year required, the year of weather data to download
+#' @param start optional, the start index of the weather stations to download.
+#'   This allows users to download part of the stations in station_to_download
+#' @param end optional, the end index of the weather stations to download.
+#'   This allows users to download part of the stations in station_to_download
+#' @keywords download isd file
+#' @export
+#' @examples
+#' download_isd(station_to_download, year=year, variables=variables)
+download_isd <- function(station_to_download, year, start, end) {
+  startIdx = 1
+  endIdx = nrow(station_to_download)
+  if (!missing(start)) {
+    startIdx = start
+  }
+  if (!missing(end)) {
+    endIdx = end
+  }
+  lapply(startIdx:endIdx, function(i){
+    print(sprintf("----------%s---------------", i))
+    tryCatch(
+      res <- rnoaa::isd(usaf=station_to_download$usaf[i], wban=station_to_download$wban[i], additional=FALSE,
+                        year=year) %>%
+        {.}
+    , warning=function(w) {print(sprintf("station %s-%s: %s", station_to_download$usaf[i],
+                                        wban=station_to_download$wban[i], w))},
+      error=function(e) {print(sprintf("station %s-%s: %s", station_to_download$usaf[i],
+                                      wban=station_to_download$wban[i], e))},
+      finally = print("no operation"))
+  })
+}
 
-## download_isd <- function(station_to_download, year, variables, start=NULL, end=NULL) {
-##   startIdx = 1
-##   endIdx = nrow(station_to_download)
-##   if (!missing(start)) {
-##     startIdx = start
-##   }
-##   if (!missing(end)) {
-##     endIdx = end
-##   }
-##   lapply(startIdx:endIdx, function(i){
-##     print(sprintf("----------%s---------------", i))
-##     tryCatch(
-##       res <- rnoaa::isd(usaf=station_to_download$usaf[i], wban=station_to_download$wban[i], additional=FALSE,
-##                         year=year) %>%
-##         {.}
-##     , warning=function(w) {print(sprintf("download failed for %s-%s", station_to_download$usaf[i],
-##                                         wban=station_to_download$wban[i]))},
-##       error=function(e) {print(sprintf("download failed for %s-%s", station_to_download$usaf[i],
-##                                       wban=station_to_download$wban[i]))},
-##       finally = print("no operation"))
-##   })
-## }
-
-## ## download isd file to cache directory, and record station mappings
-## get_isdfile_by_year <- function(year) {
-##   print(sprintf("getting nearby stations for %s", year))
-##   station_df = get_nearby_isd_station_by_year(year)
-##   station_df %>%
-##     feather::write_feather(sprintf("csv_FY/weather/noaa/station_df_%s.feather", year))
-##   station_df = feather::read_feather(sprintf("csv_FY/weather/noaa/station_df_%s.feather", year))
-##   station_to_download = get_station_to_download(station_df)
-##   station_to_download %>%
-##     feather::write_feather(sprintf("csv_FY/weather/noaa/station_to_download_%s.feather", year))
-##   variables = c("temperature")
-##   print(sprintf("downloading stations for %s", year))
-##   weather_year = download_isd(station_to_download, year=year, variables=variables)
-## }
+#' Download isd files to cache directory, and record station mappings to feather files
+#'
+#' This function downloads unique stations in lat_lon_df to a cache directory in
+#' rnoaa
+#' @param year required, the year of isd weather data to download
+#' @param lat_lon_df optional, default to use db.interface::get_lat_lon_df
+#' @param isd_data optional, if missing, it will be created with
+#'   rnoaa::isd_stations(refresh = TRUE), but will be a bit slow
+#' @keywords download isd file
+#' @export
+#' @examples
+#' get_isdfile_by_year(year)
+get_isdfile_by_year <- function(year, lat_lon_df, isd_data) {
+  print(sprintf("getting nearby stations for %s", year))
+  if (missing(isd_data)) {
+    isd_data <-
+      rnoaa::isd_stations(refresh = TRUE) %>%
+      {.}
+  }
+  station_df = get_nearby_isd_stations(lat_lon_df=lat_lon_df, isd_data=isd_data, radius=100, limit=5, year=year)
+  station_df %>%
+    feather::write_feather(sprintf("csv_FY/weather/noaa/station_df_%s.feather", year))
+  station_to_download = get_unique_stations(station_df)
+  station_to_download %>%
+    feather::write_feather(sprintf("csv_FY/weather/noaa/station_to_download_%s.feather", year))
+  print(sprintf("downloading stations for %s", year))
+  weather_year = download_isd(station_to_download, year=year)
+}
 
 ## isd_data <-
 ##   rnoaa::isd_stations(refresh = TRUE) %>%
