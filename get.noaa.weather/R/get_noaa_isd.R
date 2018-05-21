@@ -1,73 +1,24 @@
-accessToken = "hDldeqcNqFHyZlnYhnXUEhJEnpKLmGlJ"
-
-library("rnoaa")
-library("dplyr")
-library("ggplot2")
-library("RCurl")
-library("feather")
-library("rlang")
-
-## --------------------------------------------------------------------------------- ##
-## this section uses ghcnd, daily data
-## --------------------------------------------------------------------------------- ##
-lat_lon_df = get_lat_lon_df("csv_FY/db/all.db") %>%
-  dplyr::mutate(`id` = `Building_Number`) %>%
-  {.}
-
-ghcnd_data <- rnoaa::ghcnd_stations()
-
-nearby_stations_ghcnd <- rnoaa::meteo_nearby_stations(lat_lon_df = lat_lon_df, var = c("TAVG", "TMAX", "TMIN"),
-                                                      station_data = ghcnd_data, limit = 5)
-
-ids = lapply(nearby_stations_ghcnd, function(b) {
-  return(b %>% dplyr::select(id))
-})
-id_df = do.call(rbind, ids) %>%
-  dplyr::group_by(id) %>%
-  slice(1) %>%
-  dplyr::ungroup() %>%
-  {.}
-
-lst = lapply(head(id_df)$id, function(s) {
-  weatherdata = rnoaa::ghcnd_search(s, date_min = date_min,
-                                    date_max = date_max,
-                                    var = "TAVG") %>%
-    dplyr::select(TAVG) %>%
-    na.omit() %>%
-    {.}
-})
-
-s = "USC00504094"
-weather_result_list = rnoaa::ghcnd_search(s, date_min = date_min,
-                           date_max = date_max,
-                           var = c("TAVG", "TMAX", "TMIN"))
-
-weather_result_list_processed = lapply(names(weather_result_list), function(name) {
-  df = result_list[[name]] %>%
-    dplyr::select(-`id`, -`mflag`, -`sflag`, -`qflag`) %>%
-    na.omit() %>%
-    {.}
-  return(df)
-})
-
-weather_df = Reduce(full_join, weather_result_list_processed)
-
-acc = lapply(names(result_list), function(nm) {
-  return(result_list %>% dplyr::select(get(nm)))
-})
-
-result = do.call(rbind, acc)
-
-weather_df = do.call(rbind, lst)
-
-
-test = rnoaa::ghcnd_search("USC00504094", date_min = "2002-9-1", date_max = "2017-10-1",
-                           var = c("TAVG", "TMAX", "TMIN")) %>%
-  na.omit()
-
-## --------------------------------------------------------------------------------- ##
-## this section uses isd, hourly data
-## --------------------------------------------------------------------------------- ##
+#' Get a data frame of nearby weather stations
+#'
+#' This function get a data frame of nearby stations, with columns: usaf, wban,
+#' begin, end, and distance
+#' @param lat_lon_df a data frame containing a column "latitude", and a column
+#'   "longitude"
+#' @param isd_data returned by rnoaa::isd_stations(refresh = TRUE)
+#' @param radius (numeric) Radius (in km) to search from the lat,lon
+#'   coordinates, used in isd_station_search
+#' @param limit the maximum nearest stations returned for each building
+#' @param date_min An integer giving the earliest date of the weather time
+#'   series that the user would like in the final output. This integer should be
+#'   formatted as yyyymmdd (20150101 for Jan 1, 2015)
+#' @param date_max An integer giving the latest date of the weather time series
+#'   that the user would like in the final output. This integer should be
+#'   formatted as yyyymmdd (20150101 for Jan 1, 2015)
+#' @keywords nearby isd
+#' @export
+#' @examples
+#' get_nearby_isd_stations(lat_lon_df, isd_data=isd_data, radius = 100, limit=5,
+#'   date_min = 20150101, date_max = 20151231)
 get_nearby_isd_stations <- function (lat_lon_df, isd_data, radius, limit, date_min, date_max) {
   v_isd_stations_search = Vectorize(rnoaa::isd_stations_search)
   result = v_isd_stations_search(lat = lat_lon_df$latitude, lon = lat_lon_df$longitude, radius = radius)
@@ -102,9 +53,7 @@ get_nearby_isd_stations <- function (lat_lon_df, isd_data, radius, limit, date_m
   return(nearby_stations_isd)
 }
 
-## tidy below to a function
-
-
+## document and try out functions below
 get_nearby_isd_station_by_year <- function(year) {
   date_min = year * 10000 + 0101
   date_max = year * 10000 + 1231
@@ -296,6 +245,3 @@ format_function_list = list(temperature = format_noaa_temperature, wind_speed = 
 
 var = "temperature"
 read_var_by_year(station_df, buildings, var, format_function_list)
-
-## data processing end
-

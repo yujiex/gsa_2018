@@ -1,0 +1,14 @@
+Package: db.interface
+Title: Query and update sqlite database
+Version: 0.0.0.9000
+Authors@R: person("Yujie", "Xu", email = "first.last@example.com", role = c("aut", "cre"))
+Description: Query and update sqlite database
+Depends: R (>= 3.4.3)
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1.9000
+Imports:
+  dplyr,
+  DBI,
+  RSQLite
