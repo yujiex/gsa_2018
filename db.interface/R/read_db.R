@@ -12,7 +12,7 @@ get_lat_lon_df <- function(path) {
   }
   con <- dbConnect(RSQLite::SQLite(), paste0(path, "all.db"))
   lat_lon_df =
-    dbGetQuery(con, 'SELECT * FROM EUAS_latlng_2' ) %>%
+    dbGetQuery(con, "SELECT * FROM EUAS_latlng_2" ) %>%
     as_data_frame() %>%
     dplyr::mutate(`latlng`=gsub("\\[|\\]", "", `latlng`)) %>%
     dplyr::rowwise() %>%
@@ -59,6 +59,7 @@ connect <- function(dbname, path) {
 get_all_tables <- function(dbname, path) {
   con <- connect(dbname)
   alltables = dbListTables(con)
+  dbDisconnect(con)
   return(alltables)
 }
 
@@ -76,7 +77,7 @@ get_all_tables <- function(dbname, path) {
 read_table_from_db <- function(dbname, tablename, path, cols) {
   con = connect(dbname, path)
   df =
-    dbGetQuery(con, sprintf('SELECT * FROM %s', tablename)) %>%
+    dbGetQuery(con, sprintf("SELECT * FROM %s", tablename)) %>%
     as_data_frame() %>%
     {.}
   if (!missing(cols)) {
@@ -84,6 +85,7 @@ read_table_from_db <- function(dbname, tablename, path, cols) {
       dplyr::select(one_of(cols)) %>%
       {.}
   }
+  dbDisconnect(con)
   return(df)
 }
 
@@ -100,9 +102,10 @@ read_table_from_db <- function(dbname, tablename, path, cols) {
 view_head_of_table <- function(dbname, tablename, path) {
   con = connect(dbname, path)
   df =
-    dbGetQuery(con, sprintf('SELECT * FROM %s', tablename)) %>%
+    dbGetQuery(con, sprintf("SELECT * FROM %s LIMIT 5", tablename)) %>%
     as_data_frame() %>%
-    head()
+    {.}
+  dbDisconnect(con)
   return(df)
 }
 
@@ -119,9 +122,10 @@ view_head_of_table <- function(dbname, tablename, path) {
 view_names_of_table <- function(dbname, tablename, path) {
   con = connect(dbname, path)
   df =
-    dbGetQuery(con, sprintf('SELECT * FROM %s', tablename)) %>%
+    dbGetQuery(con, sprintf("SELECT * FROM %s", tablename)) %>%
     as_data_frame() %>%
     names()
+  dbDisconnect(con)
   return(df)
 }
 
@@ -136,7 +140,7 @@ view_names_of_table <- function(dbname, tablename, path) {
 get_euas_buildings <- function() {
   con = connect("all")
   df =
-    dbGetQuery(con, 'SELECT DISTINCT Building_Number FROM EUAS_monthly') %>%
+    dbGetQuery(con, "SELECT DISTINCT Building_Number FROM EUAS_monthly") %>%
     as_data_frame() %>%
     {.}
   return(df)
