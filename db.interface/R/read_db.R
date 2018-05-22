@@ -47,9 +47,9 @@ connect <- function(dbname, path) {
   return(con)
 }
 
-#' Get all tables in a sqlite database with "dbname"
+#' Get all tables in a sqlite .db file
 #'
-#' This function returns a xx of tables in the database
+#' This function returns a vector of all tables in the database
 #' @param dbname required, the name string of the database, e.g. "all.db" has name "all"
 #' @param path optional, the path to .db file, default is "csv_FY/db/"
 #' @keywords all_tables sqlite
@@ -57,14 +57,39 @@ connect <- function(dbname, path) {
 #' @examples
 #' get_all_tables("all")
 get_all_tables <- function(dbname, path) {
-  con <- connect("all")
+  con <- connect(dbname)
   alltables = dbListTables(con)
   return(alltables)
 }
 
-#' Print the head of a table "tablename" in a sqlite database "dbname"
+#' Read table from db
 #'
-#' This function returns a xx of tables in the database
+#' This function returns a table from database
+#' @param dbname required, the name string of the database, e.g. "all.db" has name "all"
+#' @param tablename required, the name string of the table to view
+#' @param path optional, the path to .db file, default is "csv_FY/db/"
+#' @param cols optional, the columns to select
+#' @keywords view head table sqlite
+#' @export
+#' @examples
+#' view_head_of_table(dbname="all", tablename="EUAS_type")
+read_table_from_db <- function(dbname, tablename, path, cols) {
+  con = connect(dbname, path)
+  df =
+    dbGetQuery(con, sprintf('SELECT * FROM %s', tablename)) %>%
+    as_data_frame() %>%
+    {.}
+  if (!missing(cols)) {
+    df <- df %>%
+      dplyr::select(one_of(cols)) %>%
+      {.}
+  }
+  return(df)
+}
+
+#' Print the head of a table in a sqlite database
+#'
+#' This function returns the head of a table in a sqlite database
 #' @param dbname required, the name string of the database, e.g. "all.db" has name "all"
 #' @param tablename required, the name string of the table to view
 #' @param path optional, the path to .db file, default is "csv_FY/db/"
@@ -83,7 +108,7 @@ view_head_of_table <- function(dbname, tablename, path) {
 
 #' Print the head of a table "tablename" in a sqlite database "dbname"
 #'
-#' This function returns a xx of tables in the database
+#' This function returns the column names of a table in a sqlite database
 #' @param dbname required, the name string of the database, e.g. "all.db" has name "all"
 #' @param tablename required, the name string of the table to view
 #' @param path optional, the path to .db file, default is "csv_FY/db/"
@@ -102,7 +127,8 @@ view_names_of_table <- function(dbname, tablename, path) {
 
 #' Get all buildings
 #'
-#' This function returns a data frame with one column, Building_Number, containing all buildings in the EUAS database
+#' This function returns a data frame with one column, Building_Number,
+#' containing all buildings in the EUAS database
 #' @keywords get all buildings
 #' @export
 #' @examples
@@ -118,10 +144,12 @@ get_euas_buildings <- function() {
 
 ## how many buildings in region i, category j, type k
 
-#' Get the count of buildings with region, category (A, C, I), type (office, etc.), and year filters applied
-#'
-#' This function get latitude longitude of EUAS buildings
-#' @param path to the all.db file, default is "csv_FY/db/"
-#' @keywords latlon
-#' @export
-#' @examples
+##' Get the count of buildings with region, category (A, C, I), type (office, etc.), and year filters applied
+##'
+##' This function get latitude longitude of EUAS buildings
+##' @param path to the all.db file, default is "csv_FY/db/"
+##' @keywords latlon
+##' @export
+##' @examples
+## get_count <- function() {
+## }
