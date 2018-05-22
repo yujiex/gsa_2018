@@ -68,7 +68,7 @@ drop_table_from_db <- function(dbname, tablename) {
 #' @keywords drop table
 #' @export
 #' @examples
-#' drop_table_from_db("all", "EUAS_type_")
+#' join_type_and_energy()
 join_type_and_energy <- function() {
   con = connect("all")
   df1 = dbGetQuery(con, "SELECT * FROM EUAS_monthly") %>%
@@ -85,6 +85,37 @@ join_type_and_energy <- function() {
   dbDisconnect(con)
 }
 
+#' Get eui by fiscal year
+#'
+#' This function produces EUAS_yearly table, with all columns aggregated to
+#' yearly
+#' @keywords eui by year
+#' @param fOrC optional, "F" for fiscal year, "C" for calendar year
+#' @export
+#' @examples
+#' get_eui_by_year("F")
+get_eui_by_year <- function(fOrC) {
+  if (missing(fOrC) || (fOrC == "F")) {
+    year_col = "Fiscal_Year"
+  } else {
+    year_col = "year"
+  }
+  con = connect("all")
+  ## df =
+    dbGetQuery(con, "SELECT * FROM EUAS_monthly_with_type") %>%
+    as_data_frame() %>%
+    dplyr::group_by(`Building_Number`, !!sym(year_col)) %>%
+    dplyr::summarise_if(is.numeric, fun(sum)) %>%
+    dplyr::summarise_if(is.character, fun(first)) %>%
+    readr::write_csv("csv_FY/db_build_temp_csv/eui_by_fy.csv")
+  ## dplyr::group_by()
+  ## {.}
+  print("Created table: eui_by_fy")
+}
+
+## add_quality_tag_energy <- function() {
+## }
+
 #' Join EUAS_monthly and EUAS_type
 #'
 #' This function joins EUAS_monthly and EUAS_type
@@ -95,4 +126,6 @@ join_type_and_energy <- function() {
 main_db_build <- function() {
   ## unify_euas_type()
   ## join_type_and_energy()
+  get_eui_by_year()
+  ## add_quality_tag_energy()
 }

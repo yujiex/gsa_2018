@@ -8,7 +8,8 @@ db.interface::view_head_of_table(dbname = "all", tablename = "EUAS_monthly_with_
 db.interface::view_names_of_table(dbname = "other_input", tablename = "euas_database_of_buildings_cmu")
 
 devtools::load_all("db.interface")
-main_db_build()
+add_quality_tag_energy()
+## main_db_build()
 
 devtools::load_all("get.noaa.weather")
 

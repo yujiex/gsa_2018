@@ -7,8 +7,13 @@
 unify_euas_type()
 }
 \description{
-This function compiles building type information to a data frame with column.
-Assuming the required tables are dumped into a database other_input
+This function compiles building type information to a data frame containing
+Building_Number, Building_Type, data_source. The input tables are
+from a database other_input. There are currently three sources of
+building type: their order of importance are
+"euas_database_of_buildings_cmu::[GSA Property Type]" >
+"PortfolioManager_sheet0_input::Self-Selected_Primary_Function" >
+"Entire_GSA_Building_Portfolio_input::Predominant_Use")))
 }
 \examples{
 unify_euas_type()

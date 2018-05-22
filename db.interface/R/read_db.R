@@ -142,14 +142,29 @@ get_euas_buildings <- function() {
   return(df)
 }
 
-## how many buildings in region i, category j, type k
-
-##' Get the count of buildings with region, category (A, C, I), type (office, etc.), and year filters applied
-##'
-##' This function get latitude longitude of EUAS buildings
-##' @param path to the all.db file, default is "csv_FY/db/"
-##' @keywords latlon
-##' @export
-##' @examples
-## get_count <- function() {
-## }
+#' Get the count of buildings with region, category (A, C, I), type (office, etc.), and year filters applied
+#'
+#' This function returns the count group by region, category, and type, if any
+#' of the parameters are specified, they will be used in filtering the results
+#' @param region optional, a string vector of region numbers, or a single
+#'   region number
+#' @param category optional, a subset of A, B, C, D, E, I
+#' @param type optional, building type
+#' @param year optional, a double vector of years, or a single year
+#' @param fOrC optional, specify one of "F" (fiscal year) or "C" (calendar year), default to "F"
+#' @keywords query count
+#' @export
+#' @examples
+#' get_count(1, c("A", "C", "I"), "office", "F")
+get_count <- function(region, category, type, fOrC) {
+  if (missing(fOrC) || (fOrC == "F")) {
+    year_col = "Fiscal_Year"
+  } else {
+    year_col = "year"
+  }
+  con = connect("all")
+  df =
+    dbGetQuery(con, sprintf("SELECT DISTINCT [Region_No.], Cat, Building_Type, %s, Building_Number,  FROM EUAS_monthly_with_type", year_col)) %>%
+    as_data_frame() %>%
+    {.}
+}
