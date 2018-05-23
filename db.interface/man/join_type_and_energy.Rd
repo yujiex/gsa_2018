@@ -12,5 +12,4 @@ This function joins EUAS_monthly and EUAS_type
 \examples{
 join_type_and_energy()
 }
-\keyword{drop}
-\keyword{table}
+\keyword{join}

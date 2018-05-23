@@ -89,6 +89,23 @@ read_table_from_db <- function(dbname, tablename, path, cols) {
   return(df)
 }
 
+#' Get unique values from a column
+#'
+#' This function returns a table from database
+#' @param dbname required, the name string of the database, e.g. "all.db" has name "all"
+#' @param tablename required, the name string of the table to view
+#' @param path optional, the path to .db file, default is "csv_FY/db/"
+#' @param col required, the column to get unique value of
+#' @keywords view head table sqlite
+#' @export
+#' @examples
+#' get_unique_value_column(dbname="all", tablename="EUAS_type_recode", col="Building_Type")
+get_unique_value_column <- function(dbname, tablename, path, col) {
+  vals = read_table_from_db(dbname, tablename, path, col) %>%
+    distinct(!!(rlang::sym(col)))
+  return(vals)
+}
+
 #' Print the head of a table in a sqlite database
 #'
 #' This function returns the head of a table in a sqlite database
@@ -153,14 +170,14 @@ get_euas_buildings <- function() {
 #' @param region optional, a string vector of region numbers, or a single
 #'   region number
 #' @param category optional, a subset of A, B, C, D, E, I
-#' @param type optional, building type
+#' @param type optional, a string (e.g. "Office"), or a string vector (e.g. c("Office", "Courthouse"))of building type
 #' @param year optional, a double vector of years, or a single year
 #' @param fOrC optional, specify one of "F" (fiscal year) or "C" (calendar year), default to "F"
 #' @keywords query count
 #' @export
 #' @examples
 #' get_count(1, c("A", "C", "I"), "office", "F")
-get_count <- function(region, category, type, fOrC) {
+get_count <- function(region, category, type, year, fOrC) {
   if (missing(fOrC) || (fOrC == "F")) {
     year_col = "Fiscal_Year"
   } else {
@@ -168,7 +185,54 @@ get_count <- function(region, category, type, fOrC) {
   }
   con = connect("all")
   df =
-    dbGetQuery(con, sprintf("SELECT DISTINCT [Region_No.], Cat, Building_Type, %s, Building_Number,  FROM EUAS_monthly_with_type", year_col)) %>%
+    dbGetQuery(con, sprintf("SELECT [Region_No.], %s, Cat, Building_Type, lowElectricity, lowGas, highEnoughELectricityGas, zeroSqft FROM eui_by_fy_tag", year_col)) %>%
     as_data_frame() %>%
     {.}
+  print(head(df))
+  if (!missing(region)) {
+    region = as.character(region)
+    if (is.vector(region)) {
+      df = df %>%
+        dplyr::filter(`Region_No.` %in% region) %>%
+        {.}
+    } else {
+      df = df %>%
+        dplyr::filter(`Region_No.` == region) %>%
+        {.}
+    }
+  }
+  print(head(df))
+  if (!missing(category)) {
+    df = df %>%
+      dplyr::filter(`Cat` %in% category) %>%
+      {.}
+  }
+  print(head(df))
+  if (!missing(type)) {
+    df = df %>%
+      dplyr::filter(`Building_Type` %in% type) %>%
+      {.}
+  }
+  print(head(df))
+  if (!missing(year)) {
+    if (is.vector(year)) {
+      df = df %>%
+        dplyr::filter_(sprintf("%s %%in%% c(%s)", year_col, paste(as.character(year), collapse = ","))) %>%
+        {.}
+    } else {
+      df = df %>%
+        dplyr::filter_(sprintf("%s == %s", year_col, year)) %>%
+        {.}
+    }
+  }
+  print(head(df))
+  df = df %>%
+    dplyr::group_by(`Region_No.`, `Fiscal_Year`, `Cat`, `Building_Type`) %>%
+    dplyr::summarise(count = n(),
+                     lowElectricity_n = sum(lowElectricity),
+                     lowGas_n = sum(lowGas),
+                     highEnoughElectricityGas_n = sum(highEnoughElectricityGas),
+                     zeroSqft_n = sum(zeroSqft)) %>%
+    {.}
+  return(df)
 }

@@ -46,6 +46,44 @@ unify_euas_type <- function() {
   return(result)
 }
 
+#' Recode building type
+#'
+#' This function recode different variations of building types, e.g. Office and
+#' Office Building is combined into the Office category
+#' @keywords recode building type
+#' @export
+#' @examples
+#' recode_euas_type()
+recode_euas_type <- function() {
+  df = read_table_from_db(dbname = "all", tablename = "EUAS_type")
+  df = df %>%
+    dplyr::mutate_at(vars(`Building_Type`), recode, "Office Building"="Office") %>%
+    {.}
+  write_table_to_db(df=df, dbname = "all", tablename = "EUAS_type_recode", overwrite = TRUE)
+}
+
+#' Write table from db
+#'
+#' This function writes a table to database
+#' @param df required, data frame to write to database
+#' @param dbname required, the name string of the database, e.g. "all.db" has name "all"
+#' @param tablename required, the name string of the table to view
+#' @param path optional, the path to .db file, default is "csv_FY/db/"
+#' @param overwrite optional, whether to overwrite, default to FALSE
+#' @keywords write table sqlite
+#' @export
+#' @examples
+#' view_head_of_table(dbname="all", tablename="EUAS_type")
+write_table_to_db <- function(df, dbname, tablename, path, overwrite) {
+  con = connect(dbname, path)
+  if (missing(overwrite)) {
+    overwrite = FALSE
+  }
+  dbWriteTable(con, tablename, df, overwrite=overwrite)
+  print(sprintf("Write table %s to %s.db", tablename, dbname))
+  dbDisconnect(con)
+}
+
 #' Drop a table from .db
 #'
 #' This function deletes a table from database
@@ -65,7 +103,7 @@ drop_table_from_db <- function(dbname, tablename) {
 #' Join EUAS_monthly and EUAS_type
 #'
 #' This function joins EUAS_monthly and EUAS_type
-#' @keywords drop table
+#' @keywords join
 #' @export
 #' @examples
 #' join_type_and_energy()
@@ -74,11 +112,12 @@ join_type_and_energy <- function() {
   df1 = dbGetQuery(con, "SELECT * FROM EUAS_monthly") %>%
     as_data_frame() %>%
     {.}
-  df2 = dbGetQuery(con, "SELECT Building_Number, Building_Type FROM EUAS_type")
+  df2 = dbGetQuery(con, "SELECT * FROM EUAS_type_recode")
     as_data_frame() %>%
     {.}
   df = df1 %>%
     dplyr::left_join(df2, by="Building_Number") %>%
+    dplyr::rename(`type_data_source`=`data_source`) %>%
     {.}
   dbWriteTable(con, "EUAS_monthly_with_type", df, overwrite=TRUE)
   print("Created table: EUAS_monthly_with_type")
@@ -87,8 +126,8 @@ join_type_and_energy <- function() {
 
 #' Get eui by fiscal year
 #'
-#' This function produces EUAS_yearly table, with all columns aggregated to
-#' yearly
+#' This function produces eui_by_fy table, with all columns aggregated to
+#' yearly. The returned table is a superset of the old eui_by_fy
 #' @keywords eui by year
 #' @param fOrC optional, "F" for fiscal year, "C" for calendar year
 #' @export
@@ -97,8 +136,10 @@ join_type_and_energy <- function() {
 get_eui_by_year <- function(fOrC) {
   if (missing(fOrC) || (fOrC == "F")) {
     year_col = "Fiscal_Year"
+    non_year_col = "year"
   } else {
     year_col = "year"
+    non_year_col = "Fiscal_Year"
   }
   con = connect("all")
   df =
@@ -115,15 +156,16 @@ get_eui_by_year <- function(fOrC) {
     ## dplyr::summarise_if(is.character, funs(first)) %>%
     {.}
   df_char = df %>%
-    dplyr::select(`Building_Number`, !!rlang::sym(year_col), `State`, `Cat`, `Gross_Sq.Ft`, `Region_No.`, `Service_Center`, `Area_Field_Office`, `Building_Designation`, `Building_Type`) %>%
+    dplyr::select(`Building_Number`, !!rlang::sym(year_col), `State`, `Cat`, `Gross_Sq.Ft`, `Region_No.`, `Service_Center`, `Area_Field_Office`, `Building_Designation`, `Building_Type`, `type_data_source`) %>%
     dplyr::group_by(`Building_Number`, !!rlang::sym(year_col)) %>%
     dplyr::summarise_all(funs(first)) %>%
     dplyr::ungroup() %>%
     {.}
   df_year = df_char %>%
     dplyr::left_join(df_numeric) %>%
+    dplyr::select(-one_of(non_year_col)) %>%
     {.}
-  dbWriteTable(con, "eui_by_fy", df, overwrite=TRUE)
+  dbWriteTable(con, "eui_by_fy", df_year, overwrite=TRUE)
   dbDisconnect(con)
   print("Created table: eui_by_fy")
 }
@@ -132,19 +174,23 @@ get_eui_by_year <- function(fOrC) {
 #'
 #' This function produces EUAS_yearly table, with all columns aggregated to
 #' yearly
-#' @keywords eui by year
+#' @keywords quality tag
 #' @export
 #' @examples
 #' add_quality_tag_energy()
 add_quality_tag_energy <- function() {
   con = connect("all")
-  df = dbGetQuery(con, "SELECT * FROM EUAS_monthly_with_type") %>%
-    dplyr::mutate(`lowElectricity`=(`eui_elec` <= 12),
-                  `lowGas`=(`eui_gas` <= 3),
+  df = dbGetQuery(con, "SELECT * FROM eui_by_fy") %>%
+    dplyr::mutate(`lowElectricity`=(`eui_elec` <= 12) & (!(`Gross_Sq.Ft` == 0)),
+                  `lowGas`=(`eui_gas` <= 3) & (!(`Gross_Sq.Ft` == 0)),
+                  `highEnoughElectricityGas`=(`eui_gas` > 3) & (`eui_elec` > 12) & (!(`Gross_Sq.Ft` == 0)),
                   `zeroSqft`=(`Gross_Sq.Ft` == 0)) %>%
     {.}
   df %>%
     readr::write_csv("csv_FY/db_build_temp_csv/eui_by_fy_tag.csv")
+  dbWriteTable(con, "eui_by_fy_tag", df, overwrite=TRUE)
+  dbDisconnect(con)
+  print("Created table: eui_by_fy_tag")
 }
 
 #' Join EUAS_monthly and EUAS_type
@@ -152,9 +198,16 @@ add_quality_tag_energy <- function() {
 #' This function joins EUAS_monthly and EUAS_type
 #' @keywords drop table
 #' @export
+#' @examples
+#' main_db_build()
 main_db_build <- function() {
   ## unify_euas_type()
+  ## recode_euas_type()
   ## join_type_and_energy()
   ## get_eui_by_year("F")
   ## add_quality_tag_energy()
+  ## get_count() %>%
+  ##   readr::write_csv("csv_FY/summary_results/count_by_region_year_cat_type.csv")
+  get_count(region=1, category = c("A", "C", "I"), type = "Office", year = c(2014, 2015, 2016), fOrC = "F") %>%
+    readr::write_csv("csv_FY/summary_results/count_by_region1_year_cat_type.csv")
 }

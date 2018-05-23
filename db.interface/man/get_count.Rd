@@ -4,7 +4,7 @@
 \alias{get_count}
 \title{Get the count of buildings with region, category (A, C, I), type (office, etc.), and year filters applied}
 \usage{
-get_count(region, category, type, fOrC)
+get_count(region, category, type, year, fOrC)
 }
 \arguments{
 \item{region}{optional, a string vector of region numbers, or a single
@@ -12,11 +12,11 @@ region number}
 
 \item{category}{optional, a subset of A, B, C, D, E, I}
 
-\item{type}{optional, building type}
-
-\item{fOrC}{optional, specify one of "F" (fiscal year) or "C" (calendar year), default to "F"}
+\item{type}{optional, a string (e.g. "Office"), or a string vector (e.g. c("Office", "Courthouse"))of building type}
 
 \item{year}{optional, a double vector of years, or a single year}
+
+\item{fOrC}{optional, specify one of "F" (fiscal year) or "C" (calendar year), default to "F"}
 }
 \description{
 This function returns the count group by region, category, and type, if any

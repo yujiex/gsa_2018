@@ -10,8 +10,8 @@ get_eui_by_year(fOrC)
 \item{fOrC}{optional, "F" for fiscal year, "C" for calendar year}
 }
 \description{
-This function produces EUAS_yearly table, with all columns aggregated to
-yearly
+This function produces eui_by_fy table, with all columns aggregated to
+yearly. The returned table is a superset of the old eui_by_fy
 }
 \examples{
 get_eui_by_year("F")

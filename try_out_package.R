@@ -3,13 +3,17 @@ lat_lon_df = db.interface::get_lat_lon_df()
 
 db.interface::get_all_tables(dbname="all")
 
-db.interface::view_head_of_table(dbname = "all", tablename = "EUAS_monthly_with_type")
+db.interface::view_head_of_table(dbname = "all", tablename = "EUAS_type")
 
-db.interface::view_names_of_table(dbname = "all", tablename = "eui_by_fy")
+db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_monthly_with_type")
+
+db.interface::view_names_of_table(dbname = "all", tablename = "eui_by_fy_tag")
 
 devtools::load_all("db.interface")
 ## add_quality_tag_energy()
 main_db_build()
+
+join_type_and_energy()
 
 devtools::load_all("get.noaa.weather")
 

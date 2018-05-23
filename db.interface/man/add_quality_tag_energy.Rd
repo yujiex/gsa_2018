@@ -13,6 +13,5 @@ yearly
 \examples{
 add_quality_tag_energy()
 }
-\keyword{by}
-\keyword{eui}
-\keyword{year}
+\keyword{quality}
+\keyword{tag}

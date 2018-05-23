@@ -9,5 +9,8 @@ main_db_build()
 \description{
 This function joins EUAS_monthly and EUAS_type
 }
+\examples{
+main_db_build()
+}
 \keyword{drop}
 \keyword{table}
