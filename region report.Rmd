@@ -1,0 +1,28 @@
+---
+title: "region report"
+params:
+  region: 1
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '~/Dropbox/gsa_2017/')
+```
+
+---
+title: GSA Region `r params$region` Energy Data Exchange
+---
+
+This document captures the past five years of portfolio energy performance for your region in comparison to your peers. Beginning with a National Overview, the document dives into the building EUAS data for xx GSA owned facilities in your region. Energy use
+totals, energy use per square foot, LEAN analysis, and buildings with the greatest cost savings compared to national medians are identified. Prior energy saving investment outcomes from a national overview are profiled alongside selected case studies of
+successful energy retrofits in your region.
+
+## 2017 Building Count and Square Footage
+
+```{r count_by_type}
+knitr::opts_knit$set(root.dir = '~/Dropbox/gsa_2017')
+devtools::load_all("summarise.and.plot")
+summarise.and.plot::national_overview(category=c("A", "C", "I"), year=2017)
+```

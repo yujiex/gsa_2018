@@ -1,0 +1,17 @@
+Package: summarise.and.plot
+Title: Produce summary statistics and plots
+Version: 0.0.0.9000
+Authors@R: person("Yujie", "Xu", email = "first.last@example.com", role = c("aut", "cre"))
+Description: Produce summary statistics and plots
+Depends: R (>= 3.4.3)
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports:
+  plyr,
+  dplyr,
+  RColorBrewer,
+  ggplot2,
+  db.interface,
+  feather
+RoxygenNote: 6.0.1.9000

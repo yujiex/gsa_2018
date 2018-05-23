@@ -76,6 +76,7 @@ get_all_tables <- function(dbname, path) {
 #' view_head_of_table(dbname="all", tablename="EUAS_type")
 read_table_from_db <- function(dbname, tablename, path, cols) {
   con = connect(dbname, path)
+  ## print("read table from %s %s.db", getwd(), dbname)
   df =
     dbGetQuery(con, sprintf("SELECT * FROM %s", tablename)) %>%
     as_data_frame() %>%
@@ -173,11 +174,12 @@ get_euas_buildings <- function() {
 #' @param type optional, a string (e.g. "Office"), or a string vector (e.g. c("Office", "Courthouse"))of building type
 #' @param year optional, a double vector of years, or a single year
 #' @param fOrC optional, specify one of "F" (fiscal year) or "C" (calendar year), default to "F"
+#' @param gbvars optional, if unspecified, group by all 4 variables, otherwise, only group by the ones specified in gbvars
 #' @keywords query count
 #' @export
 #' @examples
-#' get_count(1, c("A", "C", "I"), "office", "F")
-get_count <- function(region, category, type, year, fOrC) {
+#' get_count(region=1, category=c("A", "C", "I"), "office", "F", gbvars="Cat")
+get_count <- function(region, category, type, year, fOrC, gbvars) {
   if (missing(fOrC) || (fOrC == "F")) {
     year_col = "Fiscal_Year"
   } else {
@@ -226,8 +228,16 @@ get_count <- function(region, category, type, year, fOrC) {
     }
   }
   print(head(df))
-  df = df %>%
-    dplyr::group_by(`Region_No.`, `Fiscal_Year`, `Cat`, `Building_Type`) %>%
+  if (missing(gbvars)) {
+    df = df %>%
+      dplyr::group_by(`Region_No.`, `Fiscal_Year`, `Cat`, `Building_Type`) %>%
+      {.}
+  } else {
+    df = df %>%
+      dplyr::group_by_at(vars(one_of(gbvars))) %>%
+      {.}
+  }
+  df <- df %>%
     dplyr::summarise(count = n(),
                      lowElectricity_n = sum(lowElectricity),
                      lowGas_n = sum(lowGas),

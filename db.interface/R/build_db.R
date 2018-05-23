@@ -193,6 +193,28 @@ add_quality_tag_energy <- function() {
   print("Created table: eui_by_fy_tag")
 }
 
+#' Remove old energy data based on index
+#'
+#' This function removes the old energy data
+#' @keywords drop old
+#' @export
+#' @examples
+#' remove_old_energy_data()
+remove_old_energy_data <- function() {
+  con = connect("all")
+  df = dbGetQuery(con, "SELECT * FROM EUAS_monthly") %>%
+    dplyr::arrange(`Building_Number`, `Fiscal_Year`, `Fiscal_Month`, `index`) %>%
+    dplyr::group_by(`Building_Number`, `Fiscal_Year`, `Fiscal_Month`) %>%
+    dplyr::slice(n()) %>%
+    dplyr::ungroup()
+    {.}
+  df %>%
+    readr::write_csv("csv_FY/db_build_temp_csv/EUAS_monthly.csv")
+  dbWriteTable(con, "EUAS_monthly", df, overwrite=TRUE)
+  dbDisconnect(con)
+  print("Created table: EUAS_monthly")
+}
+
 #' Join EUAS_monthly and EUAS_type
 #'
 #' This function joins EUAS_monthly and EUAS_type
@@ -201,13 +223,10 @@ add_quality_tag_energy <- function() {
 #' @examples
 #' main_db_build()
 main_db_build <- function() {
-  ## unify_euas_type()
-  ## recode_euas_type()
-  ## join_type_and_energy()
-  ## get_eui_by_year("F")
-  ## add_quality_tag_energy()
-  ## get_count() %>%
-  ##   readr::write_csv("csv_FY/summary_results/count_by_region_year_cat_type.csv")
-  get_count(region=1, category = c("A", "C", "I"), type = "Office", year = c(2014, 2015, 2016), fOrC = "F") %>%
-    readr::write_csv("csv_FY/summary_results/count_by_region1_year_cat_type.csv")
+  remove_old_energy_data()
+  unify_euas_type()
+  recode_euas_type()
+  join_type_and_energy()
+  get_eui_by_year("F")
+  add_quality_tag_energy()
 }

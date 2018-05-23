@@ -5,7 +5,7 @@ library(plyr)
 library(stringr)
 library(Rmisc)
 library(dplyr)
-library(reshape)
+library(reshape2)
 n <- 60
 qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
 col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
@@ -105,6 +105,7 @@ df <- df[df$Fiscal_Year < 2016,]
 df$Cat <- factor(df$Cat, levels=c("A", "I", "C", "B", "D", "E"))
 g = stackbar(df, "Fiscal_Year", "Cat", "Building Count", "EUAS Building Count By Category")
 print(g)
+
 ggsave(file="plot_FY_annual/quant/building_by_cat_.png", width=8, height=4, units="in")
 ## df$Fiscal_Year <- factor(df$Fiscal_Year)
 ## df %>% dplyr::group_by(Fiscal_Year, Cat) %>%
