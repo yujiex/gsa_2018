@@ -1,13 +1,15 @@
 ---
 title: "region report"
-output: html_document
 params:
-   region: 1
+  region: 1
+output:
+  html_document: default
+  pdf_document: default
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "~/Dropbox/gsa_2017/")
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_knit$set(root.dir = "~/Dropbox/gsa_2017")
 ```
 
 ---
@@ -18,11 +20,35 @@ This document captures the past five years of portfolio energy performance for y
 totals, energy use per square foot, LEAN analysis, and buildings with the greatest cost savings compared to national medians are identified. Prior energy saving investment outcomes from a national overview are profiled alongside selected case studies of
 successful energy retrofits in your region.
 
-## 2017 Building Count and Square Footage
+## National Overview
 
-```{r count_by_type}
+### Building count and sqft
 
-getwd()
-devtools::load_all("~/Dropbox/gsa_2017/summarise.and.plot")
-summarise.and.plot::national_overview(category=c("A", "C", "I"), year=2017)
+```{r count_by_type, message=FALSE, out.width="100%"}
+library(devtools)
+library(DBI)
+library(dplyr)
+library(tidyr)
+library(RSQLite)
+library(ggplot2)
+devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
+devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
+setwd("/Users/yujiex/Dropbox/gsa_2017/")
+summarise.and.plot::national_overview(category=c("I", "A"), year=2017, pal_values = c("#FFFFB3", "#8DD3C7"))
+```
+
+### Consumption and cost per sqft over years
+
+```{r eui_over_year, message=FALSE, out.width="100%"}
+library(devtools)
+library(DBI)
+library(dplyr)
+library(tidyr)
+library(RSQLite)
+library(ggplot2)
+devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
+devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
+setwd("/Users/yujiex/Dropbox/gsa_2017/")
+national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), pal="Set3")
+#national_overview_over_years(category=c("I", "A"), pal="Set3")
 ```

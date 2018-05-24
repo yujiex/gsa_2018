@@ -8,7 +8,7 @@
 #' get_lat_lon_df()
 get_lat_lon_df <- function(path) {
   if (missing(path)) {
-    path = "csv_FY/db/"
+    path = "~/Dropbox/gsa_2017/csv_FY/db/"
   }
   con <- dbConnect(RSQLite::SQLite(), paste0(path, "all.db"))
   lat_lon_df =
@@ -41,7 +41,7 @@ get_lat_lon_df <- function(path) {
 #' connect("all")
 connect <- function(dbname, path) {
   if (missing(path)) {
-    path = "csv_FY/db/"
+    path = "~/Dropbox/gsa_2017/csv_FY/db/"
   }
   con <- dbConnect(RSQLite::SQLite(), paste0(path, dbname, ".db"))
   return(con)

@@ -4,8 +4,8 @@
 \alias{stackbar}
 \title{Stacked bar plot}
 \usage{
-stackbar(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit, legendloc,
-  legendOrient, pal, pal_values)
+stackbar(df, needAgg, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit,
+  legendloc, legendOrient, pal, pal_values)
 }
 \arguments{
 \item{df}{required, a dataframe to plot}
@@ -22,7 +22,7 @@ stackbar(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit, legendloc,
 
 \item{tit}{plot title}
 
-\item{legendloc}{legend location}
+\item{legendloc}{legend location: top, bottom, c(0.8, 0.2)}
 
 \item{legendOrient}{legend orientation: "v" or "h"}
 

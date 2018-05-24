@@ -215,6 +215,46 @@ remove_old_energy_data <- function() {
   print("Created table: EUAS_monthly")
 }
 
+#' Add chilled water eui
+#'
+#' This function adds chilled water eui
+#' @keywords modify db
+#' @export
+#' @examples
+#' compute_eui()
+compute_eui <- function(df, energy_input, eui_output, sqftcol, mult) {
+  if (missing(mult)) {
+    mult = 1
+  }
+  df = df %>%
+    dplyr::mutate(!!(rlang::sym(eui_output)) := !!(rlang::sym(energy_input)) / !!(rlang::sym(sqftcol)) * mult) %>%
+    {.}
+  return(df)
+}
+
+#' Add chilled water eui
+#'
+#' This function adds chilled water eui
+#' @keywords modify db
+#' @export
+#' @examples
+#' add_chilled_water_eui()
+add_chilled_water_eui <- function() {
+  con = connect("all")
+  df = dbGetQuery(con, "SELECT * FROM EUAS_monthly") %>%
+    compute_eui(energy_input = "Chilled_Water_(Ton_Hr)", eui_output = "eui_chilledWater", sqftcol="Gross_Sq.Ft",
+                mult=12) %>%
+    dplyr::mutate(`eui_total` = `eui_elec` + `eui_gas` + `eui_steam` + `eui_oil` + `eui_chilledWater`) %>%
+    dplyr::mutate(`Chilled_Water_(kBtu)` = `Chilled_Water_(Ton_Hr)` * 12) %>%
+    dplyr::mutate(`Total_(kBtu)` = `Electric_(kBtu)` + `Gas_(kBtu)` + `Oil_(kBtu)` + `Steam_(kBtu)` + `Chilled_Water_(kBtu)`) %>%
+    {.}
+  df %>%
+    readr::write_csv("csv_FY/db_build_temp_csv/EUAS_monthly.csv")
+  dbWriteTable(con, "EUAS_monthly", df, overwrite=TRUE)
+  dbDisconnect(con)
+  print("Created table: EUAS_monthly")
+}
+
 #' Join EUAS_monthly and EUAS_type
 #'
 #' This function joins EUAS_monthly and EUAS_type
@@ -223,8 +263,9 @@ remove_old_energy_data <- function() {
 #' @examples
 #' main_db_build()
 main_db_build <- function() {
-  remove_old_energy_data()
-  unify_euas_type()
+  ## remove_old_energy_data()
+  ## unify_euas_type()
+  add_chilled_water_eui()
   recode_euas_type()
   join_type_and_energy()
   get_eui_by_year("F")
