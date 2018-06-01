@@ -94,6 +94,9 @@ stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "
 plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"))
 plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"))
 plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="base", category=c("I", "A"))
+## test save change
+## test save change
+asdf
 
 generate_lean_tex(plotType="elec", region=9)
 generate_lean_tex(plotType="gas", region=9)
