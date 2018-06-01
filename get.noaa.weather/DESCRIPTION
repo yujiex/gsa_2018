@@ -10,5 +10,7 @@ LazyData: true
 Imports:
   dplyr,
   rnoaa,
+  devtools,
+  leaflet,
   feather
 RoxygenNote: 6.0.1.9000

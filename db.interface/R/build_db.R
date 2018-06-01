@@ -57,7 +57,7 @@ unify_euas_type <- function() {
 recode_euas_type <- function() {
   df = read_table_from_db(dbname = "all", tablename = "EUAS_type")
   df = df %>%
-    dplyr::mutate_at(vars(`Building_Type`), recode, "Office Building"="Office") %>%
+    dplyr::mutate_at(vars(`Building_Type`), recode, "Office Building"="Office", "All Other"="Other", "Non-Refrigerated Warehouse"="Warehouse") %>%
     {.}
   write_table_to_db(df=df, dbname = "all", tablename = "EUAS_type_recode", overwrite = TRUE)
 }

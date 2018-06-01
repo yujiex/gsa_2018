@@ -15,12 +15,13 @@ and "wban"}
 \item{start}{optional, the start index of the weather stations to download.
 This allows users to download part of the stations in station_to_download}
 
-\item{end}{optional, the end index of the weather stations to download.
-This allows users to download part of the stations in station_to_download}
+\item{end}{optional, the end index of the weather stations to download. This
+allows users to download part of the stations in station_to_download}
 }
 \description{
 This function downloads unique stations in station_to_download to a cache
-directory in rnoaa
+directory in rnoaa, it allows user to specify the starting and ending index
+to allow for downloading part of the stations in station_to_download
 }
 \examples{
 download_isd(station_to_download, year=year, variables=variables)

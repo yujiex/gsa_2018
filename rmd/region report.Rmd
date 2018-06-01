@@ -50,5 +50,38 @@ devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
 devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
 setwd("/Users/yujiex/Dropbox/gsa_2017/")
 national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), pal="Set3")
-#national_overview_over_years(category=c("I", "A"), pal="Set3")
+```
+
+---
+
+## Region Overview
+
+### Building count and sqft
+
+```{r region_overview, message=FALSE, out.width="100%"}
+library(devtools)
+library(DBI)
+library(dplyr)
+library(tidyr)
+library(RSQLite)
+library(ggplot2)
+devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
+devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
+setwd("/Users/yujiex/Dropbox/gsa_2017/")
+summarise.and.plot::national_overview(category=c("I", "A"), year=2017, pal_values = c("#FFFFB3", "#8DD3C7"), region="9")
+```
+
+### Consumption and cost per sqft over years
+
+```{r region_eui_over_year, message=FALSE, out.width="100%"}
+library(devtools)
+library(DBI)
+library(dplyr)
+library(tidyr)
+library(RSQLite)
+library(ggplot2)
+devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
+devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
+setwd("/Users/yujiex/Dropbox/gsa_2017/")
+national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), region="9", pal="Set3")
 ```

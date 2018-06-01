@@ -4,7 +4,7 @@
 \alias{get_isdfile_by_year}
 \title{Download isd files to cache directory, and record station mappings to feather files}
 \usage{
-get_isdfile_by_year(year, lat_lon_df, isd_data)
+get_isdfile_by_year(year, lat_lon_df, isd_data, saveResult2File)
 }
 \arguments{
 \item{year}{required, the year of isd weather data to download}
@@ -13,13 +13,16 @@ get_isdfile_by_year(year, lat_lon_df, isd_data)
 
 \item{isd_data}{optional, if missing, it will be created with
 rnoaa::isd_stations(refresh = TRUE), but will be a bit slow}
+
+\item{saveResult2File}{optional, default to TRUE}
 }
 \description{
-This function downloads unique stations in lat_lon_df to a cache directory in
-rnoaa
+This function downloads isd files of nearby stations for the set of buildings
+with latitude and longitude specified in lat_lon_df. The isd files are saved
+to a cache directory in rnoaa
 }
 \examples{
-get_isdfile_by_year(year)
+get_isdfile_by_year(year, lat_lon_df, isd_data)
 }
 \keyword{download}
 \keyword{file}

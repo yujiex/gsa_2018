@@ -3,7 +3,6 @@ accessToken = "hDldeqcNqFHyZlnYhnXUEhJEnpKLmGlJ"
 library("rnoaa")
 library("dplyr")
 library("ggplot2")
-library("RCurl")
 library("feather")
 library("rlang")
 

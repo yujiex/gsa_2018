@@ -4,15 +4,17 @@
 \alias{get_lat_lon_df}
 \title{Get latitude longitude}
 \usage{
-get_lat_lon_df(path)
+get_lat_lon_df(path, building)
 }
 \arguments{
 \item{path}{to the all.db file, default is "csv_FY/db/"}
+
+\item{building}{optional, if supplied, only this building's data is returned}
 }
 \description{
 This function get latitude longitude of EUAS buildings
 }
 \examples{
-get_lat_lon_df()
+get_lat_lon_df(building="XXXXXXXX")
 }
 \keyword{latlon}

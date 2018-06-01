@@ -2,18 +2,28 @@
 #'
 #' This function get latitude longitude of EUAS buildings
 #' @param path to the all.db file, default is "csv_FY/db/"
+#' @param building optional, if supplied, only this building's data is returned
 #' @keywords latlon
 #' @export
 #' @examples
-#' get_lat_lon_df()
-get_lat_lon_df <- function(path) {
+#' get_lat_lon_df(building="XXXXXXXX")
+get_lat_lon_df <- function(path, building) {
   if (missing(path)) {
     path = "~/Dropbox/gsa_2017/csv_FY/db/"
   }
   con <- dbConnect(RSQLite::SQLite(), paste0(path, "all.db"))
+  if (missing(building)) {
   lat_lon_df =
     dbGetQuery(con, "SELECT * FROM EUAS_latlng_2" ) %>%
     as_data_frame() %>%
+    {.}
+  } else {
+    lat_lon_df =
+      dbGetQuery(con, sprintf("SELECT * FROM EUAS_latlng_2 WHERE Building_Number = \'%s\'", building)) %>%
+      as_data_frame() %>%
+      {.}
+  }
+  lat_lon_df <- lat_lon_df %>%
     dplyr::mutate(`latlng`=gsub("\\[|\\]", "", `latlng`)) %>%
     dplyr::rowwise() %>%
     dplyr::mutate(`lat`=strsplit(`latlng`, ", ")[[1]][1]) %>%
@@ -70,17 +80,25 @@ get_all_tables <- function(dbname, path) {
 #' @param tablename required, the name string of the table to view
 #' @param path optional, the path to .db file, default is "csv_FY/db/"
 #' @param cols optional, the columns to select
+#' @param building optional, only read data for this building
 #' @keywords view head table sqlite
 #' @export
 #' @examples
 #' view_head_of_table(dbname="all", tablename="EUAS_type")
-read_table_from_db <- function(dbname, tablename, path, cols) {
+read_table_from_db <- function(dbname, tablename, path, cols, building) {
   con = connect(dbname, path)
   ## print("read table from %s %s.db", getwd(), dbname)
-  df =
-    dbGetQuery(con, sprintf("SELECT * FROM %s", tablename)) %>%
-    as_data_frame() %>%
-    {.}
+  if (missing(building)) {
+    df =
+      dbGetQuery(con, sprintf("SELECT * FROM %s", tablename)) %>%
+      as_data_frame() %>%
+      {.}
+  } else {
+    df =
+      dbGetQuery(con, sprintf("SELECT * FROM %s WHERE Building_Number = \'%s\'", tablename, building)) %>%
+      as_data_frame() %>%
+      {.}
+  }
   if (!missing(cols)) {
     df <- df %>%
       dplyr::select(one_of(cols)) %>%
@@ -162,6 +180,51 @@ get_euas_buildings <- function() {
     as_data_frame() %>%
     {.}
   return(df)
+}
+
+#' Get list of buildings
+#'
+#' This function returns a vector of building id's
+#' @param region optional, region number
+#' @param buildingType optional, building type
+#' @param year optional, restrict to data with fiscal year = year
+#' @param category optional, restrict to data with category in a vector of
+#'   categories, c(a vector of categories, e.g. "A", "I")
+#' @keywords get all buildings
+#' @export
+#' @examples
+#' get_buildings()
+get_buildings <- function(region, buildingType, year, category) {
+  con = connect("all")
+  df =
+    dbGetQuery(con, "SELECT * FROM eui_by_fy_tag") %>%
+    as_data_frame() %>%
+    dplyr::filter(`Gross_Sq.Ft` != 0) %>%
+    dplyr::filter(`eui_elec` != 0) %>%
+    dplyr::mutate(`Region_No.` = as.numeric(`Region_No.`))
+    {.}
+  if (!missing(region)) {
+    df <- df %>%
+      dplyr::filter(`Region_No.` == region) %>%
+      {.}
+  }
+  if (!missing(year)) {
+    df <- df %>%
+      dplyr::filter(`Fiscal_Year` == year) %>%
+      {.}
+  }
+  if (!missing(buildingType)) {
+    df <- df %>%
+      dplyr::filter(`Building_Type` == buildingType) %>%
+      {.}
+  }
+  if (!missing(category)) {
+    df <- df %>%
+      dplyr::filter(`Cat` %in% category) %>%
+      {.}
+  }
+  print(sprintf("number of buildings: %s", nrow(df)))
+  return(unique(df$Building_Number))
 }
 
 #' Get the count of buildings with region, category (A, C, I), type (office, etc.), and year filters applied

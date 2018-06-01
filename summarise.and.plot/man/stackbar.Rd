@@ -4,8 +4,8 @@
 \alias{stackbar}
 \title{Stacked bar plot}
 \usage{
-stackbar(df, needAgg, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit,
-  legendloc, legendOrient, pal, pal_values)
+stackbar(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit, legendloc,
+  legendOrient, pal, pal_values, labelFormat, width, verbose)
 }
 \arguments{
 \item{df}{required, a dataframe to plot}
@@ -30,7 +30,13 @@ stackbar(df, needAgg, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit,
 
 \item{pal_values}{colors in the palette to use}
 
+\item{labelFormat}{optional, string format function of label}
+
+\item{width}{optional, the width of the bars}
+
 \item{aggfun}{count or sum}
+
+\item{width}{verbose, if TRUE print data to the output}
 }
 \description{
 This function produces a stacked bar plot

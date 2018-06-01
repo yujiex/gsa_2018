@@ -11,7 +11,7 @@ get_nearby_isd_stations(lat_lon_df, isd_data, radius, limit, date_min, date_max,
 \item{lat_lon_df}{a data frame containing a column "latitude", and a column
 "longitude"}
 
-\item{isd_data}{returned by rnoaa::isd_stations(refresh = TRUE)}
+\item{isd_data}{optional, returned by rnoaa::isd_stations(refresh = TRUE)}
 
 \item{radius}{(numeric) Radius (in km) to search from the lat,lon
 coordinates, used in isd_station_search}

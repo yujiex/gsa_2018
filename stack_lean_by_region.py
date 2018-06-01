@@ -179,6 +179,7 @@ def plot_saving_oneplot(region, season=None):
         # fit_time(measure_type, region=region, season=season)
         plot_json(jsondir, measure_type, region=region, season=season, subset=None)
 
+# fixme: remove filters for electric and gas eui, only remove ones with no sqft
 def main():
     for region in range(1, 12):
     # for region in range(10, 11):

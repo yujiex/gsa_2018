@@ -4,7 +4,7 @@
 \alias{read_table_from_db}
 \title{Read table from db}
 \usage{
-read_table_from_db(dbname, tablename, path, cols)
+read_table_from_db(dbname, tablename, path, cols, building)
 }
 \arguments{
 \item{dbname}{required, the name string of the database, e.g. "all.db" has name "all"}
@@ -14,6 +14,8 @@ read_table_from_db(dbname, tablename, path, cols)
 \item{path}{optional, the path to .db file, default is "csv_FY/db/"}
 
 \item{cols}{optional, the columns to select}
+
+\item{building}{optional, only read data for this building}
 }
 \description{
 This function returns a table from database

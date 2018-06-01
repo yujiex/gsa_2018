@@ -1,17 +1,14 @@
-Package: summarise.and.plot
-Title: Produce summary statistics and plots
+Package: lean.analysis
+Title: Lean Energy Analysis
 Version: 0.0.0.9000
 Authors@R: person("Yujie", "Xu", email = "first.last@example.com", role = c("aut", "cre"))
-Description: Produce summary statistics and plots
+Description: This package conducts lean energy analysis for individual buildings
 Depends: R (>= 3.4.3)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 Imports:
   dplyr,
-  tidyr,
-  RColorBrewer,
-  ggplot2,
-  db.interface,
-  feather
+  segmented,
+  get.noaa.weather
 RoxygenNote: 6.0.1.9000
