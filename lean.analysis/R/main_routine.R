@@ -246,6 +246,8 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
         slice(1) %>%
         dplyr::ungroup() %>%
         dplyr::arrange(`highLabel`) %>%
+        ## remove the ones with unrealistic out of sample prediction
+        dplyr::filter(`highLabel` >= -0.5) %>%
         slice(c(1:2,(n()-4):n())) %>%
         {.}
       print(nrow(toDisplay))
@@ -256,6 +258,8 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
         slice(1) %>%
         dplyr::ungroup() %>%
         dplyr::arrange(`lowLabel`) %>%
+        ## remove the ones with unrealistic out of sample prediction
+        dplyr::filter(`lowLabel` >= -0.5) %>%
         slice(c(1:2,(n()-4):n())) %>%
         {.}
     }
