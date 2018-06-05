@@ -319,16 +319,23 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
     ggplot2::ggtitle(sprintf("%s stacked lean plot for region %s (method: %s)", keyword, region, methodLabel)) +
     ggplot2::xlab("Average Monthly Temperature (F)") +
     ggplot2::ylab(sprintf("%s kBtu/sqft/mo.", keyword)) +
-    ggplot2::xlim(c(20, 100)) +
     ggplot2::theme()
   if (plotType == "elec") {
     p <- p +
-      ggplot2::geom_text(ggplot2::aes(x=80, y=highLabel, label=sprintf("%.1f", highLabel))) +
+      ## ggplot2::geom_text(ggplot2::aes(x=80, y=highLabel, label=sprintf("%.1f", highLabel))) +
       ggplot2::geom_vline(xintercept=80, linetype="dashed")
   } else if (plotType == "gas") {
     p <- p +
-      ggplot2::geom_text(ggplot2::aes(x=30, y=lowLabel, label=sprintf("%.1f", lowLabel))) +
+      ## ggplot2::geom_text(ggplot2::aes(x=30, y=lowLabel, label=sprintf("%.1f", lowLabel))) +
       ggplot2::geom_vline(xintercept=30, linetype="dashed")
+  }
+  if (!missing(plotXLimits)) {
+    p <- p +
+      ggplot2::xlim(plotXLimits)
+  }
+  if (!missing(plotYLimits)) {
+    p <- p +
+      ggplot2::ylim(plotYLimits)
   }
   print(p)
   ggsave(imagefile, width=8, height=6,
