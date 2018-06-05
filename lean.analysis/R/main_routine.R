@@ -202,12 +202,14 @@ plot_lean_subset <- function(region, buildingType, year, plotType, category) {
 #' @param lowRange require curves plotted have left end of x range lower than lowRange
 #' @param highRange require curves plotted have right end of x range higher than highRange
 #' @param debugFlag default to FALSE, set to true to print plot
+#' @param plotXLimits x limits for plotting, e.g. c(20, 100)
+#' @param plotYLimits y limits for plotting, e.g. c(20, 100)
 #' @keywords lean test
 #' @export
 #' @examples
 #' test_lean_analysis_db()
 stacked_fit_plot <- function(region, buildingType, year, category, plotType, method, methodLabel, lowRange,
-                             highRange, debugFlag=FALSE) {
+                             highRange, debugFlag=FALSE, plotXLimits, plotYLimits) {
   datafile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.csv", plotType, region, methodLabel)
   imagefile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.png", plotType, region, methodLabel)
   print(datafile)
