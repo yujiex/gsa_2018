@@ -204,12 +204,14 @@ plot_lean_subset <- function(region, buildingType, year, plotType, category) {
 #' @param debugFlag default to FALSE, set to true to print plot
 #' @param plotXLimits x limits for plotting, e.g. c(20, 100)
 #' @param plotYLimits y limits for plotting, e.g. c(20, 100)
+#' @param minorgrid a sequence of minor breaks, e.g. seq(0 , 100, 5)
+#' @param majorgrid a sequence of major breaks, e.g. seq(0, 100, 10)
 #' @keywords lean test
 #' @export
 #' @examples
 #' test_lean_analysis_db()
 stacked_fit_plot <- function(region, buildingType, year, category, plotType, method, methodLabel, lowRange,
-                             highRange, debugFlag=FALSE, plotXLimits, plotYLimits) {
+                             highRange, debugFlag=FALSE, plotXLimits, plotYLimits, minorgrid, majorgrid) {
   datafile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.csv", plotType, region, methodLabel)
   imagefile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.png", plotType, region, methodLabel)
   print(datafile)
@@ -333,15 +335,25 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
       ## ggplot2::geom_text(ggplot2::aes(x=30, y=lowLabel, label=sprintf("%.1f", lowLabel))) +
       ggplot2::geom_vline(xintercept=30, linetype="dashed")
   }
+  print("y plot range")
+  print(ggplot2::ggplot_build(p)$layout$panel_ranges[[1]]$y.range)
+  print("x plot range")
+  print(ggplot2::ggplot_build(p)$layout$panel_ranges[[1]]$x.range)
   if (!missing(plotXLimits)) {
     p <- p +
+      ## ggplot2::coord_cartesian(xlim = plotXLimits)
       ggplot2::xlim(plotXLimits)
   }
   if (!missing(plotYLimits)) {
-    p <- p +
-      ggplot2::ylim(plotYLimits)
+    if (missing(minorgrid)) {
+      p <- p +
+        ## ggplot2::coord_cartesian(ylim = plotYLimits)
+        ggplot2::ylim(plotYLimits)
+    } else {
+      p <- p +
+        ggplot2::scale_y_continuous(limits=plotYLimits, minor_breaks = minorgrid, breaks = majorgrid)
+    }
   }
   print(p)
-  ggsave(imagefile, width=8, height=6,
-         unit="in")
+  ggsave(imagefile, width=8, height=6, unit="in")
 }

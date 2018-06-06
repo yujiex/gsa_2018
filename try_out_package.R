@@ -8,9 +8,17 @@ db.interface::view_head_of_table(dbname = "all", tablename = "EUAS_monthly")[,5:
 
 db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_monthly_with_type")
 
+db.interface::view_names_of_table(dbname = "all", tablename = "eui_by_fy_tag")
+
 db.interface::view_names_of_table(dbname = "other_input", tablename = "PortfolioManager_sheet0_input")
 
 db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_ecm")
+
+db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>%
+  readr::write_csv("eui_by_fy_tag.csv")
+
+db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_monthly") %>%
+  readr::write_csv("EUAS_monthly.csv")
 
 db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>%
   dplyr::filter(`Region_No.`=="9", `Gross_Sq.Ft`==0) %>%
@@ -31,12 +39,22 @@ get_unique_value_column(dbname="all", tablename="EUAS_type_recode", col="data_so
 ## ---------------------------------------------------------------------------------
 
 devtools::load_all("summarise.and.plot")
-## national_overview(category=c("I", "A"), year=2017)
+national_overview_facetRegion(category=c("I", "A"), years=c(2015, 2017))
+
+national_overview(category=c("I", "A"), year=2017)
 ## national_overview(category=c("I", "A"), year=2017, region="9")
-national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), pal="Set3")
+## national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), pal="Set3")
 ## national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), region="9", pal="Set3")
 ## national_overview_over_years(category=c("I", "A"), pal="Set3")
 ## gb_agg_ratio(df, groupvar = "Fiscal_Year", numerator_var = c("Electric_(kBtu)", "Gas_(kBtu)", "Oil_(kBtu)", "Steam_(kBtu)", "Chilled_Water_(kBtu)"), denominator_var = "Gross_Sq.Ft", aggfun=sum, valuename="kBtu/sqft", varname="Fuel Type")
+
+dftemp = db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>%
+  dplyr::filter(`Gross_Sq.Ft` != 0) %>%
+  dplyr::filter(`eui_elec` != 0) %>%
+  {.}
+p = stackbar(df=dftemp, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", legendloc = "bottom", xlabel="Fiscal Year",orderByHeight=FALSE,
+               tit="Building Category Count by Fiscal Year", verbose=FALSE, facetvar="Region_No.")
+print(p)
 
 ## ---------------------------------------------------------------------------------
 
@@ -72,7 +90,7 @@ evtools::load_all("get.noaa.weather")
 
 view_isd_stations_year(isd_data=isd_data, year=2015, latitude=33.560347, longitude=-117.713329, zoom=10)
 
-get_nearby_isd_stations(lat_lon_df = data.frame(Building_Number="NV7300ZZ", latitude=33.560231, longitude=-117.713318), radius=10, limit=5, year=2015)
+get_nearby_isd_stations(lat_lon_df = data.frame(Building_Number="NV7300Z", latitude=33.560231, longitude=-117.713318), radius=10, limit=5, year=2015)
 
 devtools::load_all("lean.analysis")
 ## set.seed(0)
@@ -84,10 +102,11 @@ devtools::load_all("lean.analysis")
 ## y[11:20] <- seq(11, 15, len=10) + rnorm(10, 0, 1.5)
 
 devtools::load_all("lean.analysis")
-stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::polynomial_deg_2, methodLabel="poly2", lowRange=60, highRange=80, plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5))
-stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=60, highRange=80, plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5))
-stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::polynomial_deg_2, methodLabel="poly2", plotXLimits=c(40, 90), plotYLimits=c(-0.5, 17.5))
-stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(40, 90), plotYLimits=c(-0.5, 17.5))
+## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::polynomial_deg_2, methodLabel="poly2", lowRange=60, highRange=80, plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5))
+## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=60, highRange=80, plotXLimits=c(44, 100))
+## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::polynomial_deg_2, methodLabel="poly2", plotXLimits=c(40, 90), plotYLimits=c(-0.5, 17.5))
+stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(44, 100), plotYLimits=c(1.7, 16.6), minorgrid=seq(2, 14, 2), majorgrid=seq(4, 16, 4))
+## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(40, 90))
 
 ## plot lean image
 plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"))
