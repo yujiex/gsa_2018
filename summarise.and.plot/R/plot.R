@@ -461,67 +461,118 @@ national_overview_over_years <- function(category, type, years, region, pal) {
     dplyr::mutate(`Fiscal_Year` = sprintf("%s\n(n = %s)", `Fiscal_Year`, `count`)) %>%
     {.}
   ## print(head(df))
-  df_agg_eui = gb_agg_ratio(df, groupvar = "Fiscal_Year", numerator_var = c("Electric_(kBtu)", "Gas_(kBtu)", "Oil_(kBtu)", "Steam_(kBtu)", "Chilled_Water_(kBtu)"), denominator_var = "Gross_Sq.Ft", aggfun=sum, valuename="kBtu/sqft", varname="FuelType") %>%
-    dplyr::mutate(`FuelType` = gsub("_\\(kBtu\\)", "", `FuelType`)) %>%
-    dplyr::mutate(`FuelType`=factor(`FuelType`, levels=c("Gas", "Oil", "Steam", "Chilled_Water", "Electric"))) %>%
-    {.}
+  ## plot bar width
   width = 0.4
+  df_agg_eui = gb_agg_ratio(df, groupvar = "Fiscal_Year", numerator_var = c("Electric_(kBtu)", "Gas_(kBtu)", "Oil_(kBtu)", "Steam_(kBtu)", "Chilled_Water_(kBtu)", "Other_(kBtu)"), denominator_var = "Gross_Sq.Ft", aggfun=sum, valuename="kBtu/sqft", varname="FuelType") %>%
+    dplyr::mutate(`FuelType` = gsub("_\\(kBtu\\)", "", `FuelType`)) %>%
+    dplyr::mutate(`FuelType`=factor(`FuelType`, levels=c("Gas", "Oil", "Steam", "Chilled_Water", "Electric", "Other"))) %>%
+    {.}
   height_of_bar = df_agg_eui %>%
     dplyr::mutate(`Fiscal_Year` = substr(`Fiscal_Year`, 1, 4)) %>%
     dplyr::group_by(`Fiscal_Year`) %>%
     dplyr::summarise(`kBtu/sqft` = sum(`kBtu/sqft`)) %>%
     {.}
   ## print(height_of_bar)
+  titleStr = "kBtu / sqft by year"
+  if (!missing(region)) {
+    titleStr = paste("kBtu / sqft by year, region", region)
+  }
   p = stackbar(df=df_agg_eui, xcol="Fiscal_Year", fillcol="FuelType", ycol="kBtu/sqft", ylabel="kBtu/sqft",
-               xlabel="Fiscal_Year", legendloc = "bottom", legendOrient="h", tit="kBtu / sqft by year",
-               orderByHeight=FALSE, labelFormat="%.1f", width=width, verbose=FALSE,
-               pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0"))
+               xlabel="Fiscal Year", legendloc = "bottom", legendOrient="h",
+               tit=sprintf("kBtu/sqft by year%s", regionTag),
+               orderByHeight=FALSE, labelFormat="%.0f", width=width, verbose=FALSE,
+               pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "grey"), labelCutoff=5)
   print(p)
-  df_agg_cost = gb_agg_ratio(df, groupvar = "Fiscal_Year", numerator_var = c("Electricity_(Cost)", "Gas_(Cost)", "Oil_(Cost)", "Steam_(Cost)", "Chilled_Water_(Cost)"), denominator_var = "Gross_Sq.Ft", aggfun=sum, valuename="Cost/sqft", varname="FuelType") %>%
+  df_agg_cost = gb_agg_ratio(df, groupvar = "Fiscal_Year", numerator_var = c("Electricity_(Cost)", "Gas_(Cost)", "Oil_(Cost)", "Steam_(Cost)", "Chilled_Water_(Cost)", "Other_(Cost)"), denominator_var = "Gross_Sq.Ft", aggfun=sum, valuename="Cost/sqft", varname="FuelType") %>%
     dplyr::mutate(`FuelType` = gsub("_\\(Cost\\)", "", `FuelType`)) %>%
     {.}
   ## print(head(df_agg_cost))
+  dflong_cost <- df %>%
+    dplyr::select(`Fiscal_Year`, `Electricity_(Cost)`, `Gas_(Cost)`, `Oil_(Cost)`, `Steam_(Cost)`, `Chilled_Water_(Cost)`, `Other_(Cost)`) %>%
+    dplyr::group_by(`Fiscal_Year`) %>%
+    dplyr::summarise_at(vars(`Electricity_(Cost)`, `Gas_(Cost)`, `Oil_(Cost)`, `Steam_(Cost)`, `Chilled_Water_(Cost)`, `Other_(Cost)`), sum) %>%
+    dplyr::ungroup() %>%
+    tidyr::gather(`FuelType`, `Cost`, `Electricity_(Cost)`:`Other_(Cost)`) %>%
+    dplyr::mutate(`FuelType` = gsub("_\\(Cost\\)", "", `FuelType`)) %>%
+    dplyr::mutate(`FuelType`=factor(`FuelType`, levels=c("Gas", "Oil", "Steam", "Chilled_Water", "Electricity", "Other"))) %>%
+    {.}
+  p = stackbar(df=dflong_cost, xcol="Fiscal_Year", fillcol="FuelType", ycol="Cost", ylabel="Million Dollar",
+               xlabel="Fiscal Year", legendloc = "bottom", legendOrient="h",
+               tit=sprintf("Energy cost (million dollar) by year%s", regionTag),
+               orderByHeight=FALSE, labelFormat="%.0f", width=width, verbose=FALSE,
+               pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "grey"), scaler=1e-6, labelCutoff=5)
+  print(p)
+  dflong_kBtu <- df %>%
+    dplyr::select(`Fiscal_Year`, `Electric_(kBtu)`, `Gas_(kBtu)`, `Oil_(kBtu)`, `Steam_(kBtu)`, `Chilled_Water_(kBtu)`, `Other_(kBtu)`) %>%
+    dplyr::group_by(`Fiscal_Year`) %>%
+    dplyr::summarise_at(vars(`Electric_(kBtu)`, `Gas_(kBtu)`, `Oil_(kBtu)`, `Steam_(kBtu)`, `Chilled_Water_(kBtu)`, `Other_(kBtu)`), sum) %>%
+    dplyr::ungroup() %>%
+    tidyr::gather(`FuelType`, `kBtu`, `Electric_(kBtu)`:`Other_(kBtu)`) %>%
+    dplyr::mutate(`FuelType` = gsub("_\\(kBtu\\)", "", `FuelType`)) %>%
+    dplyr::mutate(`FuelType`=factor(`FuelType`, levels=c("Gas", "Oil", "Steam", "Chilled_Water", "Electric", "Other"))) %>%
+    {.}
+  p = stackbar(df=dflong_kBtu, xcol="Fiscal_Year", fillcol="FuelType", ycol="kBtu", ylabel="Billion Btu",
+               xlabel="Fiscal Year", legendloc = "bottom", legendOrient="h",
+               tit=sprintf("Billion Btu by year%s", regionTag),
+               orderByHeight=FALSE, labelFormat="%.0f", width=width, verbose=FALSE,
+               pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "grey"), scaler=1e-6, labelCutoff=300)
+  print(p)
   height_of_bar = df_agg_cost %>%
     ## dplyr::mutate(`Fiscal_Year` = substr(`Fiscal_Year`, 1, 4)) %>%
     dplyr::group_by(`Fiscal_Year`) %>%
     dplyr::summarise(`Cost/sqft` = sum(`Cost/sqft`)) %>%
     dplyr::mutate(`FuelType` = "total") %>%
     {.}
+  df_agg_cost <- df_agg_cost %>%
+    dplyr::bind_rows(height_of_bar) %>%
+    {.}
   ## print(head(height_of_bar))
   p <- df_agg_cost %>%
     dplyr::select(-`Gross_Sq.Ft`) %>%
-    dplyr::bind_rows(height_of_bar) %>%
-    dplyr::mutate(`FuelType`=factor(`FuelType`, levels=c("Gas", "Oil", "Steam", "Chilled_Water", "Electricity", "total"))) %>%
     ## only plot the total
     dplyr::filter(`FuelType` == "total") %>%
     ggplot2::ggplot(ggplot2::aes(x=`Fiscal_Year`, y=`Cost/sqft`, group=`FuelType`, colour=`FuelType`, label=sprintf("%.3f", `Cost/sqft`))) +
     ggplot2::geom_line() +
     ggplot2::geom_point() +
     ggplot2::geom_text(vjust=-0.5) +
-    ggplot2::scale_color_brewer(palette=pal) +
+    ## ggplot2::scale_color_brewer(palette=pal) +
     ggplot2::theme(legend.position="bottom") +
-    ggplot2::ggtitle("Cost / sqft by year by fuel type") +
+    ggplot2::ylim(c(0, 3)) +
     ## ggplot2::scale_color_manual(values=c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "gray"))
+    ggplot2::ggtitle(sprintf("Cost / sqft by year by fuel type%s", regionTag)) +
     ggplot2::theme_bw()
   print(p)
   ## single building kbtu/sqft distribution
-  ## df_singlebuilding <- df %>%
-  ##   dplyr::select(`Building_Number`, `Fiscal_Year`, `Electric_(kBtu)`, `Gas_(kBtu)`, `Oil_(kBtu)`, `Steam_(kBtu)`,
-  ##                 `Chilled_Water_(kBtu)`, `Gross_Sq.Ft`) %>%
-  ##   tidyr::gather(`FuelType`, `kBtu`, `Electric_(kBtu)`:`Chilled_Water_(kBtu)`) %>%
-  ##   dplyr::group_by(`Building_Number`, `Fiscal_Year`, `Gross_Sq.Ft`) %>%
-  ##   dplyr::summarise(`totalkBtu` = sum(`kBtu`)) %>%
-  ##   dplyr::ungroup() %>%
-  ##   ## dplyr::mutate(`FuelType` = gsub("_\\(kBtu\\)", "", `FuelType`)) %>%
-  ##   dplyr::mutate(`kBtu/Sqft` = `totalkBtu` / `Gross_Sq.Ft`) %>%
-  ##   {.}
+  df_singlebuilding <- df %>%
+    dplyr::select(`Building_Number`, `Fiscal_Year`, `Electric_(kBtu)`, `Gas_(kBtu)`, `Oil_(kBtu)`, `Steam_(kBtu)`,
+                  `Chilled_Water_(kBtu)`, `Gross_Sq.Ft`) %>%
+    tidyr::gather(`FuelType`, `kBtu`, `Electric_(kBtu)`:`Chilled_Water_(kBtu)`) %>%
+    dplyr::group_by(`Building_Number`, `Fiscal_Year`, `Gross_Sq.Ft`) %>%
+    dplyr::summarise(`totalkBtu` = sum(`kBtu`)) %>%
+    dplyr::ungroup() %>%
+    ## dplyr::mutate(`FuelType` = gsub("_\\(kBtu\\)", "", `FuelType`)) %>%
+    dplyr::mutate(`kBtu/sqft` = `totalkBtu` / `Gross_Sq.Ft`) %>%
+    {.}
   ## ## print(head(df_singlebuilding))
-  ## p <- df_singlebuilding %>%
-  ##   ggplot2::ggplot(ggplot2::aes(x=`Fiscal_Year`, y=`kBtu/Sqft`)) +
-  ##   ggplot2::geom_boxplot() +
-  ##   ggplot2::ylab("kBtu/sqft distribution") +
-  ##   ggplot2::ggtitle("Distribution of kBtu/sqft for individual buildings")
-  ## print(p)
+  p <-
+    df_singlebuilding %>%
+    dplyr::group_by(`Fiscal_Year`) %>%
+    dplyr::summarise(`0` = quantile(`kBtu/sqft`)[1],
+                     `25` = quantile(`kBtu/sqft`)[2],
+                     `50` = quantile(`kBtu/sqft`)[3],
+                     `75` = quantile(`kBtu/sqft`)[4],
+                     `100` = quantile(`kBtu/sqft`)[5]) %>%
+    dplyr::ungroup() %>%
+    tidyr::gather(`quantile`, `value`, `0`:`100`) %>%
+    dplyr::mutate(`quantile` = as.numeric(`quantile`)) %>%
+    ## head() %>%
+    ggplot2::ggplot(ggplot2::aes(x=`Fiscal_Year`, y=`value`, group=`quantile`, colour=`quantile`)) +
+    ggplot2::geom_point() +
+    ggplot2::geom_line() +
+    ggplot2::ylab("kBtu/sqft distribution") +
+    ggplot2::ggtitle("Distribution of kBtu/sqft for individual buildings") %>%
+    {.}
+  print(p)
   ## ## singe building cost/sqft distribution
   ## df_singlebuilding <- df %>%
   ##   dplyr::select(`Building_Number`, `Fiscal_Year`, `Electricity_(Cost)`, `Gas_(Cost)`, `Oil_(Cost)`, `Steam_(Cost)`,
