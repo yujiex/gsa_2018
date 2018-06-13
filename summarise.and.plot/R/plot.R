@@ -294,40 +294,130 @@ national_overview_facetRegion <- function(category, type, years, region) {
     dplyr::mutate(`Cat` = factor(`Cat`, levels=c("I", "A"))) %>%
     {.}
   if (missing(region)) {
-    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", legendloc = "bottom", xlabel="Fiscal Year",orderByHeight=FALSE,
-                pal_values = pal_values, tit="Building Count by Region and Category, 2015 vs 2017", verbose=FALSE, facetvar="Region_No.")
+    regionTag = ""
+  } else {
+    regionTag = sprintf(", region %s", region)
+  }
+  ## national level plots
+  if (missing(region)) {
+    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", xlabel="Fiscal Year",orderByHeight=FALSE,legendOrient = "v",legendloc = "bottom",
+                pal_values = pal_values, tit="Building Count by Region and Category, 2015 vs 2017", verbose=FALSE, facetvar="Region_No.", facetNcol=11, labelCutoff=10)
     print(p)
-    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", legendloc = "bottom", xlabel="Fiscal Year",orderByHeight=FALSE,
-                pal_values = pal_values, tit="Building Million Gross_Sq.Ft by Category and Region, 2015 vs 2017", labelFormat="%.2f",
-                verbose=FALSE, scaler=1e-6, facetvar="Region_No.")
+    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", xlabel="Fiscal Year",orderByHeight=FALSE,legendOrient = "v",legendloc = "bottom",
+                pal_values = pal_values, tit="Building Million Gross_Sq.Ft by Region and Category, 2015 vs 2017", labelFormat="%.0f",
+                verbose=FALSE, scaler=1e-6, facetvar="Region_No.", facetNcol=11, labelCutoff=5)
     print(p)
-    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Total_(kBtu)", ylabel="Million kBtu", xlabel="Fiscal_Year",
-                legendOrient="v", pal_values = pal_values,
-                tit="Building Million kBtu by Category and Region",
-                labelFormat="%.2f",
-                orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, facetvar="Region_No.")
+    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", xlabel="Fiscal Year",
+                 legendOrient="v", pal_values = pal_values,legendloc = "bottom",
+                 tit=sprintf("Building Count by Category and Building Type, 2015 vs 2017%s", regionTag),
+                 orderByHeight=FALSE, verbose=FALSE, facetvar="Building_Type", facetNcol=length(unique(df$`Building_Type`)), labelCutoff=5)
+    print(p)
+    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", xlabel="Building Type",
+                 legendOrient="v", pal_values = pal_values,legendloc = "bottom",
+                 tit=sprintf("Building Million Gross_Sq.Ft by Category and Building Type%s", regionTag),
+                 labelFormat="%.0f",
+                 orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, facetvar="Building_Type", facetNcol=length(unique(df$`Building_Type`)), labelCutoff=1)
+    print(p)
+    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Total_(kBtu)", ylabel="Billion Btu", xlabel="Fiscal Year",
+                 legendOrient="v", pal_values = pal_values,legendloc = "bottom",
+                tit="Building Billion Btu by Region and Category",
+                labelFormat="%.0f",
+                orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, facetvar="Region_No.", facetNcol=11, labelCutoff=300)
     print(p)
     dftemp = df %>%
       dplyr::mutate(`Total_(Cost)` = `Electricity_(Cost)` + `Steam_(Cost)` + `Oil_(Cost)` + `Gas_(Cost)` + `Chilled_Water_(Cost)`) %>%
       {.}
-    p = stackbar(df=dftemp, xcol="Fiscal_Year", fillcol="Cat", ycol="Total_(Cost)", ylabel="Million Dollars", xlabel="Fiscal_Year",
-                legendOrient="v", pal_values = pal_values,
-                tit="Building Million Dollars by Category and Region",
-                labelFormat="%.2f",
-                orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, facetvar="Region_No.")
+    p = stackbar(df=dftemp, xcol="Fiscal_Year", fillcol="Cat", ycol="Total_(Cost)", ylabel="Million Dollars", xlabel="Fiscal Year",
+                 legendOrient="v", pal_values = pal_values,legendloc = "bottom",
+                tit="Building Million Dollars by Region and Category",
+                labelFormat="%.0f",
+                orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, facetvar="Region_No.", facetNcol=11, labelCutoff=5)
+    print(p)
+    df_agg_eui_region = gb_agg_ratio(df, groupvar = c("Fiscal_Year", "Region_No."), numerator_var = c("Electric_(kBtu)", "Gas_(kBtu)", "Oil_(kBtu)", "Steam_(kBtu)", "Chilled_Water_(kBtu)", "Other_(kBtu)"), denominator_var = "Gross_Sq.Ft", aggfun=sum, valuename="kBtu/sqft", varname="FuelType") %>%
+      dplyr::mutate(`Region_No.` = factor(`Region_No.`, levels = as.character(1:11))) %>%
+      dplyr::mutate(`FuelType` = gsub("_\\(kBtu\\)", "", `FuelType`)) %>%
+      dplyr::mutate(`FuelType`=factor(`FuelType`, levels=c("Gas", "Oil", "Steam", "Chilled_Water", "Electric", "Other"))) %>%
+      {.}
+    p = stackbar(df=df_agg_eui_region, xcol="Fiscal_Year", fillcol="FuelType", ycol="kBtu/sqft", ylabel="kBtu/sqft",
+                 xlabel="Fiscal Year",legendloc = "bottom",
+                 legendOrient="v", pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "gray"),
+                 tit="kBtu/sqft by region, 2015 vs 2017",
+                 labelFormat="%.0f",
+                 orderByHeight=FALSE, verbose=FALSE, facetvar="Region_No.", facetNcol=11, labelCutoff=5)
+    print(p)
+    ## get savings
+    dftemp = df_agg_eui_region %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(`Fiscal_Year` = substr(`Fiscal_Year`, 1, 4)) %>%
+      dplyr::filter(`Fiscal_Year` %in% c(2015, 2017)) %>%
+      {.}
+    dfsummary = dftemp %>% dplyr::group_by(`Fiscal_Year`, `Region_No.`) %>%
+      dplyr::select(-`Gross_Sq.Ft`) %>%
+      dplyr::summarise_if(is.numeric, funs(sum)) %>%
+      dplyr::ungroup() %>%
+      tidyr::spread(`Fiscal_Year`, `kBtu/sqft`) %>%
+      dplyr::mutate(`percent_saving` = (`2017` - `2015`) / `2015` * 100) %>%
+      {.}
+    print("change from 2015 to 2017")
+    dfsummary %>%
+      print(knitr::kable(dfsummary))
+  } else {
+    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", xlabel="Fiscal Year",
+                 legendOrient="v", pal_values = pal_values,legendloc = "bottom",
+                tit=sprintf("Building Count by Category and Building Type, 2015 vs 2017%s", regionTag),
+                orderByHeight=TRUE, verbose=FALSE, facetvar="Building_Type", facetNcol=length(unique(df$`Building_Type`)), labelCutoff=5)
+    print(p)
+    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", xlabel="Building Type",
+                 legendOrient="v", pal_values = pal_values,legendloc = "bottom",
+                tit=sprintf("Building Million Gross_Sq.Ft by Category and Building Type%s", regionTag),
+                labelFormat="%.0f",
+                orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, facetvar="Building_Type", facetNcol=length(unique(df$`Building_Type`)), labelCutoff=1)
     print(p)
   }
-  p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", xlabel="Fiscal_Year",
-               legendOrient="v", pal_values = pal_values,
-               tit="Building Count by Category and Building Type, 2015 vs 2017",
-               orderByHeight=TRUE, verbose=FALSE, facetvar="Building_Type")
-  print(p)
-  p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", xlabel="Building Type",
-               legendOrient="v", pal_values = pal_values,
-               tit="Building Million Gross_Sq.Ft by Category and Building Type",
-               labelFormat="%.2f",
-               orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, facetvar="Building_Type")
-  print(p)
+}
+
+#' Get the subject building set
+#'
+#' This function gets the subject building set
+#' @param category optional, a subset of A, B, C, D, E, I to include
+#' @param type optional, a string (e.g. "Office"), or a string vector (e.g. c("Office", "Courthouse")) of building type
+#' @param year optional, the year to plot
+#' @param region optional, the region to plot
+#' @keywords query count
+#' @export
+#' @examples
+#'get_filter_set(category=c("A", "I"), year=2017, region="9")
+get_filter_set <- function(category, type, year, region) {
+  ## remove 0 sqft and 0 electricity
+  df = db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>%
+    dplyr::filter(`Gross_Sq.Ft` != 0) %>%
+    dplyr::filter(`eui_elec` != 0) %>%
+    {.}
+  if (!missing(category)) {
+    df <- df %>%
+      dplyr::filter(`Cat` %in% category) %>%
+      {.}
+  }
+  if (!missing(type)) {
+    df <- df %>%
+      dplyr::filter(`Building_Type` %in% type) %>%
+      {.}
+  }
+  if (!missing(region)) {
+    df <- df %>%
+      dplyr::filter(`Region_No.` == region) %>%
+      {.}
+  }
+  df = df %>%
+    dplyr::mutate(`Region_No.` = factor(`Region_No.`, levels = as.character(1:11))) %>%
+    dplyr::mutate(`Cat` = factor(`Cat`, levels=c("I", "A"))) %>%
+    {.}
+  if (!missing(year)) {
+    df <- df %>%
+      dplyr::filter(`Fiscal_Year` == year) %>%
+      {.}
+  }
+  return(df)
 }
 
 #' National overview: cnt, eui, sqft
