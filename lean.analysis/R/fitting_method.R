@@ -87,11 +87,14 @@ piecewise_linear <- function(y, x, h) {
 #' @param plotType the type of plots: "base_elec", "base_gas", "elec", "gas"
 #' @param id optional, unique identifier of a building, default to "XXXXXXXX"
 #' @param methodName optional, the name of the method
+#' @param plotXLimit optional, the range of x axis, e.g. c(10, 100)
+#' @param plotYLimit optional, the range of y axis, e.g. c(10, 100)
 #' @keywords polynomial
 #' @export
 #' @examples
 #' plot_fit(y=df$`eui_elect`, x=df$`wt_temperatureFmonth`, output, color="red", methodName=NULL)
-plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, methodName) {
+plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, methodName, plotXLimit=NULL,
+                     plotYLimit=NULL) {
   if (missing(id)) {
     id = "XXXXXXXX"
   }
@@ -183,9 +186,14 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
       ggplot2::geom_text(ggplot2::aes(x=label_x_loc, y=label_y_loc,
                                       label=sprintf("base gas: %.2f", resultGas$baseload)), colour=base_gas_color, size=3)
   }
-  p <- p +
-    ggplot2::ylim(c(-1, 18)) +
-    ggplot2::xlim(c(43, 97))
+  if (!is.null(plotXLimit)) {
+    p <- p +
+      ggplot2::xlim(plotXLimit)
+  }
+  if (!is.null(plotYLimit)) {
+    p <- p +
+      ggplot2::ylim(plotYLimit)
+  }
   print(p)
   return(list(img = p, score=fitted_display))
 }

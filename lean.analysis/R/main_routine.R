@@ -18,7 +18,8 @@
 #' @export
 #' @examples
 #' lean_analysis(lat_lon_df, radius=100, limit=5)
-lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, limit=5, id, plotType, debugFlag) {
+lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, limit=5, id, plotType, debugFlag,
+                           plotXLimit, plotYLimit) {
   ## get the years of data to download
   if (missing(id)) {
     id = "XXXXXXXX"
@@ -68,7 +69,7 @@ lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, 
   resultGas <- polynomial_deg_2(y=yGas, x=x)
   fitted_display = plot_fit(yElec=yElec, yGas=yGas, x=x, resultElec=resultElec,
            resultGas=resultGas, plotType=plotType, id=id,
-           methodName="polynomial degree 2")
+           methodName="polynomial degree 2", plotXLimit=plotXLimit, plotYLimit=plotYLimit)
   ggplot2::ggsave(file=sprintf("region_report_img/lean/%s_%s.png", plotType, id), width = 2, height=2, units="in")
   return(fitted_display)
 }
