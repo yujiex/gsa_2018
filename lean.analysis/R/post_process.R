@@ -41,11 +41,13 @@ img2tex <- function(df, prefix, suffix, isDesc, outfilename, topn=16, botn=4) {
 #' @param prefix
 #' @param suffix
 #' @param isDesc whether the sort is descending
+#' @param topn top n records to include
+#' @param botn bottom n records to include
 #' @keywords image to tex
 #' @export
 #' @examples
 #' polynomial_deg_2(y, x)
-generate_lean_tex <- function(plotType, region) {
+generate_lean_tex <- function(plotType, region, topn, botn) {
   df = readr::read_csv(sprintf("csv_FY/%s_lean_score_region_%s.csv", plotType, region)) %>%
     dplyr::rename(`id`=`Building_Number`) %>%
     {.}
@@ -57,5 +59,5 @@ generate_lean_tex <- function(plotType, region) {
   img2tex(df, prefix=sprintf("\\includegraphics[width = 0.24\\textwidth, keepaspectratio]{lean/%s_", plotType),
           suffix=".png}",
           isDesc=TRUE, outfilename=sprintf("region_report_img/%s_region_%s.tex", plotType, region),
-          topn=16, botn=4)
+          topn=topn, botn=botn)
 }

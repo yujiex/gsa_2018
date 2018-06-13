@@ -17,6 +17,9 @@ db.interface::view_names_of_table(dbname = "other_input", tablename = "euas_data
 db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_ecm")
 
 db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>%
+  dplyr::filter(`Building_Number` == "CA0306ZZ") %>%
+    dplyr::select(`eui_total`, `Fiscal_Year`)
+
   readr::write_csv("eui_by_fy_tag.csv")
 
 db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_monthly") %>%
@@ -45,6 +48,19 @@ get_filter_set(category=c("A", "I"), year=2017) %>%
   dplyr::left_join(db.interface::get_lat_lon_df()) %>%
   dplyr::select(-`index`) %>%
   readr::write_csv("csv_FY/powerMapData2017.csv")
+
+
+devtools::load_all("summarise.and.plot")
+get_filter_set(category=c("A", "I"), year=2017, region="9") %>%
+  dplyr::filter(`Building_Type`=="Office") %>%
+  dplyr::select(`Building_Number`, `eui_total`) %>%
+  dplyr::arrange(desc(`eui_total`)) %>%
+  head()
+
+devtools::load_all("summarise.and.plot")
+get_filter_set(category=c("A", "I"), year=2017, region="9") %>%
+  dplyr::group_by(`Building_Type`, `Cat`) %>%
+  dplyr::summarise(`median_eui` = median(`eui_total`), `cnt`=n(), `maximum`=max(`eui_total`))
 
 head(db.interface::get_lat_lon_df())
 
@@ -124,19 +140,13 @@ devtools::load_all("lean.analysis")
 ## plot lean image
 ## maybe add in a whether to redo plotting tag?
 plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 40))
-
 plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60))
 plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60))
-## test save change
-## test save change
 
 devtools::load_all("lean.analysis")
-generate_lean_tex(plotType="gas", region=9)
-
-generate_lean_tex(plotType="elec", region=9)
-
-
-generate_lean_tex(plotType="base", region=9)
+generate_lean_tex(plotType="gas", region=9, topn=20, botn=0)
+generate_lean_tex(plotType="elec", region=9, topn=20, botn=0)
+generate_lean_tex(plotType="base", region=9, topn=16, botn=4)
 
 test_lean_analysis_db()
 
