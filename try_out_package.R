@@ -10,7 +10,9 @@ db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_monthly_with
 
 db.interface::view_names_of_table(dbname = "all", tablename = "eui_by_fy_tag")
 
-db.interface::view_names_of_table(dbname = "other_input", tablename = "PortfolioManager_sheet0_input")
+db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_latlng_2")
+
+db.interface::view_names_of_table(dbname = "other_input", tablename = "euas_database_of_buildings_cmu")
 
 db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_ecm")
 
@@ -39,6 +41,15 @@ get_unique_value_column(dbname="all", tablename="EUAS_type_recode", col="data_so
 ## ---------------------------------------------------------------------------------
 
 devtools::load_all("summarise.and.plot")
+get_filter_set(category=c("A", "I"), year=2017) %>%
+  dplyr::left_join(db.interface::get_lat_lon_df()) %>%
+  dplyr::select(-`index`) %>%
+  readr::write_csv("csv_FY/powerMapData2017.csv")
+
+head(db.interface::get_lat_lon_df())
+
+national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), pal="Set3")
+
 national_overview_facetRegion(category=c("I", "A"), years=c(2015, 2017))
 
 national_overview(category=c("I", "A"), year=2017)
@@ -108,16 +119,24 @@ devtools::load_all("lean.analysis")
 stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(44, 100), plotYLimits=c(1.7, 16.6), minorgrid=seq(2, 14, 2), majorgrid=seq(4, 16, 4))
 ## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(40, 90))
 
+
+devtools::load_all("lean.analysis")
 ## plot lean image
-plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"))
-plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"))
-plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="base", category=c("I", "A"))
+## maybe add in a whether to redo plotting tag?
+plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 40))
+
+plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60))
+plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60))
 ## test save change
 ## test save change
-asdf
+
+devtools::load_all("lean.analysis")
+generate_lean_tex(plotType="gas", region=9)
 
 generate_lean_tex(plotType="elec", region=9)
-generate_lean_tex(plotType="gas", region=9)
+
+
+generate_lean_tex(plotType="base", region=9)
 
 test_lean_analysis_db()
 
