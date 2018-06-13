@@ -222,9 +222,7 @@ remove_old_energy_data <- function() {
 #' @param energy_input required, input column to compute eui
 #' @param eui_output required, output column name
 #' @param sqftcol required, the sqft column
-#' @param mult optional, when energy_input and sqftcol has different resolution,
-#'   adjust the sqftcol so that the output eui is the same resolution as the
-#'   energy_input
+#' @param mult optional, unit conversion multiplier for kBtu
 #' @keywords modify db
 #' @export
 #' @examples
@@ -256,9 +254,11 @@ add_chilled_water_eui <- function() {
     dplyr::mutate(`Total_(kBtu)` = `Electric_(kBtu)` + `Gas_(kBtu)` + `Oil_(kBtu)` + `Steam_(kBtu)` + `Chilled_Water_(kBtu)` + `Other_(kBtu)`) %>%
     dplyr::mutate(`Total_(Cost)` = `Electricity_(Cost)` + `Gas_(Cost)` + `Oil_(Cost)` + `Steam_(Cost)` + `Chilled_Water_(Cost)` + `Other_(Cost)`) %>%
     compute_eui(energy_input = "Chilled_Water_(kBtu)", eui_output = "eui_chilledWater", sqftcol="Gross_Sq.Ft",
-                mult=12) %>%
+                mult=1) %>%
     compute_eui(energy_input = "Other_(kBtu)", eui_output = "eui_other", sqftcol="Gross_Sq.Ft",
-                mult=12) %>%
+                mult=1) %>%
+    compute_eui(energy_input = "Oil_(kBtu)", eui_output = "eui_oil", sqftcol="Gross_Sq.Ft",
+                mult=1) %>%
     dplyr::mutate(`eui_total` = `eui_elec` + `eui_gas` + `eui_steam` + `eui_oil` + `eui_chilledWater` + `eui_other`) %>%
     {.}
   df %>%
