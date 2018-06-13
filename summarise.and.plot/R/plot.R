@@ -237,16 +237,8 @@ gb_agg_ratio <- function(df, groupvar, numerator_var, denominator_var, aggfun, v
     dplyr::summarise_at(vars(one_of(c(numerator_var, denominator_var))), aggfun) %>%
     tidyr::gather_(varname, valuename, numerator_var) %>%
     dplyr::mutate(!!(rlang::sym(valuename)) := !!(rlang::sym(valuename)) / !!(rlang::sym(denominator_var))) %>%
+    dplyr::ungroup() %>%
     {.}
-  df %>%
-    dplyr::select(one_of(c(groupvar, numerator_var, denominator_var, numerator_var))) %>%
-    dplyr::group_by_at(vars(one_of(groupvar))) %>%
-    dplyr::summarise_at(vars(one_of(c(numerator_var, denominator_var))), aggfun) %>%
-    tidyr::gather_(varname, valuename, numerator_var) %>%
-    dplyr::group_by(`Fiscal_Year`) %>%
-    dplyr::summarise_at(vars(one_of(valuename)), aggfun) %>%
-    head() %>%
-    print()
   return(df_group)
 }
 
@@ -452,16 +444,21 @@ national_overview <- function(category, type, year, region, pal_values) {
       dplyr::filter(`Region_No.` == region) %>%
       {.}
   }
+  if (missing(region)) {
+    regionTag = ""
+  } else {
+    regionTag = sprintf(", region %s", region)
+  }
   df = df %>%
     dplyr::mutate(`Region_No.` = factor(`Region_No.`, levels = as.character(1:11))) %>%
     dplyr::mutate(`Cat` = factor(`Cat`, levels=c("I", "A"))) %>%
     {.}
   p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", legendloc = "bottom", xlabel="Fiscal Year",orderByHeight=FALSE,
-               pal_values = pal_values, tit="Building Category Count by Fiscal Year", verbose=FALSE)
+               pal_values = pal_values, tit="Building Category Count by Fiscal Year", verbose=FALSE, labelCutoff=5)
   print(p)
   p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", legendloc = "bottom", xlabel="Fiscal Year",orderByHeight=FALSE,
-               pal_values = pal_values, tit="Building Million Gross_Sq.Ft by Fiscal Year", labelFormat="%.2f",
-               verbose=FALSE, scaler=1e-6)
+               pal_values = pal_values, tit="Building Million Gross_Sq.Ft by Fiscal Year", labelFormat="%.0f",
+               verbose=FALSE, scaler=1e-6, labelCutoff=5)
   print(p)
   if (!missing(year)) {
     df <- df %>%
@@ -472,31 +469,28 @@ national_overview <- function(category, type, year, region, pal_values) {
   if (missing(region)) {
     p = stackbar(df=df, xcol="Region_No.", fillcol="Cat", ylabel="Building Count", xlabel="region",orderByHeight=FALSE,
                 pal_values = pal_values, tit=sprintf("%s Building Category Count by Region (n = %s)", year, nrecord),
-                verbose=FALSE)
+                verbose=FALSE, labelCutoff=5)
     print(p)
     ## ## ## ggsave(file=sprintf("region_report_img/national/cat_cnt_by_region_%s.png", year),
     ## ## ##        width=8, height=4, units="in")
     p = stackbar(df=df, xcol="Region_No.", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft",xlabel="region",
                 orderByHeight=FALSE, pal_values = pal_values,
-                tit=sprintf("%s Building Million Gross_Sq.Ft by Region (n = %s)", year, nrecord), labelFormat="%.2f",
-                verbose=FALSE, scaler=1e-6)
+                tit=sprintf("%s Building Million Gross_Sq.Ft by Region (n = %s)", year, nrecord), labelFormat="%.0f",
+                verbose=FALSE, scaler=1e-6, labelCutoff=5)
+    print(p)
+  } else {
+    p = stackbar(df=df, xcol="Building_Type", fillcol="Cat", ylabel="Building Count", xlabel="Building Type",
+                legendOrient="v", pal_values = pal_values,
+                tit=sprintf("%s Building Category Count by Building Type (n = %s)%s", year, nrecord, regionTag),
+                orderByHeight=TRUE, verbose=FALSE, labelCutoff=5)
+    print(p)
+    p = stackbar(df=df, xcol="Building_Type", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", xlabel="Building Type",
+                legendOrient="v", pal_values = pal_values,
+                tit=sprintf("%s Building Category Million Gross_Sq.Ft by Building Type (n = %s)%s", year, nrecord, regionTag),
+                labelFormat="%.0f",
+                orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, labelCutoff=5)
     print(p)
   }
-  ## ## ## ggsave(file=sprintf("region_report_img/national/sqft_sum_by_region_%s.png", year),
-  ## ## ##        width=8, height=4, units="in")
-  p = stackbar(df=df, xcol="Building_Type", fillcol="Cat", ylabel="Building Count", xlabel="Building Type",
-               legendOrient="v", pal_values = pal_values,
-               tit=sprintf("%s Building Category Count by Building Type (n = %s)", year, nrecord),
-               orderByHeight=TRUE, verbose=FALSE)
-  print(p)
-  p = stackbar(df=df, xcol="Building_Type", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", xlabel="Building Type",
-               legendOrient="v", pal_values = pal_values,
-               tit=sprintf("%s Building Category Million Gross_Sq.Ft by Building Type (n = %s)", year, nrecord),
-               labelFormat="%.2f",
-               orderByHeight=TRUE, verbose=FALSE, scaler=1e-6)
-  print(p)
-  ## ggsave(file=sprintf("region_report_img/national/cat_cnt_by_type_%s.png", year),
-  ##        width=8, height=6, units="in")
 }
 
 #' National overview by years
@@ -535,6 +529,11 @@ national_overview_over_years <- function(category, type, years, region, pal) {
     df <- df %>%
       dplyr::filter(`Region_No.` == region) %>%
       {.}
+  }
+  if (missing(region)) {
+    regionTag = ""
+  } else {
+    regionTag = sprintf(", region %s", region)
   }
   if (missing(pal)) {
     pal="Set3"
@@ -683,44 +682,9 @@ national_overview_over_years <- function(category, type, years, region, pal) {
   ## print(p)
   ## following comment out
   ## p = stackbar(df=df_agg_cost, xcol="Fiscal_Year", fillcol="FuelType", ycol="Cost/sqft", ylabel="Cost/sqft",
-  ##              xlabel="Fiscal_Year", legendloc = "bottom", legendOrient="h", tit="Cost / sqft by year",
+  ##              xlabel="Fiscal Year", legendloc = "bottom", legendOrient="h", tit="Cost / sqft by year",
   ##              orderByHeight=FALSE, labelFormat="%.3f", width=width, verbose=FALSE)
   ## print(p)
-  df_agg_eui_region = gb_agg_ratio(df, groupvar = c("Fiscal_Year", "Region_No."), numerator_var = c("Electric_(kBtu)", "Gas_(kBtu)", "Oil_(kBtu)", "Steam_(kBtu)", "Chilled_Water_(kBtu)"), denominator_var = "Gross_Sq.Ft", aggfun=sum, valuename="kBtu/sqft", varname="FuelType") %>% #
-    dplyr::mutate(`Region_No.` = factor(`Region_No.`, levels = as.character(1:11))) %>%
-    dplyr::mutate(`FuelType` = gsub("_\\(kBtu\\)", "", `FuelType`)) %>%
-    {.}
-    dftemp = df_agg_eui_region %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(`Fiscal_Year` = substr(`Fiscal_Year`, 1, 4)) %>%
-      dplyr::filter(`Fiscal_Year` %in% c(2015, 2017)) %>%
-      {.}
-  print(head(dftemp))
-    ## dfsummary = dftemp %>% dplyr::group_by(`Fiscal_Year`, `Region_No.`) %>%
-    ##   dplyr::select(-`Gross_Sq.Ft`) %>%
-    ##   dplyr::summarise_if(is.numeric, funs(sum)) %>%
-    ##   dplyr::ungroup() %>%
-    ##   tidyr::spread(`Fiscal_Year`, `kBtu/sqft`) %>%
-    ##   dplyr::mutate(`percent_saving` = (`2017` - `2015`) / `2015` * 100) %>%
-    ##   {.}
-        ## readr::write_csv("csv_FY/office_eui.csv")
-    ## dfsummary %>%
-    ## print(knitr::kable(dfsummary))
-    p = dftemp %>%
-      dplyr::group_by(`Fiscal_Year`, `Region_No.`) %>%
-      dplyr::summarise_if(is.numeric, sum) %>%
-      ggplot2::ggplot(ggplot2::aes(x=`Fiscal_Year`, y=`kBtu/sqft`, label=sprintf("%.1f", `kBtu/sqft`))) +
-      ggplot2::geom_bar(stat="identity", position = "stack", width=width) +
-      ## ggplot2::ylab(ylabel) +
-      ## ggplot2::xlab(xlabel) +
-      ggplot2::labs(title="EUI trend by region") +
-      ## ggplot2::geom_text(size=2.5, position = ggplot2::position_stack(vjust = 0.5)) +
-      ggplot2::geom_text(size=2.5) +
-      ggplot2::scale_fill_brewer(palette=pal) +
-      ggplot2::theme(legend.position="bottom") +
-      ggplot2::facet_wrap(~`Region_No.`) +
-      ggplot2::theme()
-    print(p)
   ## this is temp
   ## df %>%
   ##   ggplot2::ggplot(ggplot2::aes(x=`Fiscal_Year`)) +
@@ -748,7 +712,7 @@ national_overview_over_years <- function(category, type, years, region, pal) {
   ##   ## dfsummary %>%
   ##   print(knitr::kable(dfsummary))
   ##   p = dftemp %>%
-  ##     ggplot2::ggplot(ggplot2::aes(x=`Fiscal_Year`, y=`kBtu/sqft`, fill=`FuelType`, label=sprintf("%.1f", `kBtu/sqft`))) +
+  ##     ggplot2::ggplot(ggplot2::aes(x=`Fiscal_Year`, y=`kBtu/sqft`, fill=`FuelType`, label=sprintf("%.0f", `kBtu/sqft`))) +
   ##     ggplot2::geom_bar(stat="identity", position = "stack", width=width) +
   ##     ## ggplot2::ylab(ylabel) +
   ##     ## ggplot2::xlab(xlabel) +
