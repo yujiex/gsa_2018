@@ -10,7 +10,7 @@
 #' @export
 #' @examples
 #' polynomial_deg_2(y, x)
-img2tex <- function(df, prefix, suffix, isDesc, outfilename, topn) {
+img2tex <- function(df, prefix, suffix, isDesc, outfilename, topn=16, botn=4) {
   print(head(df))
   df <- df %>%
     dplyr::mutate(`lines`=paste0(prefix, `id`, suffix)) %>%
@@ -27,8 +27,7 @@ img2tex <- function(df, prefix, suffix, isDesc, outfilename, topn) {
   }
   print(head(df))
   if (!missing(topn)) {
-    df <- df %>%
-      head(n=topn)
+    df <- rbind(head(df, n=topn), tail(df, n=botn))
   }
   df %>%
     dplyr::select(`lines`) %>%
@@ -50,7 +49,13 @@ generate_lean_tex <- function(plotType, region) {
   df = readr::read_csv(sprintf("csv_FY/%s_lean_score_region_%s.csv", plotType, region)) %>%
     dplyr::rename(`id`=`Building_Number`) %>%
     {.}
+  if (plotType != "base") {
+    df <- df %>%
+      dplyr::filter(`score` != 0) %>%
+      {.}
+  }
   img2tex(df, prefix=sprintf("\\includegraphics[width = 0.24\\textwidth, keepaspectratio]{lean/%s_", plotType),
           suffix=".png}",
-          isDesc=TRUE, outfilename=sprintf("region_report_img/%s_region_%s.tex", plotType, region), topn=20)
+          isDesc=TRUE, outfilename=sprintf("region_report_img/%s_region_%s.tex", plotType, region),
+          topn=16, botn=4)
 }
