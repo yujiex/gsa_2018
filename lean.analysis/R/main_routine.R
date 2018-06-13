@@ -143,30 +143,39 @@ test_lean_analysis_db <- function() {
 
 #' Lean analysis for a subset of building
 #'
-#' This function tests the main lean analysis routine, with inputs from the db
+#' This function produces the lean plot included in the regional report
 #' @param region
 #' @param buildingType
 #' @param year
 #' @param plotType "base", "elec", "gas"
 #' @param category a vector of "A", "I", etc.
+#' @param sourceEnergy, optional, whether to use source, instead of site energy
+#' @param topn, optional, produce the topn score building's lean plot
+#' @param botn, optional, produce the botn score building's lean plot
 #' @keywords lean test
 #' @export
 #' @examples
 #' test_lean_analysis_db()
-plot_lean_subset <- function(region, buildingType, year, plotType, category) {
+plot_lean_subset <- function(region, buildingType, year, plotType, category, sourceEnergy=FALSE, plotXLimit=NULL, plotYLimit=NULL, topn=16, botn=4) {
   buildings = db.interface::get_buildings(region=region, buildingType=buildingType, year=year, category=category)
   counter = 1
-  ## buildings <- buildings[(buildings %in% c("CA0000SS", "CA0273ZZ"))]
-  ## for (building in buildings[1:1]) {
-  ## for (building in buildings[(23+14+11):length(buildings)]) {
-  ## for (building in buildings[23+14:length(buildings)]) {
-  ## for (building in buildings[23:length(buildings)]) {
-  ## for (building in c("CA0000OO")) {
   acc=NULL
-  if (file.exists(sprintf("csv_FY/%s_lean_score.csv", plotType))) {
-    dfscore = readr::read_csv(sprintf("csv_FY/%s_lean_score.csv", plotType)) %>%
+  if (missing(region)) {
+    regionTag = ""
+  } else {
+    regionTag = sprintf("_region_%s", region)
+  }
+  summaryFile = sprintf("csv_FY/%s_lean_score%s.csv", plotType, regionTag)
+  if (file.exists(summaryFile)) {
+    print("111111111111111")
+    dfscore = readr::read_csv(summaryFile) %>%
+      ## remove zero consumptions
+      dplyr::filter(`score` != 0) %>%
       dplyr::arrange(desc(`score`)) %>%
-      head(n=20)
+      {.}
+    print(head(dfscore))
+    print(tail(dfscore))
+    dfscore <- rbind(head(dfscore, n=topn), tail(dfscore, n=botn))
     buildings = dfscore$Building_Number
   }
   for (building in buildings) {
@@ -175,20 +184,33 @@ plot_lean_subset <- function(region, buildingType, year, plotType, category) {
                                               cols=c("Fiscal_Year", "Fiscal_Month", "year", "month", "eui_elec", "eui_gas"), building=building) %>%
       dplyr::arrange(-`Fiscal_Year`, -`Fiscal_Month`) %>%
       head(n=36)
+    print(building)
+    print(head(energy))
+    if (sourceEnergy) {
+      print("modify site to source")
+      energy <- energy %>%
+        dplyr::mutate(`eui_elec` = `eui_elec` * 3.14,
+                      `eui_gas` = `eui_gas` * 1.05) %>%
+        {.}
+    }
+    print(head(energy))
     ## print("--------head of energy---------")
     ## print(energy)
     lat_lon_df = db.interface::get_lat_lon_df(building=building)
     ## print("--------head of lat_lon_df---------")
     ## print(head(lat_lon_df))
-    lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE)
+    lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE, plotXLimit=plotXLimit, plotYLimit=plotYLimit)
     ## print("--------lean result---------")
     ## print(lean_result)
     counter = counter + 1
     acc = rbind(acc, data.frame(Building_Number = building, score=lean_result$score))
   }
-  acc %>%
-    dplyr::mutate(type = plotType) %>%
-    readr::write_csv(sprintf("csv_FY/%s_lean_score_region_%s.csv", plotType, region))
+  if (!file.exists(summaryFile)) {
+    print("write to file")
+    acc %>%
+      dplyr::mutate(type = plotType) %>%
+      readr::write_csv(sprintf("csv_FY/%s_lean_score_region_%s.csv", plotType, region))
+  }
 }
 
 #' Lean analysis for a subset of building
@@ -212,7 +234,8 @@ plot_lean_subset <- function(region, buildingType, year, plotType, category) {
 #' @examples
 #' test_lean_analysis_db()
 stacked_fit_plot <- function(region, buildingType, year, category, plotType, method, methodLabel, lowRange,
-                             highRange, debugFlag=FALSE, plotXLimits, plotYLimits, minorgrid, majorgrid) {
+                             highRange, debugFlag=FALSE, plotXLimits, plotYLimits, minorgrid, majorgrid,
+                             sourceEnergy=FALSE) {
   datafile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.csv", plotType, region, methodLabel)
   imagefile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.png", plotType, region, methodLabel)
   print(datafile)
@@ -294,8 +317,14 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
       }
       if (plotType == "elec") {
         y <- df$`eui_elec`
+        if (sourceEnergy) {
+          y <- y * 3.14
+        }
       } else if (plotType == "gas") {
         y <- df$`eui_gas`
+        if (sourceEnergy) {
+          y <- y * 1.05
+        }
       }
       if (sum(y == 0) > 32/36) {
         print(sprintf("too man zero y values for building %s", building))

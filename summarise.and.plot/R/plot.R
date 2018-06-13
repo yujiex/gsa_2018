@@ -19,11 +19,13 @@
 #' @param width optional, the width of the bars
 #' @param verbose if TRUE print data to the output
 #' @param scaler optional, if supplied, scale the input
+#' @param facetNcol optional, number of columns in facet plot
+#' @param labelCutoff optional, upper bound for label to be visible
 #' @keywords query count
 #' @export
 #' @examples
 #' stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", tit="EUAS Building Count By Category")
-stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit, legendloc, legendOrient, pal, pal_values, labelFormat, width, verbose, scaler, facetvar=NULL) {
+stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit, legendloc, legendOrient, pal, pal_values, labelFormat, width, verbose, scaler, facetvar=NULL, facetNcol=NULL, labelCutoff=NULL) {
   ncategory = length(unique(df[[fillcol]]))
   if (missing(labelFormat)) {
     labelFormat = "%s"
@@ -85,6 +87,16 @@ stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit
     if (!missing(verbose) && verbose) {
       print(knitr::kable(dfcount))
     }
+    dfcount
+    if (is.null(labelCutoff)) {
+      dfcount = dfcount %>%
+        dplyr::mutate(`total_label` = `freq`) %>%
+        {.}
+    } else {
+      dfcount = dfcount %>%
+        dplyr::mutate(`total_label` = ifelse(`freq` > labelCutoff, as.character(`freq`), "")) %>%
+        {.}
+    }
     if (orderByHeight) {
       g = ggplot2::ggplot(dfcount, ggplot2::aes_string(x=sprintf("reorder(%s, -freq)", xcol), y="freq", fill=fillcol)) +
         ggplot2::theme()
@@ -141,9 +153,15 @@ stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit
     if (!missing(verbose) && verbose) {
       print(knitr::kable(dfcount))
     }
-    dfcount = dfcount %>%
-      dplyr::mutate(`total_label` = sprintf(labelFormat, `total`)) %>%
-      {.}
+    if (is.null(labelCutoff)) {
+      dfcount = dfcount %>%
+        dplyr::mutate(`total_label` = sprintf(labelFormat, `total`)) %>%
+        {.}
+    } else {
+      dfcount = dfcount %>%
+        dplyr::mutate(`total_label` = ifelse(`total` > labelCutoff, sprintf(labelFormat, `total`), "")) %>%
+        {.}
+    }
     if (orderByHeight) {
       g = ggplot2::ggplot(dfcount, ggplot2::aes_string(x = sprintf("reorder(%s, -total)", xcol), y="total", fill=fillcol)) +
         ggplot2::theme()
@@ -164,16 +182,9 @@ stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit
     ggplot2::xlab(xlabel) +
     ggplot2::labs(title=tit) +
     ggplot2::geom_text(size=3, ggplot2::aes(y=pos, label=barHeightLabel), fontface = "bold", vjust=-0.5) +
+    ggplot2::geom_text(size=2.5, position = ggplot2::position_stack(vjust = 0.5),
+                       ggplot2::aes(label=`total_label`)) +
     ggplot2::theme()
-  if (!missing(ycol)) {
-    g <- g +
-      ggplot2::geom_text(size=2.5, position = ggplot2::position_stack(vjust = 0.5),
-                         ggplot2::aes(label=`total_label`))
-  } else {
-    g <- g +
-      ggplot2::geom_text(size=2.5, position = ggplot2::position_stack(vjust = 0.5),
-                         ggplot2::aes(label=`freq`))
-  }
     ## ggplot2::geom_text(ggplot2::aes(y=mid_y), size=2.5)
   if (!missing(legendloc)) {
     g <- g + ggplot2::theme(legend.position=legendloc)
@@ -188,8 +199,16 @@ stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit
     pal = "Set3"
   }
   if (!is.null(facetvar)) {
-    g <- g +
-      ggplot2::facet_wrap(as.formula(paste("~", facetvar)))
+    if (!is.null(facetNcol)) {
+      g <- g +
+        ggplot2::facet_wrap(as.formula(paste("~", facetvar)), ncol=facetNcol)
+    } else if (!is.null(facetNrow)){
+      g <- g +
+        ggplot2::facet_wrap(as.formula(paste("~", facetvar)), nrow=facetNrow)
+    } else {
+      g <- g +
+        ggplot2::facet_wrap(as.formula(paste("~", facetvar)))
+    }
   }
   if (!missing(pal_values)) {
     g <- g + ggplot2::scale_fill_manual(values=pal_values)
