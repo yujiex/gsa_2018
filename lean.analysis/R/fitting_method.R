@@ -89,12 +89,13 @@ piecewise_linear <- function(y, x, h) {
 #' @param methodName optional, the name of the method
 #' @param plotXLimit optional, the range of x axis, e.g. c(10, 100)
 #' @param plotYLimit optional, the range of y axis, e.g. c(10, 100)
+#' @param xLabelPrefix optional, the prefix of x label
 #' @keywords polynomial
 #' @export
 #' @examples
 #' plot_fit(y=df$`eui_elect`, x=df$`wt_temperatureFmonth`, output, color="red", methodName=NULL)
 plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, methodName, plotXLimit=NULL,
-                     plotYLimit=NULL) {
+                     plotYLimit=NULL, xLabelPrefix="") {
   if (missing(id)) {
     id = "XXXXXXXX"
   }
@@ -128,6 +129,9 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   alpha_base_elec = paleAlpha
   alpha_gas = paleAlpha
   alpha_elec = paleAlpha
+  ## font sizes
+  fitted_display_size = 4
+  theme_text_size = 12
   if (plotType == "base") {
     alpha_base_elec = fullAlpha
     alpha_base_gas = fullAlpha
@@ -150,7 +154,7 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
                           linetype="dashed", color = base_gas_line_color, size=0.5) +
     ggplot2::geom_line(ggplot2::aes(x=xseq, y=yElecSeq + yGasSeq), colour=total_line_color) +
     ggplot2::theme_bw() +
-    ggplot2::theme(text = ggplot2::element_text(size=8))
+    ggplot2::theme(text = ggplot2::element_text(size=theme_text_size))
   ## fill base load
   p <- p +
     ggplot2::geom_ribbon(aes(x=xseq, ymin=0, ymax=resultElec$baseload), fill=base_elec_color,
@@ -175,16 +179,17 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
                              ymax=(yGasSeq + resultElec$baseload)[lowerGas:upperGas]), fill=gas_mk_color,
                          alpha=alpha_gas)
   p <- p +
-    ggplot2::xlab(id) +
+    ggplot2::xlab(paste0(xLabelPrefix, id)) +
     ggplot2::ylab(NULL) +
     ## ggplot2::ylab("kBtu/sqft/mo.") +
-    ggplot2::geom_text(ggplot2::aes(x=mean(c(min(x), max(x))), y=0.7*resultElec$baseload, label=fitted_display), size=4)
+    ggplot2::geom_text(ggplot2::aes(x=mean(c(min(x), max(x))), y=0.7*resultElec$baseload, label=fitted_display), size=fitted_display_size)
   if (plotType == "base") {
     label_x_loc = mean(c(min(x), max(x)))
     label_y_loc = 0.7*resultElec$baseload - 2
-    p <- p +
-      ggplot2::geom_text(ggplot2::aes(x=label_x_loc, y=label_y_loc,
-                                      label=sprintf("base gas: %.2f", resultGas$baseload)), colour=base_gas_color, size=3)
+    ## removed label for base gas load
+    ## p <- p +
+      ## ggplot2::geom_text(ggplot2::aes(x=label_x_loc, y=label_y_loc,
+      ##                                 label=sprintf("base gas: %.2f", resultGas$baseload)), colour=base_gas_color, size=3)
   }
   if (!is.null(plotXLimit)) {
     p <- p +
