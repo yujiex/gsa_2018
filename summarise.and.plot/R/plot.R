@@ -493,6 +493,51 @@ national_overview <- function(category, type, year, region, pal_values) {
   }
 }
 
+#' Potential dollar saving based on median
+#'
+#' This function plots the potential dollar savings based on some median eui
+#' @param category optional, a subset of A, B, C, D, E, I to include
+#' @param type optional, a string (e.g. "Office"), or a string vector (e.g. c("Office", "Courthouse")) of building type
+#' @param years optional, the years to plot
+#' @param region optional, the region to plot
+#' @keywords dollar saving median
+#' @export
+#' @examples
+#' dollar_saving(category=c("I", "A"), year=2017, region="9")
+dollar_saving <- function(category, type, year, region) {
+  df = get_filter_set(category, type, year, region)
+  if (missing(region)) {
+    regionTag = ""
+  } else {
+    regionTag = sprintf(", region %s", region)
+  }
+  p <- df %>%
+    dplyr::select(`Building_Number`, `Fiscal_Year`, `Cat`, `Building_Type`, `eui_total`, `Total_(Cost)`, `Gross_Sq.Ft`, `Total_(kBtu)`) %>%
+    dplyr::group_by(`Cat`, `Building_Type`, `Fiscal_Year`) %>%
+    dplyr::mutate(`eui_median` = median(`eui_total`)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(`Potential_Saving` = (`eui_total` - `eui_median`) * `Gross_Sq.Ft` * (`Total_(Cost)` / `Total_(kBtu)`)) %>%
+    dplyr::mutate(`Potential_Saving` = `Potential_Saving` * 1e-6) %>%
+    dplyr::mutate(`Building_Number` = ifelse(`Cat` == "I", sprintf("(I) %s", `Building_Number`), `Building_Number`)) %>%
+      ## readr::write_csv(sprintf("csv_FY/dollar_saving_own_type_median_%s_region%s.csv", year, region))
+    ggplot2::ggplot(aes(x = reorder(`Building_Number`, -`Potential_Saving`), y=`Potential_Saving`)) +
+    ggplot2::geom_bar(stat="identity") +
+    ## ggplot2::facet_grid(~ `Building_Type`) +
+    ggplot2::coord_flip() +
+    ggplot2::ylab("Million Dollar") +
+    ggplot2::xlab("Building Number") +
+    ggplot2::ggtitle(sprintf("Potential dollar saving%s", regionTag)) +
+    ggplot2::theme_bw()
+    ## head() %>%
+  print(p)
+  if (missing(region)) {
+    ggsave(file="region_report_img/regional/potential_dollar")
+  } else {
+    ggsave(file=sprintf("region_report_img/regional/potential_dollar_region_%s.png", region), width=5, height=8,
+          units = "in")
+  }
+}
+
 #' National overview by years
 #'
 #' This function plots kbtu and cost per sqft by years
