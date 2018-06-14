@@ -141,9 +141,10 @@ stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "
 devtools::load_all("lean.analysis")
 ## plot lean image
 ## maybe add in a whether to redo plotting tag?
-plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 40))
-plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60))
-plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60))
+plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60), topn=16, botn=4)
+
+plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 40), topn=20, botn=0)
+plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60), topn=20, botn=0)
 
 devtools::load_all("lean.analysis")
 generate_lean_tex(plotType="gas", region=9, topn=20, botn=0)
