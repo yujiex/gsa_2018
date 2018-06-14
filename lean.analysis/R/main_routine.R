@@ -14,12 +14,13 @@
 #' @param id optional, a unique identifier for a building, used to join other static data
 #' @param plotType optional, "base", "elec", "gas"
 #' @param debugFlag optional, flag of debugging, with temp file saved to db_build_temp_csv
+#' @param xLabelPrefix optional, the prefix of x label
 #' @keywords lean
 #' @export
 #' @examples
 #' lean_analysis(lat_lon_df, radius=100, limit=5)
 lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, limit=5, id, plotType, debugFlag,
-                           plotXLimit, plotYLimit) {
+                           plotXLimit, plotYLimit, xLabelPrefix) {
   ## get the years of data to download
   if (missing(id)) {
     id = "XXXXXXXX"
@@ -69,7 +70,7 @@ lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, 
   resultGas <- polynomial_deg_2(y=yGas, x=x)
   fitted_display = plot_fit(yElec=yElec, yGas=yGas, x=x, resultElec=resultElec,
            resultGas=resultGas, plotType=plotType, id=id,
-           methodName="polynomial degree 2", plotXLimit=plotXLimit, plotYLimit=plotYLimit)
+           methodName="polynomial degree 2", plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=xLabelPrefix)
   ggplot2::ggsave(file=sprintf("region_report_img/lean/%s_%s.png", plotType, id), width = 2, height=2, units="in")
   return(fitted_display)
 }
@@ -181,10 +182,11 @@ plot_lean_subset <- function(region, buildingType, year, plotType, category, sou
   for (building in buildings) {
     ## print(sprintf("plot %s %s ---------------", counter, building))
     energy = db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly",
-                                              cols=c("Fiscal_Year", "Fiscal_Month", "year", "month", "eui_elec", "eui_gas"), building=building) %>%
+                                              cols=c("Fiscal_Year", "Fiscal_Month", "year", "month", "eui_elec", "eui_gas", "Cat"), building=building) %>%
       dplyr::arrange(-`Fiscal_Year`, -`Fiscal_Month`) %>%
       head(n=36)
     print(building)
+    prefix = ifelse(energy$Cat[[1]] == "I", "(I) ", "")
     print(head(energy))
     if (sourceEnergy) {
       print("modify site to source")
@@ -199,7 +201,7 @@ plot_lean_subset <- function(region, buildingType, year, plotType, category, sou
     lat_lon_df = db.interface::get_lat_lon_df(building=building)
     ## print("--------head of lat_lon_df---------")
     ## print(head(lat_lon_df))
-    lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE, plotXLimit=plotXLimit, plotYLimit=plotYLimit)
+    lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE, plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=prefix)
     ## print("--------lean result---------")
     ## print(lean_result)
     counter = counter + 1
