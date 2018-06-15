@@ -99,7 +99,10 @@ library(ggplot2)
 devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
 devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
 setwd("/Users/yujiex/Dropbox/gsa_2017/")
+# for (r in as.character(1:11)) {
+#   dollar_saving(category=c("I", "A"), year=2017, region=r, method="own")
+# }
 for (r in as.character(1:11)) {
-  dollar_saving(category=c("I", "A"), year=2017, region=r)
+  dollar_saving(category=c("I", "A"), year=2017, region=r, method="cbecs")
 }
 ```
