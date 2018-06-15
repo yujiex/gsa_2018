@@ -523,6 +523,7 @@ dollar_saving <- function(category, type, year, region, method="own") {
       dplyr::select(`Building_Number`, `Fiscal_Year`, `Cat`, `Building_Type`, `eui_total`, `Total_(Cost)`, `Gross_Sq.Ft`, `Total_(kBtu)`) %>%
       dplyr::group_by(`Cat`, `Building_Type`, `Fiscal_Year`) %>%
       dplyr::summarise(`eui_median` = median(`eui_total`)) %>%
+      dplyr::mutate(`region`=region) %>%
       readr::write_csv(sprintf("csv_FY/eui_median_region_%s.csv", region))
   } else if (method == "cbecs") {
     ## read median table of cbecs
@@ -559,6 +560,37 @@ dollar_saving <- function(category, type, year, region, method="own") {
     ggsave(file=sprintf("region_report_img/regional/%s_median_potential_dollar_region_%s.png", method, region),
            width=5, height=8, units = "in")
   }
+}
+
+#' Summary table own median vs cbecs median
+#'
+#' This function generates a data frame with building type, cbecs median, region 1 median, ..., region 11 median
+#' @keywords median summary
+#' @export
+#' @examples
+#' dollar_saving(category=c("I", "A"), year=2017, region="9")
+median_summary <- function() {
+  files = list.files(path="csv_FY/", pattern="eui_median_region_*")
+  print(files)
+  acc <- lapply(files, function(f) {
+    df <- readr::read_csv(sprintf("csv_FY/%s", f)) %>%
+      as.data.frame() %>%
+      {.}
+  })
+  allregion = do.call(rbind, acc) %>%
+    dplyr::mutate(`region` = sprintf("region_%s_median", region)) %>%
+    tidyr::spread(region, eui_median) %>%
+    dplyr::ungroup() %>%
+    {.}
+  dfNational = readr::read_csv("csv_FY/national_median.csv") %>%
+    as.data.frame() %>%
+    na.omit() %>%
+    dplyr::rename(`cbecs_median`=`eui_median`) %>%
+    {.}
+  dfNational%>%
+    dplyr::right_join(allregion, by="Building_Type") %>%
+    dplyr::arrange(`Building_Type`, `Cat`) %>%
+    readr::write_csv("csv_FY/median_cmp.csv")
 }
 
 #' National overview by years

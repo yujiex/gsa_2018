@@ -65,7 +65,8 @@ get_filter_set(category=c("A", "I"), year=2017, region="9") %>%
   dplyr::summarise(`median_eui` = median(`eui_total`), `cnt`=n(), `maximum`=max(`eui_total`))
 
 devtools::load_all("summarise.and.plot")
-dollar_saving(category=c("I", "A"), year=2017, region="9", method="own")
+median_summary()
+## dollar_saving(category=c("I", "A"), year=2017, region="9", method="own")
 ## dollar_saving(category=c("I", "A"), year=2017, region="9", method="cbecs")
 
 head(db.interface::get_lat_lon_df())
