@@ -41,6 +41,8 @@ get_unique_value_column(dbname="all", tablename="EUAS_ecm", col="high_level_ECM"
 
 get_unique_value_column(dbname="all", tablename="EUAS_type_recode", col="data_source")
 
+get_unique_value_column(dbname="all", tablename="EUAS_type_recode", col="Building_Type")
+
 ## ---------------------------------------------------------------------------------
 
 devtools::load_all("summarise.and.plot")
@@ -63,7 +65,8 @@ get_filter_set(category=c("A", "I"), year=2017, region="9") %>%
   dplyr::summarise(`median_eui` = median(`eui_total`), `cnt`=n(), `maximum`=max(`eui_total`))
 
 devtools::load_all("summarise.and.plot")
-dollar_saving(category=c("I", "A"), year=2017, region="9")
+dollar_saving(category=c("I", "A"), year=2017, region="9", method="own")
+## dollar_saving(category=c("I", "A"), year=2017, region="9", method="cbecs")
 
 head(db.interface::get_lat_lon_df())
 
@@ -116,7 +119,7 @@ buildings = db.interface::get_buildings(region=9, buildingType="Office", year=20
 
 load(file="~/Dropbox/gsa_2017/get.noaa.weather/data/isdData.rda")
 
-evtools::load_all("get.noaa.weather")
+devtools::load_all("get.noaa.weather")
 
 view_isd_stations_year(isd_data=isd_data, year=2015, latitude=33.560347, longitude=-117.713329, zoom=10)
 

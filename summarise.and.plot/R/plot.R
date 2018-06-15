@@ -500,41 +500,64 @@ national_overview <- function(category, type, year, region, pal_values) {
 #' @param type optional, a string (e.g. "Office"), or a string vector (e.g. c("Office", "Courthouse")) of building type
 #' @param years optional, the years to plot
 #' @param region optional, the region to plot
+#' @param reference optional, cbecs, own, or pm
 #' @keywords dollar saving median
 #' @export
 #' @examples
 #' dollar_saving(category=c("I", "A"), year=2017, region="9")
-dollar_saving <- function(category, type, year, region) {
+dollar_saving <- function(category, type, year, region, method="own") {
   df = get_filter_set(category, type, year, region)
   if (missing(region)) {
     regionTag = ""
   } else {
     regionTag = sprintf(", region %s", region)
   }
-  p <- df %>%
-    dplyr::select(`Building_Number`, `Fiscal_Year`, `Cat`, `Building_Type`, `eui_total`, `Total_(Cost)`, `Gross_Sq.Ft`, `Total_(kBtu)`) %>%
-    dplyr::group_by(`Cat`, `Building_Type`, `Fiscal_Year`) %>%
-    dplyr::mutate(`eui_median` = median(`eui_total`)) %>%
-    dplyr::ungroup() %>%
+  if (method == "own") {
+    df <- df %>%
+      dplyr::select(`Building_Number`, `Fiscal_Year`, `Cat`, `Building_Type`, `eui_total`, `Total_(Cost)`, `Gross_Sq.Ft`, `Total_(kBtu)`) %>%
+      dplyr::group_by(`Cat`, `Building_Type`, `Fiscal_Year`) %>%
+      dplyr::mutate(`eui_median` = median(`eui_total`)) %>%
+      dplyr::ungroup() %>%
+      {.}
+    df %>%
+      dplyr::select(`Building_Number`, `Fiscal_Year`, `Cat`, `Building_Type`, `eui_total`, `Total_(Cost)`, `Gross_Sq.Ft`, `Total_(kBtu)`) %>%
+      dplyr::group_by(`Cat`, `Building_Type`, `Fiscal_Year`) %>%
+      dplyr::summarise(`eui_median` = median(`eui_total`)) %>%
+      readr::write_csv(sprintf("csv_FY/eui_median_region_%s.csv", region))
+  } else if (method == "cbecs") {
+    ## read median table of cbecs
+    df_median = readr::read_csv("csv_FY/national_medial.csv") %>%
+      na.omit() %>%
+      dplyr::select(-`PM_type`) %>%
+      {.}
+    df <- df %>%
+      dplyr::left_join(df_median, by="Building_Type") %>%
+      {.}
+    df %>%
+      readr::write_csv(sprintf("csv_FY/join_pm_median_%s_region%s.csv", year, region))
+  }
+  df <- df %>%
     dplyr::mutate(`Potential_Saving` = (`eui_total` - `eui_median`) * `Gross_Sq.Ft` * (`Total_(Cost)` / `Total_(kBtu)`)) %>%
     dplyr::mutate(`Potential_Saving` = `Potential_Saving` * 1e-6) %>%
     dplyr::mutate(`Building_Number` = ifelse(`Cat` == "I", sprintf("(I) %s", `Building_Number`), `Building_Number`)) %>%
       ## readr::write_csv(sprintf("csv_FY/dollar_saving_own_type_median_%s_region%s.csv", year, region))
+    {.}
+  p <- df %>%
     ggplot2::ggplot(aes(x = reorder(`Building_Number`, -`Potential_Saving`), y=`Potential_Saving`)) +
     ggplot2::geom_bar(stat="identity") +
     ## ggplot2::facet_grid(~ `Building_Type`) +
     ggplot2::coord_flip() +
     ggplot2::ylab("Million Dollar") +
     ggplot2::xlab("Building Number") +
-    ggplot2::ggtitle(sprintf("Potential dollar saving%s", regionTag)) +
+    ggplot2::ggtitle(sprintf("Potential dollar saving%s (%s)", regionTag, method)) +
     ggplot2::theme_bw()
     ## head() %>%
   print(p)
   if (missing(region)) {
-    ggsave(file="region_report_img/regional/potential_dollar")
+    ggsave(sprintf(file="region_report_img/regional/%s_median_potential_dollar_", method))
   } else {
-    ggsave(file=sprintf("region_report_img/regional/potential_dollar_region_%s.png", region), width=5, height=8,
-          units = "in")
+    ggsave(file=sprintf("region_report_img/regional/%s_median_potential_dollar_region_%s.png", method, region),
+           width=5, height=8, units = "in")
   }
 }
 
