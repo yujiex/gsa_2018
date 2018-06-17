@@ -533,7 +533,7 @@ dollar_saving <- function(category, type, year, region, method="own") {
     df %>%
       dplyr::select(`Building_Number`, `Fiscal_Year`, `Cat`, `Building_Type`, `eui_total`, `Total_(Cost)`, `Gross_Sq.Ft`, `Total_(kBtu)`) %>%
       dplyr::group_by(`Cat`, `Building_Type`, `Fiscal_Year`) %>%
-      dplyr::summarise(`eui_median` = median(`eui_total`)) %>%
+      dplyr::summarise(`eui_median` = median(`eui_total`), `building_count`=n()) %>%
       dplyr::mutate(`region`=region) %>%
       readr::write_csv(sprintf("csv_FY/eui_median_region_%s.csv", region))
   } else if (method == "cbecs") {
@@ -588,11 +588,24 @@ median_summary <- function() {
       as.data.frame() %>%
       {.}
   })
-  allregion = do.call(rbind, acc) %>%
+  allregion_median = do.call(rbind, acc) %>%
     dplyr::mutate(`region` = sprintf("region_%s_median", region)) %>%
+    dplyr::select(-`building_count`) %>%
     tidyr::spread(region, eui_median) %>%
     dplyr::ungroup() %>%
     {.}
+  print(head(allregion_median))
+  allregion_count = do.call(rbind, acc) %>%
+    dplyr::mutate(`region` = sprintf("region_%s_count", region)) %>%
+    dplyr::select(-`eui_median`) %>%
+    tidyr::spread(region, building_count) %>%
+    dplyr::ungroup() %>%
+    {.}
+  print(head(allregion_count))
+  allregion = allregion_median %>%
+    dplyr::left_join(allregion_count) %>%
+    {.}
+  print(head(allregion))
   dfNational = readr::read_csv("csv_FY/national_median.csv") %>%
     as.data.frame() %>%
     na.omit() %>%

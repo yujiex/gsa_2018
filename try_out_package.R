@@ -66,7 +66,10 @@ get_filter_set(category=c("A", "I"), year=2017, region="9") %>%
 
 devtools::load_all("summarise.and.plot")
 median_summary()
-## dollar_saving(category=c("I", "A"), year=2017, region="9", method="own")
+
+for (region in as.character(1:11)) {
+  dollar_saving(category=c("I", "A"), year=2017, region=region, method="own")
+}
 ## dollar_saving(category=c("I", "A"), year=2017, region="9", method="cbecs")
 
 head(db.interface::get_lat_lon_df())
