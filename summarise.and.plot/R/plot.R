@@ -295,8 +295,8 @@ national_overview_facetRegion <- function(category, type, years, region) {
     p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", xlabel="Fiscal Year",orderByHeight=FALSE,legendOrient = "v",legendloc = "bottom",
                 pal_values = pal_values, tit="Building Count by Region and Category, 2015 vs 2017", verbose=FALSE, facetvar="Region_No.", facetNcol=11, labelCutoff=10)
     print(p)
-    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", xlabel="Fiscal Year",orderByHeight=FALSE,legendOrient = "v",legendloc = "bottom",
-                pal_values = pal_values, tit="Building Million Gross_Sq.Ft by Region and Category, 2015 vs 2017", labelFormat="%.0f",
+    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross Sqft", xlabel="Fiscal Year",orderByHeight=FALSE,legendOrient = "v",legendloc = "bottom",
+                pal_values = pal_values, tit="Building Million Gross Sqft by Region and Category, 2015 vs 2017", labelFormat="%.0f",
                 verbose=FALSE, scaler=1e-6, facetvar="Region_No.", facetNcol=11, labelCutoff=5)
     print(p)
     p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", xlabel="Fiscal Year",
@@ -304,9 +304,9 @@ national_overview_facetRegion <- function(category, type, years, region) {
                  tit=sprintf("Building Count by Category and Building Type, 2015 vs 2017%s", regionTag),
                  orderByHeight=FALSE, verbose=FALSE, facetvar="Building_Type", facetNcol=length(unique(df$`Building_Type`)), labelCutoff=5)
     print(p)
-    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", xlabel="Building Type",
+    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross Sqft", xlabel="Building Type",
                  legendOrient="v", pal_values = pal_values,legendloc = "bottom",
-                 tit=sprintf("Building Million Gross_Sq.Ft by Category and Building Type%s", regionTag),
+                 tit=sprintf("Building Million Gross Sqft by Category and Building Type%s", regionTag),
                  labelFormat="%.0f",
                  orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, facetvar="Building_Type", facetNcol=length(unique(df$`Building_Type`)), labelCutoff=1)
     print(p)
@@ -359,9 +359,9 @@ national_overview_facetRegion <- function(category, type, years, region) {
                 tit=sprintf("Building Count by Category and Building Type, 2015 vs 2017%s", regionTag),
                 orderByHeight=TRUE, verbose=FALSE, facetvar="Building_Type", facetNcol=length(unique(df$`Building_Type`)), labelCutoff=5)
     print(p)
-    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", xlabel="Building Type",
+    p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross Sqft", xlabel="Building Type",
                  legendOrient="v", pal_values = pal_values,legendloc = "bottom",
-                tit=sprintf("Building Million Gross_Sq.Ft by Category and Building Type%s", regionTag),
+                tit=sprintf("Building Million Gross Sqft by Category and Building Type%s", regionTag),
                 labelFormat="%.0f",
                 orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, facetvar="Building_Type", facetNcol=length(unique(df$`Building_Type`)), labelCutoff=1)
     print(p)
@@ -456,8 +456,8 @@ national_overview <- function(category, type, year, region, pal_values) {
   p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", legendloc = "bottom", xlabel="Fiscal Year",orderByHeight=FALSE,
                pal_values = pal_values, tit="Building Category Count by Fiscal Year", verbose=FALSE, labelCutoff=5)
   print(p)
-  p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", legendloc = "bottom", xlabel="Fiscal Year",orderByHeight=FALSE,
-               pal_values = pal_values, tit="Building Million Gross_Sq.Ft by Fiscal Year", labelFormat="%.0f",
+  p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross Sqft", legendloc = "bottom", xlabel="Fiscal Year",orderByHeight=FALSE,
+               pal_values = pal_values, tit="Building Million Gross Sqft by Fiscal Year", labelFormat="%.0f",
                verbose=FALSE, scaler=1e-6, labelCutoff=5)
   print(p)
   if (!missing(year)) {
@@ -473,24 +473,35 @@ national_overview <- function(category, type, year, region, pal_values) {
     print(p)
     ## ## ## ggsave(file=sprintf("region_report_img/national/cat_cnt_by_region_%s.png", year),
     ## ## ##        width=8, height=4, units="in")
-    p = stackbar(df=df, xcol="Region_No.", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft",xlabel="region",
+    p = stackbar(df=df, xcol="Region_No.", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross Sqft",xlabel="region",
                 orderByHeight=FALSE, pal_values = pal_values,
-                tit=sprintf("%s Building Million Gross_Sq.Ft by Region (n = %s)", year, nrecord), labelFormat="%.0f",
+                tit=sprintf("%s Building Million Gross Sqft by Region (n = %s)", year, nrecord), labelFormat="%.0f",
                 verbose=FALSE, scaler=1e-6, labelCutoff=5)
     print(p)
-  } else {
-    p = stackbar(df=df, xcol="Building_Type", fillcol="Cat", ylabel="Building Count", xlabel="Building Type",
-                legendOrient="v", pal_values = pal_values,
-                tit=sprintf("%s Building Category Count by Building Type (n = %s)%s", year, nrecord, regionTag),
-                orderByHeight=TRUE, verbose=FALSE, labelCutoff=5)
-    print(p)
-    p = stackbar(df=df, xcol="Building_Type", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross_Sq.Ft", xlabel="Building Type",
-                legendOrient="v", pal_values = pal_values,
-                tit=sprintf("%s Building Category Million Gross_Sq.Ft by Building Type (n = %s)%s", year, nrecord, regionTag),
-                labelFormat="%.0f",
-                orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, labelCutoff=5)
-    print(p)
   }
+  if (missing(region)) {
+    cutoff=13
+  } else {
+    ## fixme:may need a different cutoff for each region
+    cutoff=5
+  }
+  p = stackbar(df=df, xcol="Building_Type", fillcol="Cat", ylabel="Building Count", xlabel="Building Type",
+              legendOrient="v", pal_values = pal_values,
+              tit=sprintf("%s Building Category Count by Building Type (n = %s)%s", year, nrecord, regionTag),
+              orderByHeight=TRUE, verbose=FALSE, labelCutoff=cutoff)
+  print(p)
+  if (missing(region)) {
+    cutoff=40
+  } else {
+    ## fixme:may need a different cutoff for each region
+    cutoff=5
+  }
+  p = stackbar(df=df, xcol="Building_Type", fillcol="Cat", ycol="Gross_Sq.Ft", ylabel="Million Gross Sqft", xlabel="Building Type",
+              legendOrient="v", pal_values = pal_values,
+              tit=sprintf("%s Building Category Million Gross Sqft by Building Type (n = %s)%s", year, nrecord, regionTag),
+              labelFormat="%.0f",
+              orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, labelCutoff=cutoff)
+  print(p)
 }
 
 #' Potential dollar saving based on median
