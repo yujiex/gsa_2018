@@ -31,7 +31,9 @@ db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>
 
 devtools::load_all("db.interface")
 ## add_quality_tag_energy()
-main_db_build()
+## main_db_build()
+## get_ship_db()
+join_source_latlng()
 
 db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_monthly") %>%
   dplyr::filter(Fiscal_Year == 2016) %>%
