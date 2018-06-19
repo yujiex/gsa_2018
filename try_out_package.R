@@ -70,9 +70,30 @@ devtools::load_all("summarise.and.plot")
 median_summary()
 
 for (region in as.character(1:11)) {
-  dollar_saving(category=c("I", "A"), year=2017, region=region, method="own")
+  dollar_saving(category=c("I", "A"), year=2017, region=region, method="hybrid")
 }
-## dollar_saving(category=c("I", "A"), year=2017, region="9", method="cbecs")
+
+devtools::load_all("summarise.and.plot")
+dollar_saving(category=c("I", "A"), year=2017, region="9", method="hybrid", legendloc="bottom")
+
+devtools::load_all("summarise.and.plot")
+dollar_saving(category=c("I", "A"), year=2017, region="9", method="own")
+
+df1 = readr::read_csv("csv_FY/dollar_saving_own_median_2017_region9.csv") %>%
+  dplyr::rename(`eui_median_own`=`eui_median`,
+                `Potential_Saving_own`=`Potential_Saving`,
+                ) %>%
+  {.}
+df2 = readr::read_csv("csv_FY/dollar_saving_cbecs_median_2017_region9.csv") %>%
+  dplyr::rename(`eui_median_cbecs`=`eui_median`,
+                `Potential_Saving_cbecs`=`Potential_Saving`,
+                ) %>%
+  {.}
+
+df1 %>%
+  dplyr::full_join(df2, by=c("Building_Number", "eui_total")) %>%
+  dplyr::arrange(desc(`Potential_Saving_cbecs`)) %>%
+  readr::write_csv("csv_FY/cmp_single_building_dollar_saving.csv")
 
 head(db.interface::get_lat_lon_df())
 
