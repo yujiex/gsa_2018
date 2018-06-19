@@ -6,24 +6,31 @@ db.interface::get_all_tables(dbname="other_input")
 
 db.interface::view_head_of_table(dbname = "all", tablename = "EUAS_monthly")[,5:10]
 
-db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_monthly_with_type")
+db.interface::view_names_of_table(dbname = "other_input", tablename = "euas_database_of_buildings_cmu")
 
 db.interface::view_names_of_table(dbname = "all", tablename = "eui_by_fy_tag")
 
-db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_latlng_2")
+db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_address")
 
-db.interface::view_names_of_table(dbname = "other_input", tablename = "euas_database_of_buildings_cmu")
+db.interface::view_head_of_table(dbname = "all", tablename = "EUAS_latlng_2")
+
+dbname="all"
+tablename="EUAS_latlng_2"
+colname="source"
+db.interface::view_names_of_table(dbname = dbname, tablename = tablename)
+get_unique_value_column(dbname = dbname, tablename = tablename, col=colname)
 
 db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_ecm")
+
+db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_type")
 
 db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>%
   dplyr::filter(`Building_Number` == "CA0306ZZ") %>%
     dplyr::select(`eui_total`, `Fiscal_Year`)
 
-  readr::write_csv("eui_by_fy_tag.csv")
-
-db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_monthly") %>%
-  readr::write_csv("EUAS_monthly.csv")
+db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_address") %>%
+  dplyr::filter(`source`=="Entire_GSA_Building_Portfolio_input") %>%
+    head()
 
 db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>%
   dplyr::filter(`Region_No.`=="9", `Gross_Sq.Ft`==0) %>%
@@ -41,6 +48,7 @@ db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_monthly") %>%
 
 get_unique_value_column(dbname="all", tablename="EUAS_ecm", col="high_level_ECM")
 
+
 get_unique_value_column(dbname="all", tablename="EUAS_type_recode", col="data_source")
 
 get_unique_value_column(dbname="all", tablename="EUAS_type_recode", col="Building_Type")
@@ -53,6 +61,11 @@ get_filter_set(category=c("A", "I"), year=2017) %>%
   dplyr::select(-`index`) %>%
   readr::write_csv("csv_FY/powerMapData2017.csv")
 
+devtools::load_all("summarise.and.plot")
+get_filter_set(category=c("A", "I"), year=2017) %>%
+  dplyr::group_by(`Building_Type`, `Cat`) %>%
+  dplyr::summarise(`eui_median` = median(`eui_total`), cnt = n()) %>%
+  {.}
 
 devtools::load_all("summarise.and.plot")
 get_filter_set(category=c("A", "I"), year=2017, region="9") %>%
