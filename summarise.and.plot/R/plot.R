@@ -511,12 +511,15 @@ national_overview <- function(category, type, year, region, pal_values) {
 #' @param type optional, a string (e.g. "Office"), or a string vector (e.g. c("Office", "Courthouse")) of building type
 #' @param years optional, the years to plot
 #' @param region optional, the region to plot
-#' @param reference optional, cbecs, own, or pm
+#' @param reference optional, cbecs, own, or hybrid
+#' @param topn optional, plot top n records
+#' @param botn optional, plot bottom n records
+#' @param legendloc optional, default to bottom
 #' @keywords dollar saving median
 #' @export
 #' @examples
 #' dollar_saving(category=c("I", "A"), year=2017, region="9")
-dollar_saving <- function(category, type, year, region, method="own") {
+dollar_saving <- function(category, type, year, region, method="own", topn=10, botn=10, legendloc="bottom") {
   df = get_filter_set(category, type, year, region)
   if (missing(region)) {
     regionTag = ""
@@ -538,7 +541,7 @@ dollar_saving <- function(category, type, year, region, method="own") {
       readr::write_csv(sprintf("csv_FY/eui_median_region_%s.csv", region))
   } else if (method == "cbecs") {
     ## read median table of cbecs
-    df_median = readr::read_csv("csv_FY/national_medial.csv") %>%
+    df_median = readr::read_csv("csv_FY/national_median.csv") %>%
       na.omit() %>%
       dplyr::select(-`PM_type`) %>%
       {.}
@@ -547,22 +550,53 @@ dollar_saving <- function(category, type, year, region, method="own") {
       {.}
     df %>%
       readr::write_csv(sprintf("csv_FY/join_pm_median_%s_region%s.csv", year, region))
+  } else if (method == "hybrid") {
+    df_median = readr::read_csv("csv_FY/hybrid_gsa_national_cbecs_median.csv") %>%
+      na.omit() %>%
+      dplyr::select(-`source`) %>%
+      {.}
+    df <- df %>%
+      dplyr::left_join(df_median, by=c("Building_Type", "Cat")) %>%
+      {.}
   }
   df <- df %>%
     dplyr::mutate(`Potential_Saving` = (`eui_total` - `eui_median`) * `Gross_Sq.Ft` * (`Total_(Cost)` / `Total_(kBtu)`)) %>%
     dplyr::mutate(`Potential_Saving` = `Potential_Saving` * 1e-6) %>%
     dplyr::mutate(`Building_Number` = ifelse(`Cat` == "I", sprintf("(I) %s", `Building_Number`), `Building_Number`)) %>%
-      ## readr::write_csv(sprintf("csv_FY/dollar_saving_own_type_median_%s_region%s.csv", year, region))
+    dplyr::arrange(desc(`Potential_Saving`)) %>%
     {.}
+  df %>%
+    dplyr::select(`Building_Number`, `Building_Type`, `eui_total`, `eui_median`, `Potential_Saving`) %>%
+    readr::write_csv(sprintf("csv_FY/dollar_saving_%s_median_%s_region%s.csv", method, year, region))
+  df %>%
+    dplyr::select(`Building_Number`, `Building_Type`, `eui_total`, `eui_median`, `Potential_Saving`) %>%
+    head() %>%
+    print()
+  ## get the default palette
+  pal_values <- scales::hue_pal()(2)
+  dfTop <- df %>%
+    dplyr::filter(`Potential_Saving` > 0) %>%
+    top_n(topn) %>%
+    {.}
+  dfBottom <- df %>%
+    dplyr::filter(`Potential_Saving` <= 0) %>%
+    top_n(n=(-1)*botn) %>%
+    {.}
+  df <- rbind(dfTop, dfBottom)
   p <- df %>%
-    ggplot2::ggplot(aes(x = reorder(`Building_Number`, -`Potential_Saving`), y=`Potential_Saving`)) +
+    ## na.omit() %>%
+    dplyr::mutate(`Status` = ifelse(`Potential_Saving` <= 0, "Doing Fine", "Needs Attention")) %>%
+    ggplot2::ggplot(aes(x = reorder(`Building_Number`, `Potential_Saving`), y=`Potential_Saving`,
+                        fill=`Status`)) +
     ggplot2::geom_bar(stat="identity") +
-    ## ggplot2::facet_grid(~ `Building_Type`) +
     ggplot2::coord_flip() +
     ggplot2::ylab("Million Dollar") +
     ggplot2::xlab("Building Number") +
     ggplot2::ggtitle(sprintf("Potential dollar saving%s (%s)", regionTag, method)) +
-    ggplot2::theme_bw()
+    ## reverse the defulat color palette
+    ggplot2::scale_fill_manual(values = rev(pal_values)) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(legend.position=legendloc)
     ## head() %>%
   print(p)
   if (missing(region)) {
