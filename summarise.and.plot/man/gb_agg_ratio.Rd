@@ -21,7 +21,7 @@ This function first group by some variable A, compute some aggregation of the
 numerator variables, take ratio of each numerator variables with the denominator_var
 }
 \examples{
-ss(df, groupvar = "Fiscal_Year", numerator_var = c("Electricity_(Cost)", "Gas_(kBtu)", "Oil_(kBtu)", "Steam__(kBtu)", "Chilled_Water_(kBtu)"), denominator_var = "Gross_Sq.Ft")
+gb_agg_ratio(df, groupvar = "Fiscal_Year", numerator_var = c("Electricity_(Cost)", "Gas_(kBtu)", "Oil_(kBtu)", "Steam__(kBtu)", "Chilled_Water_(kBtu)"), denominator_var = "Gross_Sq.Ft")
 }
 \keyword{by}
 \keyword{group}

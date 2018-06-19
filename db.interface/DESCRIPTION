@@ -12,5 +12,6 @@ Imports:
   readr,
   rlang,
   DBI,
+  pipeR,
   RSQLite
 RoxygenNote: 6.0.1.9000

@@ -1,3 +1,5 @@
+#'@importFrom pipeR %>>%
+NULL
 #' Unify building type
 #'
 #' This function compiles building type information to a data frame containing
@@ -295,9 +297,9 @@ get_ship_db <- function() {
 main_db_build <- function() {
   ## remove_old_energy_data()
   ## unify_euas_type()
-  add_chilled_water_eui()
+  ## add_chilled_water_eui()
   ## recode_euas_type()
-  join_type_and_energy()
-  get_eui_by_year("F")
-  add_quality_tag_energy()
+  ## join_type_and_energy()
+  ## get_eui_by_year("F")
+  ## add_quality_tag_energy()
 }

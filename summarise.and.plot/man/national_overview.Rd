@@ -4,7 +4,7 @@
 \alias{national_overview}
 \title{National overview: cnt, eui, sqft}
 \usage{
-national_overview(category, type, year, pal_values)
+national_overview(category, type, year, region, pal_values)
 }
 \arguments{
 \item{category}{optional, a subset of A, B, C, D, E, I to include}
@@ -12,6 +12,8 @@ national_overview(category, type, year, pal_values)
 \item{type}{optional, a string (e.g. "Office"), or a string vector (e.g. c("Office", "Courthouse")) of building type}
 
 \item{year}{optional, the year to plot}
+
+\item{region}{optional, the region to plot}
 }
 \description{
 This function groups the national level plots, may decide on a filter

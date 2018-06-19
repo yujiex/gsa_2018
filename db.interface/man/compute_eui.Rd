@@ -2,9 +2,20 @@
 % Please edit documentation in R/build_db.R
 \name{compute_eui}
 \alias{compute_eui}
-\title{Add chilled water eui}
+\title{Compute monthly eui}
 \usage{
 compute_eui(df, energy_input, eui_output, sqftcol, mult)
+}
+\arguments{
+\item{df}{required, data frame containing input, output, and sqft column}
+
+\item{energy_input}{required, input column to compute eui}
+
+\item{eui_output}{required, output column name}
+
+\item{sqftcol}{required, the sqft column}
+
+\item{mult}{optional, unit conversion multiplier for kBtu}
 }
 \description{
 This function adds chilled water eui

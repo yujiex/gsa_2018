@@ -5,7 +5,8 @@
 \title{Stacked bar plot}
 \usage{
 stackbar(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit, legendloc,
-  legendOrient, pal, pal_values, labelFormat, width, verbose)
+  legendOrient, pal, pal_values, labelFormat, width, verbose, scaler,
+  facetvar = NULL, facetNcol = NULL, labelCutoff = NULL)
 }
 \arguments{
 \item{df}{required, a dataframe to plot}
@@ -34,12 +35,20 @@ stackbar(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit, legendloc,
 
 \item{width}{optional, the width of the bars}
 
-\item{aggfun}{count or sum}
+\item{verbose}{if TRUE print data to the output}
 
-\item{width}{verbose, if TRUE print data to the output}
+\item{scaler}{optional, if supplied, scale the input}
+
+\item{facetNcol}{optional, number of columns in facet plot}
+
+\item{labelCutoff}{optional, upper bound for label to be visible}
+
+\item{aggfun}{count or sum}
 }
 \description{
-This function produces a stacked bar plot
+This function produces a stacked bar plot, with labels for each stacked
+segment and also the height of the bar. The height labeling part is copied
+from: https://gist.github.com/svigneau/05148a7031172c2bc70d
 }
 \examples{
 stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", tit="EUAS Building Count By Category")
