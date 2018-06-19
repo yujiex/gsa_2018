@@ -269,38 +269,6 @@ add_chilled_water_eui <- function() {
   print("Created table: EUAS_monthly")
 }
 
-#' Join latlng source
-#'
-#' This function joins latitude longitude source, EUAS_address, to the latitude longitude one
-#' @keywords join source of address
-#' @export
-#' @examples
-#' join_source_latlng()
-join_source_latlng <- function() {
-  df1 = read_table_from_db(dbname = "all", tablename = "EUAS_address") %>>%
-    as.data.frame() %>>%
-    (?nrow(.)) %>>%
-    (?names(.)) %>>%
-    dplyr::select(-`index`) %>>%
-    dplyr::mutate(`source` = factor(`source`,
-                                    levels = c("euas_database_of_buildings_cmu",
-                                               "PortfolioManager_sheet0_input",
-                                               "Entire_GSA_Building_Portfolio_input"))) %>>%
-    dplyr::arrange(`Building_Number`, `source`) %>>%
-    dplyr::group_by(`Building_Number`, `geocoding_input`) %>>%
-    slice(1) %>>%
-    (?nrow(.)) %>>%
-    dplyr::ungroup() %>>%
-    dplyr::select(`Building_Number`, `geocoding_input`, `source`) %>>%
-    {.}
-  df2 = read_table_from_db(dbname = "all", tablename = "EUAS_latlng_2")
-  df = df2 %>%
-    dplyr::left_join(df1, by=c("Building_Number", "geocoding_input")) %>%
-    {.}
-  df %>%
-    readr::write_csv("csv_FY/db_build_temp_csv/EUAS_latlng_2.csv")
-}
-
 ## fixme
 #' Ship db
 #'
