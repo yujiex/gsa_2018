@@ -156,9 +156,12 @@ plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="gas", cat
 plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60), topn=20, botn=0)
 
 devtools::load_all("lean.analysis")
+generate_lean_tex(plotType="base", region=9, topn=8, botn=4, category="I")
+
+generate_lean_tex(plotType="base", region=9, topn=4, botn=4, category="A")
+
 generate_lean_tex(plotType="gas", region=9, topn=20, botn=0)
 generate_lean_tex(plotType="elec", region=9, topn=20, botn=0)
-generate_lean_tex(plotType="base", region=9, topn=16, botn=4)
 
 test_lean_analysis_db()
 

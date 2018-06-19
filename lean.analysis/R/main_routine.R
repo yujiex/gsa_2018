@@ -181,8 +181,8 @@ plot_lean_subset <- function(region, buildingType, year, plotType, category, sou
   }
   for (building in buildings) {
     ## print(sprintf("plot %s %s ---------------", counter, building))
-    energy = db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly",
-                                              cols=c("Fiscal_Year", "Fiscal_Month", "year", "month", "eui_elec", "eui_gas", "Cat"), building=building) %>%
+    energy = db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly_with_type",
+                                              cols=c("Fiscal_Year", "Fiscal_Month", "year", "month", "Building_Type","eui_elec", "eui_gas", "Cat"), building=building) %>%
       dplyr::arrange(-`Fiscal_Year`, -`Fiscal_Month`) %>%
       head(n=36)
     print(building)
@@ -205,7 +205,8 @@ plot_lean_subset <- function(region, buildingType, year, plotType, category, sou
     ## print("--------lean result---------")
     ## print(lean_result)
     counter = counter + 1
-    acc = rbind(acc, data.frame(Building_Number = building, score=lean_result$score))
+    acc = rbind(acc, data.frame(Building_Number = building, score=lean_result$score, Cat=energy$Cat[[1]], Building_Type=energy$Building_Type[[1]]))
+    print(acc)
   }
   if (!file.exists(summaryFile)) {
     print("write to file")

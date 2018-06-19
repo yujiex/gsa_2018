@@ -41,13 +41,14 @@ img2tex <- function(df, prefix, suffix, isDesc, outfilename, topn=16, botn=4) {
 #' @param prefix
 #' @param suffix
 #' @param isDesc whether the sort is descending
+#' @param category optional, filter for specific category
 #' @param topn top n records to include
 #' @param botn bottom n records to include
 #' @keywords image to tex
 #' @export
 #' @examples
 #' polynomial_deg_2(y, x)
-generate_lean_tex <- function(plotType, region, topn, botn) {
+generate_lean_tex <- function(plotType, region, topn, botn, category) {
   df = readr::read_csv(sprintf("csv_FY/%s_lean_score_region_%s.csv", plotType, region)) %>%
     dplyr::rename(`id`=`Building_Number`) %>%
     {.}
@@ -56,8 +57,16 @@ generate_lean_tex <- function(plotType, region, topn, botn) {
       dplyr::filter(`score` != 0) %>%
       {.}
   }
+  categoryTag = ""
+  if (!missing(category)) {
+    df <- df %>%
+      dplyr::filter(`Cat`==category) %>%
+      {.}
+    categoryTag = sprintf("_%s", category)
+  }
+  outfile = sprintf("region_report_img/%s_region_%s%s.tex", plotType, region, categoryTag)
   img2tex(df, prefix=sprintf("\\includegraphics[width = 0.24\\textwidth, keepaspectratio]{lean/%s_", plotType),
           suffix=".png}",
-          isDesc=TRUE, outfilename=sprintf("region_report_img/%s_region_%s.tex", plotType, region),
+          isDesc=TRUE, outfilename=outfile,
           topn=topn, botn=botn)
 }
