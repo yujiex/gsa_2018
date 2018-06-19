@@ -664,6 +664,7 @@ median_summary <- function() {
 #' @examples
 #' national_overview_over_years(category=c("I", "A"), years=c(2015, 2016, 2017))
 national_overview_over_years <- function(category, type, years, region, pal) {
+  national_over_years_pal = c("#E6AC62", "#FCEDB1", "#DA7666", "#AEACCD", "#7E9FC3", "grey")
   df <- db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>%
     dplyr::filter(`Gross_Sq.Ft` != 0) %>%
     dplyr::filter(`eui_elec` != 0) %>%
@@ -728,7 +729,9 @@ national_overview_over_years <- function(category, type, years, region, pal) {
                xlabel="Fiscal Year", legendloc = "bottom", legendOrient="h",
                tit=sprintf("kBtu/sqft by year%s", regionTag),
                orderByHeight=FALSE, labelFormat="%.0f", width=width, verbose=FALSE,
-               pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "grey"), labelCutoff=5)
+               ## pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "grey"),
+               pal_values = national_over_years_pal,
+               labelCutoff=5)
   print(p)
   df_agg_cost = gb_agg_ratio(df, groupvar = "Fiscal_Year", numerator_var = c("Electricity_(Cost)", "Gas_(Cost)", "Oil_(Cost)", "Steam_(Cost)", "Chilled_Water_(Cost)", "Other_(Cost)"), denominator_var = "Gross_Sq.Ft", aggfun=sum, valuename="Cost/sqft", varname="FuelType") %>%
     dplyr::mutate(`FuelType` = gsub("_\\(Cost\\)", "", `FuelType`)) %>%
@@ -747,7 +750,9 @@ national_overview_over_years <- function(category, type, years, region, pal) {
                xlabel="Fiscal Year", legendloc = "bottom", legendOrient="h",
                tit=sprintf("Energy cost (million dollar) by year%s", regionTag),
                orderByHeight=FALSE, labelFormat="%.0f", width=width, verbose=FALSE,
-               pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "grey"), scaler=1e-6, labelCutoff=5)
+               ## pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "grey"),
+               pal_values = national_over_years_pal,
+               scaler=1e-6, labelCutoff=5)
   print(p)
   dflong_kBtu <- df %>%
     dplyr::select(`Fiscal_Year`, `Electric_(kBtu)`, `Gas_(kBtu)`, `Oil_(kBtu)`, `Steam_(kBtu)`, `Chilled_Water_(kBtu)`, `Other_(kBtu)`) %>%
@@ -762,7 +767,9 @@ national_overview_over_years <- function(category, type, years, region, pal) {
                xlabel="Fiscal Year", legendloc = "bottom", legendOrient="h",
                tit=sprintf("Billion Btu by year%s", regionTag),
                orderByHeight=FALSE, labelFormat="%.0f", width=width, verbose=FALSE,
-               pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "grey"), scaler=1e-6, labelCutoff=300)
+               ## pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "grey"),
+               pal_values = national_over_years_pal,
+               scaler=1e-6, labelCutoff=300)
   print(p)
   height_of_bar = df_agg_cost %>%
     ## dplyr::mutate(`Fiscal_Year` = substr(`Fiscal_Year`, 1, 4)) %>%
