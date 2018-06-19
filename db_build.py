@@ -359,7 +359,7 @@ def geocoding_cache(keys):
     return d
 
 def geocoding():
-    conn = sqlite3.connect(homedir + 'db/all.db')
+    conn = sqlite3connect(homedir + 'db/all.db')
     df = pd.read_sql('SELECT DISTINCT Building_Number, geocoding_input FROM EUAS_address', conn)
     keys = (df['geocoding_input'].unique())
     d = geocoding_cache(keys)
@@ -898,7 +898,10 @@ def get_latlng_from_datafile():
     print len(df1)
     df2 = pd.read_sql('SELECT DISTINCT Building_Number FROM EUAS_monthly', conn)
     print len(df2)
+    pd.read_sql('SELECT * FROM EUAS_latlng_2', conn).to_csv(homedir + \
+                                                            'db_build_temp_csv/EUAS_latlng_2_old.csv')
     df = pd.merge(df2, df1, on='Building_Number', how='left')
+    df['source'] = "geocoding"
     print len(df)
     conn = sqlite3.connect(homedir + 'db/other_input.db')
     with conn:
@@ -906,11 +909,14 @@ def get_latlng_from_datafile():
     df_latlng['latlng'] = df_latlng.apply(lambda r: '[{}, {}]'.format(r['Latitude'], r['Longitude']), axis=1)
     df_latlng.drop(['Latitude', 'Longitude'], axis=1, inplace=True)
     conn.close()
+    df_latlng['source'] = 'euas_database_of_buildings_cmu'
     df_final = pd.merge(df, df_latlng, how='left', on='Building_Number')
     print df_final.head()
     df_final['latlng_x'].update(df_final['latlng_y'])
-    df_final.rename(index=str, columns={'latlng_x': 'latlng'}, inplace=True)
+    df_final['source_x'].update(df_final['source_y'])
+    df_final.rename(index=str, columns={'latlng_x': 'latlng', 'source_x': 'source'}, inplace=True)
     df_final.drop('latlng_y', axis=1, inplace=True)
+    df_final.drop('source_y', axis=1, inplace=True)
     print df_final.head()
     conn = uo.connect('all')
     with conn:
@@ -1667,7 +1673,7 @@ def main():
     # concat_covered()
     # db_view('other_input', True)
     return
-    
+
 main()
 
 # print df.groupby(['high_level_ECM', 'detail_level_ECM']).count()[['Building_Number']]
