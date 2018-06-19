@@ -12,6 +12,7 @@ Imports:
   tidyr,
   RColorBrewer,
   ggplot2,
+  scales,
   db.interface,
   feather
 RoxygenNote: 6.0.1.9000
