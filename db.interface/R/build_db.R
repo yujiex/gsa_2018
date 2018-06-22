@@ -41,10 +41,7 @@ unify_euas_type <- function() {
     {.}
   result = df %>% dplyr::left_join(dftype) %>%
     {.}
-  con <- connect("all")
-  dbWriteTable(con, "EUAS_type", result, overwrite=TRUE)
-  print("Created table: EUAS_type")
-  dbDisconnect(con)
+  write_table_to_db(df=result, dbname="all", "EUAS_type", overwrite=TRUE)
   return(result)
 }
 
@@ -68,10 +65,12 @@ recode_euas_type <- function() {
 #'
 #' This function writes a table to database
 #' @param df required, data frame to write to database
-#' @param dbname required, the name string of the database, e.g. "all.db" has name "all"
+#' @param dbname required, the name string of the database, e.g. "all.db" has
+#'   name "all"
 #' @param tablename required, the name string of the table to view
 #' @param path optional, the path to .db file, default is "csv_FY/db/"
-#' @param overwrite optional, whether to overwrite, default to FALSE
+#' @param overwrite optional, whether to overwrite, default to FALSE. If
+#'   overwrite is set to true, a backup csv file will be created in db_build_temp_csv
 #' @keywords write table sqlite
 #' @export
 #' @examples
@@ -280,6 +279,85 @@ get_ship_db <- function() {
   }
 }
 
+#' Back up a table to a csv file
+#'
+#' This function backs up the specified table in db_build_temp_csv, with a timestamp attached to the filename
+#' @param dbname required, the name string of the database, e.g. "all.db" has name "all"
+#' @param tablename required, the name string of the table to view
+#' @keywords backup table
+#' @export
+#' @examples
+#' backup_table(dbname="all", tablename="EUAS_address")
+backup_table <- function(dbname, tablename) {
+  df = db.interface::read_table_from_db(dbname=dbname, tablename=tablename)
+  timestamp = Sys.time()
+  filename = sprintf("csv_FY/db_build_temp_csv/backups/%s_%s.csv", tablename, timestamp)
+  df %>%
+    readr::write_csv(filename)
+  print(sprintf("write to backup file: %s", filename))
+}
+
+#' Recode state to abbreviation
+#'
+#' This function converts state full name in EUAS data to state abbreviation, as
+#' the current state in the data is a mixture of abbreviation and full name
+#' @keywords state to abbr
+#' @export
+#' @examples
+#' recode_state_abbr()
+recode_state_abbr <- function() {
+  df = db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly") %>%
+    {.}
+  dflookup = readr::read_csv("input/FY/state_abbr.csv") %>%
+    tibble::as_data_frame() %>%
+    {.}
+  dflookup <- dflookup %>%
+    dplyr::rename(`State`=`state_full_name`) %>%
+    dplyr::bind_rows(data.frame(State=dflookup$state_abbr, state_abbr=dflookup$state_abbr)) %>%
+    {.}
+  print(head(dflookup))
+  df <- df %>%
+    ## if this column is not in there, it will throw out a warning
+    dplyr::select(-one_of("state_abbr")) %>%
+    dplyr::left_join(dflookup, by="State") %>%
+    dplyr::mutate(`state_abbr_from_id` = substr(`Building_Number`, start=1, stop=2)) %>%
+    ## for NA state, if it has "AX", its state does not equal the first two character of the id
+    dplyr::mutate(`state_abbr` = ifelse(is.na(`state_abbr`),
+                                 ifelse(`state_abbr_from_id` == "AX", NA, `state_abbr_from_id`), `state_abbr`)) %>%
+    dplyr::select(-`state_abbr_from_id`) %>%
+    {.}
+  write_table_to_db(df=df, dbname="all", tablename="EUAS_monthly", overwrite = TRUE)
+}
+
+#' Correct city name
+#'
+#' This function overwrites the city name error, or unify their names
+#' @keywords city name
+#' @export
+#' @examples
+#' correct_city_name()
+correct_city_name <- function() {
+  df_correction = readr::read_csv("input/FY/city_name_correction.csv") %>%
+    tibble::as_data_frame() %>%
+    dplyr::select(`Building_Number`, `City`, `correct_city_name`) %>%
+    ## only keep those that are actually corrected
+    dplyr::filter(`City` != `correct_city_name`) %>%
+    {.}
+  df = db.interface::read_table_from_db(dbname="all", tablename="EUAS_address") %>%
+    dplyr::select(`City`, `Building_Number`, `source`) %>%
+    dplyr::mutate(`City`=toupper(`City`)) %>%
+    dplyr::left_join(df_correction, by=c("Building_Number", "City")) %>%
+    dplyr::mutate(`City`=ifelse(is.na(`correct_city_name`), `City`, `correct_city_name`)) %>%
+    dplyr::mutate(`source`=ifelse(is.na(`correct_city_name`), `source`, "manual correction")) %>%
+    dplyr::group_by(`Building_Number`, `City`) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(`Building_Number`, `City`, `source`) %>%
+    ## readr::write_csv("csv_FY/db_build_temp_csv/corrected_name.csv")
+    {.}
+  write_table_to_db(df, dbname = "all", tablename = "EUAS_city", overwrite = TRUE)
+}
+
 #' Join EUAS_monthly and EUAS_type
 #'
 #' This function joins EUAS_monthly and EUAS_type
@@ -289,10 +367,12 @@ get_ship_db <- function() {
 #' main_db_build()
 main_db_build <- function() {
   ## remove_old_energy_data()
+  ## recode_state_abbr()
+  ## correct_city_name()
   ## unify_euas_type()
   ## add_chilled_water_eui()
   ## recode_euas_type()
   ## join_type_and_energy()
   ## get_eui_by_year("F")
-  ## add_quality_tag_energy()
+  add_quality_tag_energy()
 }
