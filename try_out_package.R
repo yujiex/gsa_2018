@@ -1,3 +1,5 @@
+library(dplyr)
+
 lat_lon_df = db.interface::get_lat_lon_df()
 
 db.interface::get_all_tables(dbname="all")
@@ -8,8 +10,9 @@ db.interface::view_head_of_table(dbname = "all", tablename = "EUAS_monthly")[,5:
 
 db.interface::view_names_of_table(dbname = "other_input", tablename = "euas_database_of_buildings_cmu")
 
-db.interface::view_names_of_table(dbname = "all", tablename = "eui_by_fy_tag")
+db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_monthly_with_type")
 
+devtools::load_all("db.interface")
 db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_address")
 
 db.interface::view_head_of_table(dbname = "all", tablename = "EUAS_latlng_2")
@@ -24,10 +27,6 @@ db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_ecm")
 
 db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_type")
 
-db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>%
-  dplyr::filter(`Building_Number` == "CA0306ZZ") %>%
-    dplyr::select(`eui_total`, `Fiscal_Year`)
-
 db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_address") %>%
   dplyr::filter(`source`=="Entire_GSA_Building_Portfolio_input") %>%
     head()
@@ -37,10 +36,18 @@ db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>
     .$Building_Number
 
 devtools::load_all("db.interface")
+building = "NY7077ZZ"
+result <- db.interface::get_lat_lon_df(building=building)
+sprintf("%s,%s", result$latitude[[1]], result$longitude[[1]])
+db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_latlng_2") %>%
+  dplyr::filter(`Building_Number`==building) %>%
+    print()
+
+devtools::load_all("db.interface")
 ## add_quality_tag_energy()
-## main_db_build()
+main_db_build()
 ## get_ship_db()
-join_source_latlng()
+## join_source_latlng()
 
 db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_monthly") %>%
   dplyr::filter(Fiscal_Year == 2016) %>%
