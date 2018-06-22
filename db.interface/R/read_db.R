@@ -1,3 +1,5 @@
+#'@importFrom dplyr %>%
+NULL
 #' Get latitude longitude
 #'
 #' This function get latitude longitude of EUAS buildings
@@ -11,16 +13,16 @@ get_lat_lon_df <- function(path, building) {
   if (missing(path)) {
     path = "~/Dropbox/gsa_2017/csv_FY/db/"
   }
-  con <- dbConnect(RSQLite::SQLite(), paste0(path, "all.db"))
+  con <- DBI::dbConnect(RSQLite::SQLite(), paste0(path, "all.db"))
   if (missing(building)) {
   lat_lon_df =
-    dbGetQuery(con, "SELECT * FROM EUAS_latlng_2" ) %>%
-    as_data_frame() %>%
+    DBI::dbGetQuery(con, "SELECT * FROM EUAS_latlng_2" ) %>%
+    tibble::as_data_frame() %>%
     {.}
   } else {
     lat_lon_df =
-      dbGetQuery(con, sprintf("SELECT * FROM EUAS_latlng_2 WHERE Building_Number = \'%s\'", building)) %>%
-      as_data_frame() %>%
+      DBI::dbGetQuery(con, sprintf("SELECT * FROM EUAS_latlng_2 WHERE Building_Number = \'%s\'", building)) %>%
+      tibble::as_data_frame() %>%
       {.}
   }
   lat_lon_df <- lat_lon_df %>%
@@ -28,15 +30,15 @@ get_lat_lon_df <- function(path, building) {
     dplyr::rowwise() %>%
     dplyr::mutate(`lat`=strsplit(`latlng`, ", ")[[1]][1]) %>%
     dplyr::mutate(`lng`=strsplit(`latlng`, ", ")[[1]][2]) %>%
-    dplyr::mutate_at(vars(`lat`, `lng`), as.numeric) %>%
+    dplyr::mutate_at(dplyr::vars(`lat`, `lng`), as.numeric) %>%
     dplyr::select(-`latlng`, -`geocoding_input`) %>%
     dplyr::ungroup() %>%
     dplyr::group_by(`Building_Number`, `lat`, `lng`) %>%
     dplyr::rename(`latitude`=`lat`, `longitude`=`lng`) %>%
-    slice(1) %>%
+    dplyr::slice(1) %>%
     dplyr::ungroup() %>%
     {.}
-  dbDisconnect(con)
+  DBI::dbDisconnect(con)
   return(lat_lon_df)
 }
 
@@ -53,7 +55,7 @@ connect <- function(dbname, path) {
   if (missing(path)) {
     path = "~/Dropbox/gsa_2017/csv_FY/db/"
   }
-  con <- dbConnect(RSQLite::SQLite(), paste0(path, dbname, ".db"))
+  con <- DBI::dbConnect(RSQLite::SQLite(), paste0(path, dbname, ".db"))
   return(con)
 }
 
@@ -90,13 +92,13 @@ read_table_from_db <- function(dbname, tablename, path, cols, building) {
   ## print("read table from %s %s.db", getwd(), dbname)
   if (missing(building)) {
     df =
-      dbGetQuery(con, sprintf("SELECT * FROM %s", tablename)) %>%
-      as_data_frame() %>%
+      DBI::dbGetQuery(con, sprintf("SELECT * FROM %s", tablename)) %>%
+      tibble::as_data_frame() %>%
       {.}
   } else {
     df =
-      dbGetQuery(con, sprintf("SELECT * FROM %s WHERE Building_Number = \'%s\'", tablename, building)) %>%
-      as_data_frame() %>%
+      DBI::dbGetQuery(con, sprintf("SELECT * FROM %s WHERE Building_Number = \'%s\'", tablename, building)) %>%
+      tibble::as_data_frame() %>%
       {.}
   }
   if (!missing(cols)) {
@@ -104,7 +106,7 @@ read_table_from_db <- function(dbname, tablename, path, cols, building) {
       dplyr::select(one_of(cols)) %>%
       {.}
   }
-  dbDisconnect(con)
+  DBI::dbDisconnect(con)
   return(df)
 }
 
@@ -138,10 +140,10 @@ get_unique_value_column <- function(dbname, tablename, path, col) {
 view_head_of_table <- function(dbname, tablename, path) {
   con = connect(dbname, path)
   df =
-    dbGetQuery(con, sprintf("SELECT * FROM %s LIMIT 5", tablename)) %>%
-    as_data_frame() %>%
+    DBI::dbGetQuery(con, sprintf("SELECT * FROM %s LIMIT 5", tablename)) %>%
+    tibble::as_data_frame() %>%
     {.}
-  dbDisconnect(con)
+  DBI::dbDisconnect(con)
   return(df)
 }
 
@@ -158,10 +160,10 @@ view_head_of_table <- function(dbname, tablename, path) {
 view_names_of_table <- function(dbname, tablename, path) {
   con = connect(dbname, path)
   df =
-    dbGetQuery(con, sprintf("SELECT * FROM %s", tablename)) %>%
-    as_data_frame() %>%
+    DBI::dbGetQuery(con, sprintf("SELECT * FROM %s", tablename)) %>%
+    tibble::as_data_frame() %>%
     names()
-  dbDisconnect(con)
+  DBI::dbDisconnect(con)
   return(df)
 }
 
@@ -176,8 +178,8 @@ view_names_of_table <- function(dbname, tablename, path) {
 get_euas_buildings <- function() {
   con = connect("all")
   df =
-    dbGetQuery(con, "SELECT DISTINCT Building_Number FROM EUAS_monthly") %>%
-    as_data_frame() %>%
+    DBI::dbGetQuery(con, "SELECT DISTINCT Building_Number FROM EUAS_monthly") %>%
+    tibble::as_data_frame() %>%
     {.}
   return(df)
 }
@@ -197,8 +199,8 @@ get_euas_buildings <- function() {
 get_buildings <- function(region, buildingType, year, category) {
   con = connect("all")
   df =
-    dbGetQuery(con, "SELECT * FROM eui_by_fy_tag") %>%
-    as_data_frame() %>%
+    DBI::dbGetQuery(con, "SELECT * FROM eui_by_fy_tag") %>%
+    tibble::as_data_frame() %>%
     dplyr::filter(`Gross_Sq.Ft` != 0) %>%
     dplyr::filter(`eui_elec` != 0) %>%
     dplyr::mutate(`Region_No.` = as.numeric(`Region_No.`))
@@ -250,8 +252,8 @@ get_count <- function(region, category, type, year, fOrC, gbvars) {
   }
   con = connect("all")
   df =
-    dbGetQuery(con, sprintf("SELECT [Region_No.], %s, Cat, Building_Type, lowElectricity, lowGas, highEnoughELectricityGas, zeroSqft FROM eui_by_fy_tag", year_col)) %>%
-    as_data_frame() %>%
+    DBI::dbGetQuery(con, sprintf("SELECT [Region_No.], %s, Cat, Building_Type, lowElectricity, lowGas, highEnoughELectricityGas, zeroSqft FROM eui_by_fy_tag", year_col)) %>%
+    tibble::as_data_frame() %>%
     {.}
   print(head(df))
   if (!missing(region)) {

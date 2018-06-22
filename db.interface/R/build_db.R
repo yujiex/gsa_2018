@@ -16,19 +16,19 @@ NULL
 unify_euas_type <- function() {
   df = get_euas_buildings()
   con <- connect("other_input")
-  df1 = dbGetQuery(con, "SELECT DISTINCT Building_Number, Predominant_Use AS Building_Type FROM Entire_GSA_Building_Portfolio_input") %>%
+  df1 = DBI::dbGetQuery(con, "SELECT DISTINCT Building_Number, Predominant_Use AS Building_Type FROM Entire_GSA_Building_Portfolio_input") %>%
     as_data_frame() %>%
     dplyr::mutate(`data_source`="Entire_GSA_Building_Portfolio_input::Predominant_Use") %>%
     {.}
-  df2 = dbGetQuery(con, "SELECT DISTINCT Building_Number, [Self-Selected_Primary_Function] AS Building_Type FROM PortfolioManager_sheet0_input") %>%
+  df2 = DBI::dbGetQuery(con, "SELECT DISTINCT Building_Number, [Self-Selected_Primary_Function] AS Building_Type FROM PortfolioManager_sheet0_input") %>%
     as_data_frame() %>%
     dplyr::mutate(`data_source`="PortfolioManager_sheet0_input::Self-Selected_Primary_Function") %>%
     {.}
-  df3 = dbGetQuery(con, "SELECT Building_Number, [GSA Property Type] AS Building_Type FROM euas_database_of_buildings_cmu") %>%
+  df3 = DBI::dbGetQuery(con, "SELECT Building_Number, [GSA Property Type] AS Building_Type FROM euas_database_of_buildings_cmu") %>%
     as_data_frame() %>%
     dplyr::mutate(`data_source`="euas_database_of_buildings_cmu::[GSA Property Type]") %>%
     {.}
-  dbDisconnect(con)
+  DBI::dbDisconnect(con)
   dftype = dplyr::bind_rows(df1, df2, df3) %>%
     dplyr::mutate(`data_source` = factor(`data_source`,
                                          levels = c("euas_database_of_buildings_cmu::[GSA Property Type]",
@@ -81,9 +81,12 @@ write_table_to_db <- function(df, dbname, tablename, path, overwrite) {
   if (missing(overwrite)) {
     overwrite = FALSE
   }
-  dbWriteTable(con, tablename, df, overwrite=overwrite)
+  DBI::dbWriteTable(con, tablename, df, overwrite=overwrite)
+  if (overwrite) {
+    backup_table(dbname=dbname, tablename=tablename)
+  }
   print(sprintf("Write table %s to %s.db", tablename, dbname))
-  dbDisconnect(con)
+  DBI::dbDisconnect(con)
 }
 
 #' Drop a table from .db
@@ -98,7 +101,7 @@ write_table_to_db <- function(df, dbname, tablename, path, overwrite) {
 drop_table_from_db <- function(dbname, tablename) {
   con = connect(dbname)
   dbRemoveTable(con, tablename)
-  dbDisconnect(con)
+  DBI::dbDisconnect(con)
   print(sprintf("Dropped table: %s", tablename))
 }
 
@@ -111,19 +114,18 @@ drop_table_from_db <- function(dbname, tablename) {
 #' join_type_and_energy()
 join_type_and_energy <- function() {
   con = connect("all")
-  df1 = dbGetQuery(con, "SELECT * FROM EUAS_monthly") %>%
+  df1 = DBI::dbGetQuery(con, "SELECT * FROM EUAS_monthly") %>%
     as_data_frame() %>%
     {.}
-  df2 = dbGetQuery(con, "SELECT * FROM EUAS_type_recode")
+  df2 = DBI::dbGetQuery(con, "SELECT * FROM EUAS_type_recode")
     as_data_frame() %>%
     {.}
+  DBI::dbDisconnect(con)
   df = df1 %>%
     dplyr::left_join(df2, by="Building_Number") %>%
     dplyr::rename(`type_data_source`=`data_source`) %>%
     {.}
-  dbWriteTable(con, "EUAS_monthly_with_type", df, overwrite=TRUE)
-  print("Created table: EUAS_monthly_with_type")
-  dbDisconnect(con)
+  write_table_to_db(df, dbname="all", tablename="EUAS_monthly_with_type", overwrite=TRUE)
 }
 
 #' Get eui by fiscal year
@@ -145,11 +147,12 @@ get_eui_by_year <- function(fOrC) {
   }
   con = connect("all")
   df =
-    ## dbGetQuery(con, "SELECT * FROM EUAS_monthly_with_type LIMIT 100") %>%
-    dbGetQuery(con, "SELECT * FROM EUAS_monthly_with_type") %>%
+    ## DBI::dbGetQuery(con, "SELECT * FROM EUAS_monthly_with_type LIMIT 100") %>%
+    DBI::dbGetQuery(con, "SELECT * FROM EUAS_monthly_with_type") %>%
     as_data_frame() %>%
     dplyr::select(-`index`, -`month`, -`Fiscal_Month`) %>%
     {.}
+  DBI::dbDisconnect(con)
   df_numeric = df %>%
     dplyr::select(-`Gross_Sq.Ft`) %>%
     dplyr::group_by(`Building_Number`, !!rlang::sym(year_col)) %>%
@@ -158,7 +161,7 @@ get_eui_by_year <- function(fOrC) {
     ## dplyr::summarise_if(is.character, funs(first)) %>%
     {.}
   df_char = df %>%
-    dplyr::select(`Building_Number`, !!rlang::sym(year_col), `State`, `Cat`, `Gross_Sq.Ft`, `Region_No.`, `Service_Center`, `Area_Field_Office`, `Building_Designation`, `Building_Type`, `type_data_source`) %>%
+    dplyr::select(`Building_Number`, !!rlang::sym(year_col), `State`, `Cat`, `Gross_Sq.Ft`, `Region_No.`, `Service_Center`, `Area_Field_Office`, `Building_Designation`, `Building_Type`, `type_data_source`, `state_abbr`) %>%
     dplyr::group_by(`Building_Number`, !!rlang::sym(year_col)) %>%
     dplyr::summarise_all(funs(first)) %>%
     dplyr::ungroup() %>%
@@ -167,9 +170,7 @@ get_eui_by_year <- function(fOrC) {
     dplyr::left_join(df_numeric) %>%
     dplyr::select(-one_of(non_year_col)) %>%
     {.}
-  dbWriteTable(con, "eui_by_fy", df_year, overwrite=TRUE)
-  dbDisconnect(con)
-  print("Created table: eui_by_fy")
+  write_table_to_db(df=df_year, dbname="all", tablename="eui_by_fy", overwrite=TRUE)
 }
 
 #' Add energy sanity check
@@ -182,17 +183,14 @@ get_eui_by_year <- function(fOrC) {
 #' add_quality_tag_energy()
 add_quality_tag_energy <- function() {
   con = connect("all")
-  df = dbGetQuery(con, "SELECT * FROM eui_by_fy") %>%
+  df = DBI::dbGetQuery(con, "SELECT * FROM eui_by_fy") %>%
     dplyr::mutate(`lowElectricity`=(`eui_elec` <= 12) & (!(`Gross_Sq.Ft` == 0)),
                   `lowGas`=(`eui_gas` <= 3) & (!(`Gross_Sq.Ft` == 0)),
                   `highEnoughElectricityGas`=(`eui_gas` > 3) & (`eui_elec` > 12) & (!(`Gross_Sq.Ft` == 0)),
                   `zeroSqft`=(`Gross_Sq.Ft` == 0)) %>%
     {.}
-  df %>%
-    readr::write_csv("csv_FY/db_build_temp_csv/eui_by_fy_tag.csv")
-  dbWriteTable(con, "eui_by_fy_tag", df, overwrite=TRUE)
-  dbDisconnect(con)
-  print("Created table: eui_by_fy_tag")
+  DBI::dbDisconnect(con)
+  write_table_to_db(df=df, dbname="all", tablename="eui_by_fy_tag", overwrite=TRUE)
 }
 
 #' Remove old energy data based on index
@@ -204,7 +202,7 @@ add_quality_tag_energy <- function() {
 #' remove_old_energy_data()
 remove_old_energy_data <- function() {
   con = connect("all")
-  df = dbGetQuery(con, "SELECT * FROM EUAS_monthly") %>%
+  df = DBI::dbGetQuery(con, "SELECT * FROM EUAS_monthly") %>%
     dplyr::arrange(`Building_Number`, `Fiscal_Year`, `Fiscal_Month`, `index`) %>%
     dplyr::group_by(`Building_Number`, `Fiscal_Year`, `Fiscal_Month`) %>%
     dplyr::slice(n()) %>%
@@ -212,8 +210,8 @@ remove_old_energy_data <- function() {
     {.}
   df %>%
     readr::write_csv("csv_FY/db_build_temp_csv/EUAS_monthly.csv")
-  dbWriteTable(con, "EUAS_monthly", df, overwrite=TRUE)
-  dbDisconnect(con)
+  DBI::dbWriteTable(con, "EUAS_monthly", df, overwrite=TRUE)
+  DBI::dbDisconnect(con)
   print("Created table: EUAS_monthly")
 }
 
@@ -248,7 +246,7 @@ compute_eui <- function(df, energy_input, eui_output, sqftcol, mult) {
 #' add_chilled_water_eui()
 add_chilled_water_eui <- function() {
   con = connect("all")
-  df = dbGetQuery(con, "SELECT * FROM EUAS_monthly") %>%
+  df = DBI::dbGetQuery(con, "SELECT * FROM EUAS_monthly") %>%
     ## conversion to kbtu
     dplyr::mutate(`Chilled_Water_(kBtu)` = `Chilled_Water_(Ton_Hr)` * 12) %>%
     dplyr::mutate(`Oil_(kBtu)` = `Oil_(Gallon)` * ((139 + 138 + 146 + 150)/4)) %>%
@@ -263,15 +261,10 @@ add_chilled_water_eui <- function() {
                 mult=1) %>%
     dplyr::mutate(`eui_total` = `eui_elec` + `eui_gas` + `eui_steam` + `eui_oil` + `eui_chilledWater` + `eui_other`) %>%
     {.}
-  df %>%
-    head(n=20000) %>%
-    readr::write_csv("csv_FY/db_build_temp_csv/EUAS_monthly.csv")
-  dbWriteTable(con, "EUAS_monthly", df, overwrite=TRUE)
-  dbDisconnect(con)
-  print("Created table: EUAS_monthly")
+  DBI::dbDisconnect(con)
+  write_table_to_db(df=df, dbname="all", tablename="EUAS_monthly", overwrite=TRUE)
 }
 
-## fixme
 #' Ship db
 #'
 #' Deliver the database with key table
