@@ -160,7 +160,8 @@ get_eui_by_year <- function(fOrC) {
     ## dplyr::summarise_if(is.character, funs(first)) %>%
     {.}
   df_char = df %>%
-    dplyr::select(`Building_Number`, !!rlang::sym(year_col), `State`, `Cat`, `Gross_Sq.Ft`, `Region_No.`, `Service_Center`, `Area_Field_Office`, `Building_Designation`, `Building_Type`, `type_data_source`, `state_abbr`) %>%
+    dplyr::select(`Building_Number`, !!rlang::sym(year_col), `State`, `Cat`, `Gross_Sq.Ft`, `Region_No.`, `Service_Center`, `Area_Field_Office`, `Building_Designation`, `Building_Type`, `type_data_source`) %>%
+    ## dplyr::select(`Building_Number`, !!rlang::sym(year_col), `State`, `Cat`, `Gross_Sq.Ft`, `Region_No.`, `Service_Center`, `Area_Field_Office`, `Building_Designation`, `Building_Type`, `type_data_source`, `state_abbr`) %>%
     dplyr::group_by(`Building_Number`, !!rlang::sym(year_col)) %>%
     dplyr::summarise_all(funs(first)) %>%
     dplyr::ungroup() %>%
@@ -308,14 +309,39 @@ backup_table <- function(dbname, tablename) {
 recode_state_abbr <- function() {
   df = db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly") %>%
     {.}
+  print("check duplicates of EUAS_monthly")
+  df %>%
+    dplyr::group_by(`Building_Number`, `Fiscal_Year`, `Fiscal_Month`) %>%
+    dplyr::filter(n() > 1) %>%
+    head() %>%
+    print()
   dflookup = readr::read_csv("input/FY/state_abbr.csv") %>%
     tibble::as_data_frame() %>%
     {.}
   dflookup <- dflookup %>%
     dplyr::rename(`State`=`state_full_name`) %>%
-    dplyr::bind_rows(data.frame(State=dflookup$state_abbr, state_abbr=dflookup$state_abbr)) %>%
+    dplyr::bind_rows(data.frame(State=unique(dflookup$state_abbr), state_abbr=unique(dflookup$state_abbr))) %>%
     {.}
+  dflookup %>%
+    readr::write_csv("csv_FY/db_build_temp_csv/dflookup_dup.csv")
+  print("check duplicates of dflookup")
+  dflookup %>%
+    dplyr::group_by(`State`) %>%
+    dplyr::filter(n() > 1) %>%
+    head() %>%
+    print()
+  print("check NA in state_abbr")
+  dflookup %>%
+    dplyr::filter(is.na(`state_abbr`)) %>%
+    head() %>%
+    print()
   print(head(dflookup))
+  print("check anti join")
+  df %>%
+    dplyr::select(-one_of("state_abbr")) %>%
+    dplyr::anti_join(dflookup, by="State") %>%
+    nrow() %>%
+    print()
   df <- df %>%
     ## if this column is not in there, it will throw out a warning
     dplyr::select(-one_of("state_abbr")) %>%
@@ -326,6 +352,19 @@ recode_state_abbr <- function() {
                                  ifelse(`state_abbr_from_id` == "AX", NA, `state_abbr_from_id`), `state_abbr`)) %>%
     dplyr::select(-`state_abbr_from_id`) %>%
     {.}
+  print("check NA in no join var")
+  df %>%
+    dplyr::select(`Building_Number`, `Fiscal_Year`, `Fiscal_Month`, `state_abbr`) %>%
+    dplyr::filter(is.na(`state_abbr`)) %>%
+    head() %>%
+    print()
+  print("check duplicates of EUAS_monthly after join")
+  df %>%
+    dplyr::select(`Building_Number`, `Fiscal_Year`, `Fiscal_Month`) %>%
+    dplyr::group_by(`Building_Number`, `Fiscal_Year`, `Fiscal_Month`) %>%
+    dplyr::filter(n() > 1) %>%
+    head() %>%
+    print()
   write_table_to_db(df=df, dbname="all", tablename="EUAS_monthly", overwrite = TRUE)
 }
 
@@ -367,12 +406,13 @@ correct_city_name <- function() {
 #' main_db_build()
 main_db_build <- function() {
   ## remove_old_energy_data()
-  ## recode_state_abbr()
+  ## note: these seems to create duplicate records for AX and DC buildings in region 11, fix it later
+  recode_state_abbr()
   ## correct_city_name()
   ## unify_euas_type()
   ## add_chilled_water_eui()
   ## recode_euas_type()
   ## join_type_and_energy()
   ## get_eui_by_year("F")
-  add_quality_tag_energy()
+  ## add_quality_tag_energy()
 }

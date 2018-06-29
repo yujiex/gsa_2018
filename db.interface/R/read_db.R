@@ -70,8 +70,8 @@ connect <- function(dbname, path) {
 #' get_all_tables("all")
 get_all_tables <- function(dbname, path) {
   con <- connect(dbname)
-  alltables = dbListTables(con)
-  dbDisconnect(con)
+  alltables = DBI::dbListTables(con)
+  DBI::dbDisconnect(con)
   return(alltables)
 }
 
