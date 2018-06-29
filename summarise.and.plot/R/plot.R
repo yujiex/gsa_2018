@@ -810,6 +810,7 @@ national_overview_over_years <- function(category, type, years, region, pal) {
   width = 0.4
   df_agg_eui = gb_agg_ratio(df, groupvar = "Fiscal_Year", numerator_var = c("Electric_(kBtu)", "Gas_(kBtu)", "Oil_(kBtu)", "Steam_(kBtu)", "Chilled_Water_(kBtu)", "Other_(kBtu)"), denominator_var = "Gross_Sq.Ft", aggfun=sum, valuename="kBtu/sqft", varname="FuelType") %>%
     dplyr::mutate(`FuelType` = gsub("_\\(kBtu\\)", "", `FuelType`)) %>%
+    ## dplyr::mutate(`FuelType`=factor(`FuelType`, levels=c("Gas", "Oil", "Steam", "Chilled_Water", "Electric"))) %>%
     dplyr::mutate(`FuelType`=factor(`FuelType`, levels=c("Gas", "Oil", "Steam", "Chilled_Water", "Electric", "Other"))) %>%
     {.}
   height_of_bar = df_agg_eui %>%
@@ -822,7 +823,8 @@ national_overview_over_years <- function(category, type, years, region, pal) {
   if (!missing(region)) {
     titleStr = paste("kBtu / sqft by year, region", region)
   }
-  p = stackbar(df=df_agg_eui, xcol="Fiscal_Year", fillcol="FuelType", ycol="kBtu/sqft", ylabel="kBtu/sqft",
+  p = stackbar(df=df_agg_eui,
+               xcol="Fiscal_Year", fillcol="FuelType", ycol="kBtu/sqft", ylabel="kBtu/sqft",
                xlabel="Fiscal Year", legendloc = "bottom", legendOrient="h",
                tit=sprintf("kBtu/sqft by year%s", regionTag),
                orderByHeight=FALSE, labelFormat="%.0f", width=width, verbose=FALSE,
