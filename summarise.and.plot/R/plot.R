@@ -317,7 +317,7 @@ national_overview_facetRegion <- function(category, type, years, region) {
                 orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, facetvar="Region_No.", facetNcol=11, labelCutoff=300)
     print(p)
     dftemp = df %>%
-      dplyr::mutate(`Total_(Cost)` = `Electricity_(Cost)` + `Steam_(Cost)` + `Oil_(Cost)` + `Gas_(Cost)` + `Chilled_Water_(Cost)`) %>%
+      ## dplyr::mutate(`Total_(Cost)` = `Electricity_(Cost)` + `Steam_(Cost)` + `Oil_(Cost)` + `Gas_(Cost)` + `Chilled_Water_(Cost)`) %>%
       {.}
     p = stackbar(df=dftemp, xcol="Fiscal_Year", fillcol="Cat", ycol="Total_(Cost)", ylabel="Million Dollars", xlabel="Fiscal Year",
                  legendOrient="v", pal_values = pal_values,legendloc = "bottom",
