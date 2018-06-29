@@ -308,3 +308,10 @@ generate_lean_tex(plotType="elec", region=9, topn=20, botn=0)
 test_lean_analysis_db()
 
 test_fit()
+
+
+readxl::read_excel("~/Dropbox/gsa_2017/input/FY/EUAS/EUAS_AllRegions_2016-2017.xlsx", sheet=2) %>%
+  dplyr::group_by(`Building Number`, `Fiscal Year`, `Fiscal Month`) %>%
+    dplyr::filter(n() > 1) %>%
+  head()
+
