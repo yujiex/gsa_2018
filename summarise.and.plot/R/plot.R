@@ -325,6 +325,17 @@ national_overview_facetRegion <- function(category, type, years, region) {
                 labelFormat="%.0f",
                 orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, facetvar="Region_No.", facetNcol=11, labelCutoff=5)
     print(p)
+    dfsummary <- dftemp %>%
+      dplyr::select(`Fiscal_Year`, `Region_No.`, `Total_(Cost)`) %>%
+      dplyr::group_by(`Fiscal_Year`, `Region_No.`) %>%
+      dplyr::summarise(`Total_(Cost)` = sum(`Total_(Cost)`)) %>%
+      dplyr::ungroup() %>%
+      tidyr::spread(`Fiscal_Year`, `Total_(Cost)`) %>%
+      dplyr::mutate(`million_dollar_saving` = (`2017` - `2015`) * 1e-6) %>%
+      {.}
+    print("Cost change from 2015 to 2017")
+    dfsummary %>%
+      print(knitr::kable(dfsummary))
     df_agg_eui_region = gb_agg_ratio(df, groupvar = c("Fiscal_Year", "Region_No."), numerator_var = c("Electric_(kBtu)", "Gas_(kBtu)", "Oil_(kBtu)", "Steam_(kBtu)", "Chilled_Water_(kBtu)", "Other_(kBtu)"), denominator_var = "Gross_Sq.Ft", aggfun=sum, valuename="kBtu/sqft", varname="FuelType") %>%
       dplyr::mutate(`Region_No.` = factor(`Region_No.`, levels = as.character(1:11))) %>%
       dplyr::mutate(`FuelType` = gsub("_\\(kBtu\\)", "", `FuelType`)) %>%
@@ -343,7 +354,7 @@ national_overview_facetRegion <- function(category, type, years, region) {
       dplyr::mutate(`Fiscal_Year` = substr(`Fiscal_Year`, 1, 4)) %>%
       dplyr::filter(`Fiscal_Year` %in% c(2015, 2017)) %>%
       {.}
-    dfsummary = dftemp %>% dplyr::group_by(`Fiscal_Year`, `Region_No.`) %>%
+    dfsummary <- dftemp %>% dplyr::group_by(`Fiscal_Year`, `Region_No.`) %>%
       dplyr::select(-`Gross_Sq.Ft`) %>%
       dplyr::summarise_if(is.numeric, funs(sum)) %>%
       dplyr::ungroup() %>%
@@ -502,24 +513,40 @@ national_overview <- function(category, type, year, region, pal_values) {
               labelFormat="%.0f",
               orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, labelCutoff=cutoff)
   print(p)
+  print(sprintf("total gross square foot: %.2f M", sum(df$Gross_Sq.Ft) * 1e-6))
+  df %>%
+    dplyr::group_by(`Building_Type`, `Cat`) %>%
+    dplyr::summarise(cnt=n(), total_million_sqft=sum(Gross_Sq.Ft) * 1e-6) %>%
+    print()
 }
 
 #' Potential dollar saving based on median
 #'
 #' This function plots the potential dollar savings based on some median eui
 #' @param category optional, a subset of A, B, C, D, E, I to include
-#' @param type optional, a string (e.g. "Office"), or a string vector (e.g. c("Office", "Courthouse")) of building type
+#' @param type optional, a string (e.g. "Office"), or a string vector (e.g.
+#'   c("Office", "Courthouse")) of building type
 #' @param years optional, the years to plot
 #' @param region optional, the region to plot
 #' @param reference optional, cbecs, own, or hybrid
 #' @param topn optional, plot top n records
 #' @param botn optional, plot bottom n records
 #' @param legendloc optional, default to bottom
+#' @param yleftLimit optional, horizontal left limit of the plot
+#' @param yrightLimit optional, horizontal right limit of the plot
+#' @param expLimit optional, expanded limit to include
+#' @param fontFamily optional, the font family
+#' @param mod optional, savings will be rounded to "mod" number of 0's, e.g. 1000
+#' @param fontsize optional, font size for all text
+#'   will make Potential_Saving return in thousands
+#' @param plotGreen optional, whether to plot the green bars, default to FALSE
 #' @keywords dollar saving median
 #' @export
 #' @examples
 #' dollar_saving(category=c("I", "A"), year=2017, region="9")
-dollar_saving <- function(category, type, year, region, method="own", topn=10, botn=10, legendloc="bottom") {
+dollar_saving <- function(category, type, year, region, method="own", topn=10, botn=10, legendloc="bottom",
+                          yleftLimit=0, yrightLimit=0, expLimit=0, hjust, fontFamily="System Font", mod=1000,
+                          fontsize=10, yadjust=0, plotGreen=FALSE) {
   df = get_filter_set(category, type, year, region)
   if (missing(region)) {
     regionTag = ""
