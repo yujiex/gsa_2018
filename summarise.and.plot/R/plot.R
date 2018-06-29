@@ -832,6 +832,17 @@ national_overview_over_years <- function(category, type, years, region, pal) {
                pal_values = national_over_years_pal,
                labelCutoff=5)
   print(p)
+  ## first two box info start
+  EUIs = df_agg_eui %>%
+    dplyr::group_by(`Fiscal_Year`) %>%
+    dplyr::summarise(EUI = sum(`kBtu/sqft`)) %>%
+    dplyr::ungroup() %>%
+    .$EUI
+  print(sprintf("EUI reduction since 2015: %.1f kbtu/sqft", EUIs[[5]] - EUIs[[3]]))
+  print(sprintf("EUI reduction since 2015: %.1f percent", (EUIs[[5]] - EUIs[[3]]) / EUIs[[3]] * 100))
+  print(sprintf("EUI reduction over five years: %.1f kbtu/sqft", EUIs[[5]] - EUIs[[1]]))
+  print(sprintf("EUI reduction over five years: %.1f percent", (EUIs[[5]] - EUIs[[1]]) / EUIs[[1]] * 100))
+  ## first two box info end
   df_agg_cost = gb_agg_ratio(df, groupvar = "Fiscal_Year", numerator_var = c("Electricity_(Cost)", "Gas_(Cost)", "Oil_(Cost)", "Steam_(Cost)", "Chilled_Water_(Cost)", "Other_(Cost)"), denominator_var = "Gross_Sq.Ft", aggfun=sum, valuename="Cost/sqft", varname="FuelType") %>%
     dplyr::mutate(`FuelType` = gsub("_\\(Cost\\)", "", `FuelType`)) %>%
     {.}
@@ -845,6 +856,14 @@ national_overview_over_years <- function(category, type, years, region, pal) {
     dplyr::mutate(`FuelType` = gsub("_\\(Cost\\)", "", `FuelType`)) %>%
     dplyr::mutate(`FuelType`=factor(`FuelType`, levels=c("Gas", "Oil", "Steam", "Chilled_Water", "Electricity", "Other"))) %>%
     {.}
+  ## the third box info start
+  COST = dflong_cost %>%
+    dplyr::group_by(`Fiscal_Year`) %>%
+    dplyr::summarise(DOLLAR = sum(`Cost`)) %>%
+    dplyr::ungroup() %>%
+    .$DOLLAR
+  print(sprintf("Dollar savings over five years: %.1fM", (COST[[5]] - COST[[1]]) * 1e-6))
+  ## the third box info end
   p = stackbar(df=dflong_cost, xcol="Fiscal_Year", fillcol="FuelType", ycol="Cost", ylabel="Million Dollar",
                xlabel="Fiscal Year", legendloc = "bottom", legendOrient="h",
                tit=sprintf("Energy cost (million dollar) by year%s", regionTag),
