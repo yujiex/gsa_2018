@@ -2,6 +2,7 @@ library(dplyr)
 
 lat_lon_df = db.interface::get_lat_lon_df()
 
+devtools::load_all("db.interface")
 db.interface::get_all_tables(dbname="all")
 
 db.interface::get_all_tables(dbname="other_input")
@@ -18,17 +19,19 @@ db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_address")
 db.interface::view_head_of_table(dbname = "all", tablename = "EUAS_latlng_2")
 
 dbname="all"
-tablename="EUAS_latlng_2"
-colname="source"
-db.interface::view_names_of_table(dbname = dbname, tablename = tablename)
-get_unique_value_column(dbname = dbname, tablename = tablename, col=colname)
+tablename="EUAS_monthly"
+colname="state_abbr"
+## db.interface::view_names_of_table(dbname = dbname, tablename = tablename)
+NA %in% get_unique_value_column(dbname = dbname, tablename = tablename, col=colname)
 
 db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_ecm")
 
 db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_type")
 
-db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_address") %>%
-  dplyr::filter(`source`=="Entire_GSA_Building_Portfolio_input") %>%
+db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_monthly_with_type") %>%
+    dplyr::group_by(`Building_Number`, `Fiscal_Year`, `Fiscal_Month`) %>%
+    dplyr::filter(n() > 1) %>%
+    ## readr::write_csv("csv_FY/db_build_temp_csv/dups.csv")
     head()
 
 db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>%
@@ -69,7 +72,7 @@ get_filter_set(category=c("A", "I"), year=2017) %>%
   readr::write_csv("csv_FY/powerMapData2017.csv")
 
 devtools::load_all("summarise.and.plot")
-get_filter_set(category=c("A", "I"), year=2017) %>%
+get_filter_set(category=c("A", "I"), year=2017, region="9") %>%
   dplyr::group_by(`Building_Type`, `Cat`) %>%
   dplyr::summarise(`eui_median` = median(`eui_total`), cnt = n()) %>%
   {.}
@@ -218,8 +221,10 @@ df1 %>%
 
 head(db.interface::get_lat_lon_df())
 
+devtools::load_all("summarise.and.plot")
 national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), pal="Set3")
 
+devtools::load_all("summarise.and.plot")
 national_overview_facetRegion(category=c("I", "A"), years=c(2015, 2017))
 
 national_overview(category=c("I", "A"), year=2017)

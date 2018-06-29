@@ -4,12 +4,18 @@
 \alias{view_isd_stations_year}
 \title{plot isd_stations}
 \usage{
-view_isd_stations_year(isd_data, year)
+view_isd_stations_year(isd_data, year, latitude, longitude, zoom)
 }
 \arguments{
 \item{isd_data}{optional, returned by rnoaa::isd_stations(refresh = TRUE)}
 
 \item{year}{optional, if supplied only plot stations with data in that year}
+
+\item{latitude}{optional, latitude of the center of the view}
+
+\item{longitude}{optional, longitude of the center of the view}
+
+\item{zoom}{optional, zoom level of the map view}
 }
 \description{
 This function plots the isd stations available for a year
