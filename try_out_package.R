@@ -175,7 +175,27 @@ for (region in as.character(1:11)) {
 }
 
 devtools::load_all("summarise.and.plot")
-dollar_saving(category=c("I", "A"), year=2017, region="9", method="hybrid", legendloc="bottom")
+## dollar_saving(category=c("I", "A"), year=2017, region="9", method="hybrid", legendloc="bottom", topn=8, botn=7, ylimit=NULL, hjust=0)
+## yrightLimits = list("1"=600000, "2"=1500000, "3"=300000, "4"=800000, "5"=300000, "6"=500000,
+##                     "7"=250000, "8"=200000, "9"=900000, "10"=200000, "11"=10000000)
+yrightLimits = list("1"=0, "2"=0, "3"=0, "4"=0, "5"=0,
+                 "6"=0, "7"=0, "8"=0, "9"=30000, "10"=0,
+                 "11"=0)
+## for the orange plus green one
+## yadjusts = list("1"=0, "2"=0, "3"=0, "4"=0, "5"=0,
+##                 "6"=0, "7"=0, "8"=0, "9"=1000000, "10"=0,
+##                 "11"=0)
+yadjusts = list("1"=0, "2"=0, "3"=0, "4"=0, "5"=0,
+                "6"=0, "7"=0, "8"=0, "9"=30000, "10"=0,
+                "11"=0)
+expLimits = list("1"=NULL, "2"=NULL, "3"=NULL, "4"=NULL, "5"=NULL,
+                 "6"=NULL, "7"=NULL, "8"=NULL, "9"=500000, "10"=NULL,
+                 "11"=NULL)
+for (r in as.character(9:9)) {
+  print("11111111111")
+  print(r)
+  dollar_saving(category=c("I", "A"), year=2017, region=r, method="hybrid", legendloc="bottom", topn=8, botn=7, yrightLimit=yrightLimits[[r]], yleftLimit=0, expLimit=, hjust=0.2, fontFamily="System Font", mod=1000, fontsize=10, yadjust=yadjusts[[r]], plotGreen=FALSE)
+}
 
 devtools::load_all("summarise.and.plot")
 dollar_saving(category=c("I", "A"), year=2017, region="9", method="own")
