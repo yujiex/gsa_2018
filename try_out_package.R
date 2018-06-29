@@ -82,9 +82,90 @@ get_filter_set(category=c("A", "I"), year=2017, region="9") %>%
   head()
 
 devtools::load_all("summarise.and.plot")
+get_filter_set(category=c("A", "I"), year=2017) %>%
+  readr::write_csv("csv_FY/eui_2017.csv")
+
+devtools::load_all("summarise.and.plot")
 get_filter_set(category=c("A", "I"), year=2017, region="9") %>%
   dplyr::group_by(`Building_Type`, `Cat`) %>%
   dplyr::summarise(`median_eui` = median(`eui_total`), `cnt`=n(), `maximum`=max(`eui_total`))
+
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+## page 3 boxes start
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+devtools::load_all("summarise.and.plot")
+df_reduction = get_filter_set(region="9") %>%
+  ## df_reduction = get_filter_set(category=c("A", "I"), region="9") %>%
+  dplyr::filter(`Fiscal_Year` %in% 2013:2017) %>%
+  dplyr::select(`Fiscal_Year`, `Total_(kBtu)`, `Gross_Sq.Ft`) %>%
+  dplyr::group_by(`Fiscal_Year`) %>%
+  dplyr::summarise(`total_kbtu` = sum(`Total_(kBtu)`), `total_sqft`=sum(`Gross_Sq.Ft`), `building_count`=n()) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(`kbtu/sqft`=`total_kbtu` / `total_sqft`) %>%
+  {.}
+print("2 year reduction EUI")
+print(df_reduction$`kbtu/sqft`[[5]] - df_reduction$`kbtu/sqft`[[3]])
+print("5 year reduction EUI")
+print(df_reduction$`kbtu/sqft`[[5]] - df_reduction$`kbtu/sqft`[[1]])
+
+df_reduction %>%
+  readr::write_csv("csv_FY/temp_query/region9kbtuPerSqft.csv")
+
+devtools::load_all("summarise.and.plot")
+df_reduction = get_filter_set() %>%
+  ## df_reduction = get_filter_set(category=c("A", "I")) %>%
+  dplyr::filter(`Fiscal_Year` %in% 2013:2017) %>%
+  dplyr::select(`Fiscal_Year`, `Total_(kBtu)`, `Gross_Sq.Ft`) %>%
+  dplyr::group_by(`Fiscal_Year`) %>%
+  dplyr::summarise(`total_kbtu` = sum(`Total_(kBtu)`), `total_sqft`=sum(`Gross_Sq.Ft`), `building_count`=n()) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(`kbtu/sqft`=`total_kbtu` / `total_sqft`) %>%
+  {.}
+print("2 year reduction EUI")
+print(df_reduction$`kbtu/sqft`[[5]] - df_reduction$`kbtu/sqft`[[3]])
+print("5 year reduction EUI")
+print(df_reduction$`kbtu/sqft`[[5]] - df_reduction$`kbtu/sqft`[[1]])
+
+df_reduction %>%
+  readr::write_csv("csv_FY/temp_query/nationalkbtuPerSqft.csv")
+
+devtools::load_all("summarise.and.plot")
+df_reduction = get_filter_set(category=c("A", "I"), region="9") %>%
+  dplyr::filter(`Fiscal_Year` %in% 2013:2017) %>%
+  dplyr::select(`Fiscal_Year`, `Total_(Cost)`, `Gross_Sq.Ft`) %>%
+  dplyr::group_by(`Fiscal_Year`) %>%
+  dplyr::summarise(`total_Cost` = sum(`Total_(Cost)`), `total_sqft`=sum(`Gross_Sq.Ft`), `building_count`=n()) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(`Cost/sqft`=`total_Cost` / `total_sqft`) %>%
+  {.}
+print("2 year reduction Cost")
+print(df_reduction$`Total_(Cost)`[[5]] - df_reduction$`Total_(Cost)`[[3]])
+print("5 year reduction Cost")
+print(df_reduction$`Total_(Cost)`[[5]] - df_reduction$`Total_(Cost)`[[1]])
+
+df_reduction %>%
+  readr::write_csv("csv_FY/temp_query/region9CostPerSqft.csv")
+
+devtools::load_all("summarise.and.plot")
+## df_reduction = get_filter_set() %>%
+df_reduction = get_filter_set(category=c("A", "I")) %>%
+  dplyr::filter(`Fiscal_Year` %in% 2013:2017) %>%
+  dplyr::select(`Fiscal_Year`, `Total_(Cost)`, `Gross_Sq.Ft`) %>%
+  dplyr::group_by(`Fiscal_Year`) %>%
+  dplyr::summarise(`total_Cost` = sum(`Total_(Cost)`), `total_sqft`=sum(`Gross_Sq.Ft`), `building_count`=n()) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(`Cost/sqft`=`total_Cost` / `total_sqft`) %>%
+  {.}
+print("2 year reduction Cost")
+print(df_reduction$`total_Cost`[[5]] - df_reduction$`total_Cost`[[3]])
+print("5 year reduction Cost")
+print(df_reduction$`total_Cost`[[5]] - df_reduction$`total_Cost`[[1]])
+
+df_reduction %>%
+  readr::write_csv("csv_FY/temp_query/nationalCostPerSqft.csv")
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+## page 3 boxes end
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 
 devtools::load_all("summarise.and.plot")
 median_summary()
