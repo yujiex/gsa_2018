@@ -305,24 +305,32 @@ def plot_saving_aggyear(df, timerange_pre,
     after = sum(y)
     before = sum(y_hat)
     print save_percent, after, before, '################'
+    def time_label(timerange):
+        if 'before' in timerange or 'after' in timerange:
+            spaceloc = timerange.find(' ')
+            return timerange[spaceloc + 1:spaceloc + 5]
+        else:
+            spaceloc = timerange.rfind(' ')
+            return "{} -- {}".format(timerange[:4], timerange[spaceloc + 1: spaceloc + 5])
     line1, = ax.plot(x, y, c=c1, ls='-', lw=2, marker='o')
     line2, = ax.plot(x, y_hat, c=c2, ls='-', lw=2, marker='o')
     ax.fill_between(x, y, y_hat, where=y_hat >= y,
                     facecolor='lime', alpha=0.5, interpolate=True)
     ax.fill_between(x, y, y_hat, where=y_hat < y, facecolor='red',
                     alpha=0.5, interpolate=True)
-    ax.legend([line1, line2], 
-              ['Actual {1} use in {0}'.format(timerange_post, lb.title_dict[theme]), '\n'.join(tw.wrap('{1} use given {2} habits but {0} weather'.format(timerange_post, lb.title_dict[theme], timerange_pre), wrapwidth))], loc=location)
-    def time_label(timerange):
-        if 'before' in timerange or 'after' in timerange:
-            return timerange[timerange.find(' ') + 1:]
-        else:
-            return timerange
-    if save_percent > 0: 
-        ax.set_title('{2} after ({0}) vs before ({4}), {1}% less, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)))
+    ax.set_ylabel("kBtu per squar foot per month", fontsize=10)
+    ax.legend([line1, line2],
+              ['Actual {1} use in {0}'.format(time_label(timerange_post), lb.title_dict[theme]),
+               '\n'.join(tw.wrap('{1} use given {2} habits but {0} weather'.format(time_label(timerange_post),
+                                                                                   lb.title_dict[theme],
+                                                                                   time_label(timerange_pre)),
+                                 wrapwidth))], loc=location)
+    if save_percent > 0:
+        ax.set_title('{2} after ({0}) vs before ({4}), {1}% less, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)), fontsize=12)
     else:
-        ax.set_title('{2} after ({0}) vs before ({4}), {1}% more, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)))
-    return save_percent, before, after 
+        ax.set_title('{2} after ({0}) vs before ({4}), {1}% more, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)), fontsize=12)
+    ax.grid(linewidth=0.5)
+    return save_percent, before, after
 
 def plot_saving_year(df, year, pre_year, theme, ax, cvrmse):
     df = df[df['year'] == year]
@@ -347,9 +355,9 @@ def plot_saving_year(df, year, pre_year, theme, ax, cvrmse):
                     interpolate=True)
     ax.fill_between(x, y, y_hat, where=y_hat < y, facecolor='red',
                     alpha=0.5, interpolate=True)
-    ax.legend([line1, line2], 
+    ax.legend([line1, line2],
               ['Actual {1} use in {0}'.format(year, lb.title_dict[theme]), '\n'.join(tw.wrap('{1} use given before {2} habits but {0} weather'.format(year, lb.title_dict[theme], pre_year), wrapwidth))], loc=location)
-    if save_percent > 0: 
+    if save_percent > 0:
         ax.set_title('{2} Savings {0} vs before {4}, {1}% less, CVRMSE: {3}'.format(year, save_percent, lb.title_dict[theme], round(cvrmse, 2), pre_year))
     else:
         ax.set_title('{2} Savings {0} vs before {4}, {1}% more, CVRMSE: {3}'.format(year, abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), pre_year))
@@ -661,7 +669,7 @@ def plot_action_fromdb():
     lines = ['Building_Number,Time,Action,Electric_Saving,Gas_Saving,Electric_Before,Electric_After,Gas_Before,Gas_After,Electric_CVRMSE,Gas_CVRMSE']
     # FIXME: PA0060ZZ has None in eui_gas
     del names[153]
-    # names = ['AK0029ZZ']
+    names = ['CA0154ZZ']
     for i, name in enumerate(names):
         print i, name, '222222222222222222222222222222'
         group = gr.get_group(name)
@@ -670,7 +678,7 @@ def plot_action_fromdb():
         # df_show['Building Number'] = 'CT0013ZZ'
         df_show.reset_index(inplace=True)
         df_show['Substantial_Completion_Date'] = pd.to_datetime(df_show['Substantial_Completion_Date'])
-        df_show.sort('Substantial_Completion_Date', inplace=True)
+        df_show.sort_values(by=['Substantial_Completion_Date'], inplace=True)
         days_diff = useq.dist_between_adjacent(df_show['Substantial_Completion_Date'].tolist())
         pair = zip(df_show['Substantial_Completion_Date'].tolist(),
                    df_show['ECM action'].tolist())
