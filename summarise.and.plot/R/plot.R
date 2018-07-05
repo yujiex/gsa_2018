@@ -486,14 +486,14 @@ national_overview <- function(category, type, year, region, pal_values) {
   nrecord = nrow(df)
   if (missing(region)) {
     p = stackbar(df=df, xcol="Region_No.", fillcol="Category", ylabel="Building Count", xlabel="region",orderByHeight=FALSE,
-                pal_values = pal_values, tit=sprintf("%s Building Category Count by Region (n = %s)", year, nrecord),
+                pal_values = pal_values, tit=sprintf("%s Building Category Count by Region (building count = %s)", year, nrecord),
                 verbose=FALSE, labelCutoff=5)
     print(p)
     ## ## ## ggsave(file=sprintf("region_report_img/national/cat_cnt_by_region_%s.png", year),
     ## ## ##        width=8, height=4, units="in")
     p = stackbar(df=df, xcol="Region_No.", fillcol="Category", ycol="Gross_Sq.Ft", ylabel="Million Gross Sqft",xlabel="region",
                 orderByHeight=FALSE, pal_values = pal_values,
-                tit=sprintf("%s Building Million Gross Sqft by Region (n = %s)", year, nrecord), labelFormat="%.0f",
+                tit=sprintf("%s Building Million Gross Sqft by Region (building count = %s)", year, nrecord), labelFormat="%.0f",
                 verbose=FALSE, scaler=1e-6, labelCutoff=5)
     print(p)
   }
@@ -505,7 +505,7 @@ national_overview <- function(category, type, year, region, pal_values) {
   }
   p = stackbar(df=df, xcol="Building_Type", fillcol="Category", ylabel="Building Count", xlabel="Building Type",
               legendOrient="v", pal_values = pal_values,
-              tit=sprintf("%s Building Category Count by Building Type (n = %s)%s", year, nrecord, regionTag),
+              tit=sprintf("%s Building Category Count by Building Type (building count = %s)%s", year, nrecord, regionTag),
               orderByHeight=TRUE, verbose=FALSE, labelCutoff=cutoff)
   print(p)
   if (missing(region)) {
@@ -516,7 +516,7 @@ national_overview <- function(category, type, year, region, pal_values) {
   }
   p = stackbar(df=df, xcol="Building_Type", fillcol="Category", ycol="Gross_Sq.Ft", ylabel="Million Gross Sqft", xlabel="Building Type",
               legendOrient="v", pal_values = pal_values,
-              tit=sprintf("%s Building Category Million Gross Sqft by Building Type (n = %s)%s", year, nrecord, regionTag),
+              tit=sprintf("%s Building Category Million Gross Sqft by Building Type (building count = %s)%s", year, nrecord, regionTag),
               labelFormat="%.0f",
               orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, labelCutoff=cutoff)
   print(p)
@@ -810,7 +810,7 @@ national_overview_over_years <- function(category, type, years, region, pal) {
       {.}
   df <- df %>%
     dplyr::left_join(dfsummary) %>%
-    dplyr::mutate(`Fiscal_Year` = sprintf("%s\n(n = %s)", `Fiscal_Year`, `count`)) %>%
+    dplyr::mutate(`Fiscal_Year` = sprintf("%s\n(building count = %s)", `Fiscal_Year`, `count`)) %>%
     {.}
   ## print(head(df))
   ## plot bar width
