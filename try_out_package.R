@@ -1,5 +1,10 @@
 library(dplyr)
 
+devtools::load_all("db.interface")
+
+devtools::load_all("summarise.and.plot")
+summarise.and.plot::national_overview(category=c("I", "A"), year=2017)
+
 lat_lon_df = db.interface::get_lat_lon_df()
 
 devtools::load_all("db.interface")
@@ -227,7 +232,9 @@ national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 201
 devtools::load_all("summarise.and.plot")
 national_overview_facetRegion(category=c("I", "A"), years=c(2015, 2017))
 
-national_overview(category=c("I", "A"), year=2017)
+devtools::load_all("summarise.and.plot")
+
+summarise.and.plot::national_overview(category=c("I", "A"), year=2017)
 ## national_overview(category=c("I", "A"), year=2017, region="9")
 ## national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), pal="Set3")
 ## national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), region="9", pal="Set3")
@@ -288,10 +295,12 @@ devtools::load_all("lean.analysis")
 ## y[11:20] <- seq(11, 15, len=10) + rnorm(10, 0, 1.5)
 
 devtools::load_all("lean.analysis")
+fontSizeStackLean = 10
 ## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::polynomial_deg_2, methodLabel="poly2", lowRange=60, highRange=80, plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5))
-## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=60, highRange=80, plotXLimits=c(44, 100))
+stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=60, highRange=80, plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5), fontSize=fontSizeStackLean, legendloc="right")
 ## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::polynomial_deg_2, methodLabel="poly2", plotXLimits=c(40, 90), plotYLimits=c(-0.5, 17.5))
-stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(44, 100), plotYLimits=c(1.7, 16.6), minorgrid=seq(2, 14, 2), majorgrid=seq(4, 16, 4))
+## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(44, 100), plotYLimits=c(1.7, 16.6), minorgrid=seq(2, 14, 2), majorgrid=seq(4, 16, 4))
+stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5), fontSize=fontSizeStackLean, legendloc="right")
 ## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(40, 90))
 
 devtools::load_all("lean.analysis")
