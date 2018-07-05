@@ -232,13 +232,16 @@ plot_lean_subset <- function(region, buildingType, year, plotType, category, sou
 #' @param plotYLimits y limits for plotting, e.g. c(20, 100)
 #' @param minorgrid a sequence of minor breaks, e.g. seq(0 , 100, 5)
 #' @param majorgrid a sequence of major breaks, e.g. seq(0, 100, 10)
+#' @param legendloc legend location, default to bottom
+#' @param fontSize font size for all text
+#' @param fontFamily font family for all text
 #' @keywords lean test
 #' @export
 #' @examples
 #' test_lean_analysis_db()
 stacked_fit_plot <- function(region, buildingType, year, category, plotType, method, methodLabel, lowRange,
                              highRange, debugFlag=FALSE, plotXLimits, plotYLimits, minorgrid, majorgrid,
-                             sourceEnergy=FALSE) {
+                             sourceEnergy=FALSE, legendloc="bottom", fontSize=10, fontFamily="System Font") {
   datafile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.csv", plotType, region, methodLabel)
   imagefile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.png", plotType, region, methodLabel)
   print(datafile)
@@ -355,10 +358,10 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
   p <- dfData %>%
     ggplot2::ggplot(ggplot2::aes(x=xseq, y=yseq, group=Building_Number, color=Building_Number)) +
     ggplot2::geom_line(size=1) +
-    ggplot2::ggtitle(sprintf("%s stacked lean plot for region %s (method: %s)", keyword, region, methodLabel)) +
+    ggplot2::ggtitle(sprintf("%s stacked lean plot for region %s\nmethod: %s", keyword, region, methodLabel)) +
     ggplot2::xlab("Average Monthly Temperature (F)") +
-    ggplot2::ylab(sprintf("%s kBtu/sqft/mo.", keyword)) +
-    ggplot2::theme()
+    ggplot2::ylab(sprintf("%s kBtu per sqft per month at that given temperature", keyword)) +
+    ggplot2::theme(legend.position=legendloc, text=ggplot2::element_text(size=fontSize, family=fontFamily))
   if (plotType == "elec") {
     p <- p +
       ## ggplot2::geom_text(ggplot2::aes(x=80, y=highLabel, label=sprintf("%.1f", highLabel))) +
@@ -366,7 +369,7 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
   } else if (plotType == "gas") {
     p <- p +
       ## ggplot2::geom_text(ggplot2::aes(x=30, y=lowLabel, label=sprintf("%.1f", lowLabel))) +
-      ggplot2::geom_vline(xintercept=30, linetype="dashed")
+      ggplot2::geom_vline(xintercept=50, linetype="dashed")
   }
   print("y plot range")
   print(ggplot2::ggplot_build(p)$layout$panel_ranges[[1]]$y.range)
@@ -388,5 +391,5 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
     }
   }
   print(p)
-  ggsave(imagefile, width=8, height=6, unit="in")
+  ggplot2::ggsave(imagefile, width=5, height=8, unit="in")
 }
