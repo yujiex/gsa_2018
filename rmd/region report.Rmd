@@ -90,15 +90,15 @@ national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 201
 
 ### Potential dollar saving
 ```{r dollar_saving, message=FALSE, fig.height=8, fig.width=5, out.width="60%"}
-library(devtools)
-library(DBI)
-library(dplyr)
-library(tidyr)
-library(RSQLite)
-library(ggplot2)
-devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
-devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
-setwd("/Users/yujiex/Dropbox/gsa_2017/")
+# library(devtools)
+# library(DBI)
+# library(dplyr)
+# library(tidyr)
+# library(RSQLite)
+# library(ggplot2)
+# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
+# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
+# setwd("/Users/yujiex/Dropbox/gsa_2017/")
 # yrightLimits = list("1"=0, "2"=0, "3"=0, "4"=0, "5"=0,
 #                  "6"=0, "7"=0, "8"=0, "9"=200000, "10"=0,
 #                  "11"=0)
