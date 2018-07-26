@@ -1,4 +1,5 @@
 #'@importFrom pipeR %>>%
+#'@importFrom magrittr %>%
 NULL
 #' Unify building type
 #'
@@ -424,6 +425,52 @@ correct_city_name <- function() {
   write_table_to_db(df, dbname = "all", tablename = "EUAS_city", overwrite = TRUE)
 }
 
+#' compute heating and cooling energy consumption per square foot
+#'
+#' This function computes the heating and cooling energy use per square foot for
+#' each building. Assume heating fuels include gas, oil, and steam; cooling fuel
+#' include electricity and chilled water. If there's zero gas + oil + steam for
+#' a year, assume electricity heating.
+#' @keywords heating cooling eui
+#' @export
+#' @examples
+#' get_heating_cooling_eui
+get_heating_cooling_eui <- function(debugFlag=FALSE) {
+  df = db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly") %>%
+    tibble::as_data_frame() %>%
+    dplyr::mutate(`Cooling_(kBtu)` = `Electric_(kBtu)` + `Chilled_Water_(kBtu)`,
+                  `Heating_(kBtu)` = `Gas_(kBtu)` + `Oil_(kBtu)` + `Steam_(kBtu)`) %>%
+    ## convertion factors are found here: https://portfoliomanager.zendesk.com/hc/en-us/articles/216670148-What-are-the-Site-to-Source-Conversion-Factors-
+    dplyr::mutate(`Cooling_(kBtu)_source` = `Electric_(kBtu)` * 3.14 + `Chilled_Water_(kBtu)` * 1.0,
+                  `Heating_(kBtu)_source` = `Gas_(kBtu)` * 1.05 + `Oil_(kBtu)` * 1.01 + `Steam_(kBtu)` * 1.2) %>%
+    {.}
+  if ("electric_heating" %in% names(df)) {
+    df <- df %>%
+      dplyr::select(-`electric_heating`) %>%
+      {.}
+  }
+  df_tag = df %>%
+    dplyr::select(`Building_Number`, `Heating_(kBtu)`, `Fiscal_Year`) %>%
+    dplyr::group_by(`Building_Number`, `Fiscal_Year`) %>%
+    dplyr::summarise(`electric_heating` = (sum(`Heating_(kBtu)`) == 0)) %>%
+    dplyr::ungroup() %>%
+    {.}
+  df <- df %>%
+    dplyr::left_join(df_tag, by=c("Building_Number", "Fiscal_Year")) %>%
+    dplyr::mutate(`Heating_(kBtu)` = ifelse(`electric_heating`, `Electric_(kBtu)`, `Heating_(kBtu)`),
+                  `Heating_(kBtu)_source` = ifelse(`electric_heating`, `Electric_(kBtu)` * 3.14,
+                                                   `Heating_(kBtu)_source`)) %>%
+    {.}
+  if (debugFlag) {
+    df %>%
+      dplyr::select(`Building_Number`, `Fiscal_Year`, `Fiscal_Month`, `Electric_(kBtu)`, `Chilled_Water_(kBtu)`,
+                    `Gas_(kBtu)`, `Oil_(kBtu)`, `Steam_(kBtu)`, `electric_heating`, `Heating_(kBtu)`, `Cooling_(kBtu)`,
+                    `Heating_(kBtu)_source`, `Cooling_(kBtu)_source`) %>%
+      readr::write_csv("~/Dropbox/gsa_2017/csv_FY/db_build_temp_csv/EUAS_monthly_heating_cooling_source.csv")
+  }
+  write_table_to_db(df, dbname = "all", tablename = "EUAS_monthly", overwrite = TRUE)
+}
+
 #' Join EUAS_monthly and EUAS_type
 #'
 #' This function joins EUAS_monthly and EUAS_type
@@ -433,13 +480,31 @@ correct_city_name <- function() {
 #' main_db_build()
 main_db_build <- function() {
   ## remove_old_energy_data()
-  ## note: these seems to create duplicate records for AX and DC buildings in region 11, fix it later
-  recode_state_abbr()
+  ## recode_state_abbr()
+  ## check_duplicates(dbname="all", tablename="EUAS_monthly",
+  ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
   ## correct_city_name()
+  ## check_duplicates(dbname="all", tablename="EUAS_city",
+  ##                  groupby_vars=c("Building_Number", "City", "source"))
   ## unify_euas_type()
+  ## check_duplicates(dbname="all", tablename="EUAS_type",
+  ##                  groupby_vars=c("Building_Number", "Building_Type", "data_source"))
   ## add_chilled_water_eui()
-  ## recode_euas_type()
-  ## join_type_and_energy()
-  ## get_eui_by_year("F")
-  ## add_quality_tag_energy()
+  ## check_duplicates(dbname="all", tablename="EUAS_monthly",
+  ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
+  ## get_heating_cooling_eui()
+  ## check_duplicates(dbname="all", tablename="EUAS_monthly",
+  ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
+  recode_euas_type()
+  check_duplicates(dbname="all", tablename="EUAS_type_recode",
+                   groupby_vars=c("Building_Number", "Building_Type", "data_source"))
+  join_type_and_energy()
+  check_duplicates(dbname="all", tablename="EUAS_monthly_with_type",
+                   groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
+  get_eui_by_year("F")
+  check_duplicates(dbname="all", tablename="eui_by_fy",
+                   groupby_vars=c("Building_Number", "Fiscal_Year"))
+  add_quality_tag_energy()
+  check_duplicates(dbname="all", tablename="eui_by_fy_tag",
+                   groupby_vars=c("Building_Number", "Fiscal_Year"))
 }

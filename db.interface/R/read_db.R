@@ -1,4 +1,4 @@
-#'@importFrom dplyr %>%
+#'@importFrom magrittr %>%
 NULL
 #' Get latitude longitude
 #'
@@ -103,7 +103,7 @@ read_table_from_db <- function(dbname, tablename, path, cols, building) {
   }
   if (!missing(cols)) {
     df <- df %>%
-      dplyr::select(one_of(cols)) %>%
+      dplyr::select(dplyr::one_of(cols)) %>%
       {.}
   }
   DBI::dbDisconnect(con)
@@ -123,7 +123,7 @@ read_table_from_db <- function(dbname, tablename, path, cols, building) {
 #' get_unique_value_column(dbname="all", tablename="EUAS_type_recode", col="Building_Type")
 get_unique_value_column <- function(dbname, tablename, path, col) {
   vals = read_table_from_db(dbname, tablename, path, col) %>%
-    distinct(!!(rlang::sym(col)))
+    dplyr::distinct(!!(rlang::sym(col)))
   return(vals)
 }
 
@@ -181,6 +181,7 @@ get_euas_buildings <- function() {
     DBI::dbGetQuery(con, "SELECT DISTINCT Building_Number FROM EUAS_monthly") %>%
     tibble::as_data_frame() %>%
     {.}
+  DBI::dbDisconnect(con)
   return(df)
 }
 
@@ -226,6 +227,7 @@ get_buildings <- function(region, buildingType, year, category) {
       {.}
   }
   print(sprintf("number of buildings: %s", nrow(df)))
+  DBI::dbDisconnect(con)
   return(unique(df$Building_Number))
 }
 
@@ -299,7 +301,7 @@ get_count <- function(region, category, type, year, fOrC, gbvars) {
       {.}
   } else {
     df = df %>%
-      dplyr::group_by_at(vars(one_of(gbvars))) %>%
+      dplyr::group_by_at(vars(dplyr::one_of(gbvars))) %>%
       {.}
   }
   df <- df %>%
@@ -309,5 +311,6 @@ get_count <- function(region, category, type, year, fOrC, gbvars) {
                      highEnoughElectricityGas_n = sum(highEnoughElectricityGas),
                      zeroSqft_n = sum(zeroSqft)) %>%
     {.}
+  DBI::dbDisconnect(con)
   return(df)
 }
