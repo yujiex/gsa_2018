@@ -1,26 +1,34 @@
 #' Main function
 #'
-#' This function chains all the steps of lean analysis of one single building, fixme: noaa found a station with empty data for building CA0000SS
+#' This function chains all the steps of lean analysis of one single building,
+#' fixme: noaa found a station with empty data for building CA0000SS
 #' @param energy, a data frame containing 4 columns, year, month,
 #'   eui_elec(electricity kBtu/sqft), eui_gas(gas kBtu/sqft)
 #' @param latitude numeric, latitude of the building
 #' @param longitude numeric, longitude of the building
 #' @param lat_lon_df if latitude and longitude are missing, user needs to input
-#'   a dataframe containing three columns: latitude, longitude, Building_Number (an id uniquely identifies the building)
+#'   a dataframe containing three columns: latitude, longitude, Building_Number
+#'   (an id uniquely identifies the building)
 #' @param isd_data optional, returned by rnoaa::isd_stations(refresh = TRUE)
 #' @param radius (numeric) Radius (in km) to search from the lat,lon
 #'   coordinates, used in isd_station_search
 #' @param limit the maximum nearest stations returned for each building
-#' @param id optional, a unique identifier for a building, used to join other static data
+#' @param id optional, a unique identifier for a building, used to join other
+#'   static data
 #' @param plotType optional, "base", "elec", "gas"
-#' @param debugFlag optional, flag of debugging, with temp file saved to db_build_temp_csv
+#' @param debugFlag optional, flag of debugging, with temp file saved to
+#'   db_build_temp_csv
 #' @param xLabelPrefix optional, the prefix of x label
+#' @param elec_col optional, the column used in fitting electricity or cooling
+#'   kbtu/sqft. Use "Cooling_(kBtu)" for cooling, and "Cooling_(kBtu)_source"
+#'   for source energy cooling. Same goes with heating.
 #' @keywords lean
 #' @export
 #' @examples
 #' lean_analysis(lat_lon_df, radius=100, limit=5)
 lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, limit=5, id, plotType, debugFlag,
-                           plotXLimit, plotYLimit, xLabelPrefix) {
+                           plotXLimit=NULL, plotYLimit=NULL, xLabelPrefix="", plotPoint=FALSE, elec_col="eui_elec",
+                           gas_col="eui_gas") {
   ## get the years of data to download
   if (missing(id)) {
     id = "XXXXXXXX"
@@ -61,8 +69,8 @@ lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, 
   }
   ## print("-----------head of df----------------")
   ## print(head(df))
-  yElec = df$`eui_elec`
-  yGas = df$`eui_gas`
+  yElec = df[[elec_col]]
+  yGas = df$[[gas_col]]
   x = df$`wt_temperatureFmonth`
   ## print("-----------fit electricity ----------------")
   resultElec <- polynomial_deg_2(y=yElec, x=x)
