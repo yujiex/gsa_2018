@@ -23,6 +23,8 @@
 #'   date_min = 20150101, date_max = 20151231)
 get_nearby_ghcnd_stations <- function (lat_lon_df, id_col_name, ghcnd_data, radius=NULL, limit=NULL, date_min=NULL,
                                        date_max=NULL, year=NULL, var="TMIN", testing=FALSE) {
+  print("var")
+  print(var)
   lat_lon_df <- lat_lon_df %>%
     dplyr::rename(`id`=`Name`) %>%
     {.}
@@ -146,7 +148,7 @@ download_stations_from_top <- function(stations, date_min, date_max, v, v_out, t
 #' @param date_max An integer giving the latest date of the weather time series
 #'   that the user would like in the final output. This integer should be
 #'   formatted as yyyymmdd (20150101 for Jan 1, 2015)
-#' @param var optional, variable to download, default to TMIN
+#' @param v optional, variable to download, default to TMIN
 #' @param testing optional, if marked true, only the head part of lat_lon_df
 #'   will be evaluated
 #' @keywords nearby isd
@@ -162,14 +164,17 @@ get_nearby_ghcnd_stations_one_loc <- function (lat_lon_df, id_col_name="id", ghc
   b = lat_lon_df[[id_col_name]][[1]]
   v_out = tolower(v)
   nearbyStations =
-    get_nearby_ghcnd_stations(lat_lon_df=b_loc, ghcnd_data=ghcnd_data,
+    get_nearby_ghcnd_stations(lat_lon_df=b_loc, ghcnd_data=ghcnd_data, var=v,
                               ## return a lot and filter by whether having data
                               radius=radius, limit=100, date_min=date_min,
                               date_max=date_max, year=year)[[b]]
   print("head of nearby stations")
   print(head(nearbyStations))
   stations = nearbyStations$id
-  result = download_stations_from_top(stations, date_min, date_max, v, v_out, topn=5)
+  if (is.null(limit)) {
+    limit = 5
+  }
+  result = download_stations_from_top(stations, date_min, date_max, v, v_out, topn=limit)
   good_stations = result$good
   bad_stations = result$bad
   nearbyStations <- nearbyStations %>%
