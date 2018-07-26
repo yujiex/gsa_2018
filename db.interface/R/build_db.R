@@ -298,6 +298,33 @@ backup_table <- function(dbname, tablename) {
   print(sprintf("write to backup file: %s", filename))
 }
 
+#' Check duplicate of table
+#'
+#' This function checks duplicates of a table, group by columns
+#' @param dbname required, the name string of the database, e.g. "all.db" has name "all"
+#' @param tablename required, the name string of the table to view
+#' @param groupby_vars required, columns to group by at
+#' @keywords backup table
+#' @export
+#' @examples
+#' backup_table(dbname="all", tablename="EUAS_address")
+check_duplicates <- function(dbname, tablename, groupby_vars) {
+  print(sprintf("check duplicates of %s in %s.db", tablename, dbname))
+  df = db.interface::read_table_from_db(dbname=dbname, tablename=tablename) %>%
+    tibble::as_data_frame() %>%
+    {.}
+  dups <- df %>%
+    dplyr::group_by_at(vars(one_of(groupby_vars))) %>%
+    dplyr::filter(n() > 1) %>%
+    dplyr::ungroup() %>%
+    {.}
+  if (nrow(dups) == 0) {
+    print("no duplicate")
+  } else {
+    print("has duplicates")
+  }
+}
+
 #' Recode state to abbreviation
 #'
 #' This function converts state full name in EUAS data to state abbreviation, as
