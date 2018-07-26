@@ -95,7 +95,7 @@ piecewise_linear <- function(y, x, h) {
 #' @examples
 #' plot_fit(y=df$`eui_elect`, x=df$`wt_temperatureFmonth`, output, color="red", methodName=NULL)
 plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, methodName, plotXLimit=NULL,
-                     plotYLimit=NULL, xLabelPrefix="") {
+                     plotYLimit=NULL, xLabelPrefix="", plotPoint=FALSE) {
   if (missing(id)) {
     id = "XXXXXXXX"
   }
@@ -145,10 +145,8 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   }
   p <- ggplot2::ggplot() +
     ggplot2::geom_line(ggplot2::aes(x=xseq, y=yElecSeq + resultGas$baseload), colour=elec_line_color) +
-    ## ggplot2::geom_point(ggplot2::aes(x=x, y=yElec), colour=elec_line_color) +
     ggplot2::geom_segment(ggplot2::aes(x=min(x), xend=max(x), y=resultElec$baseload, yend=resultElec$baseload), linetype="dashed", color = base_elec_line_color, size=0.5) +
     ggplot2::geom_line(ggplot2::aes(x=xseq, y=yGasSeq + resultElec$baseload), colour=gas_line_color) +
-    ## ggplot2::geom_point(ggplot2::aes(x=x, y=yGas + resultElec$baseload), colour=gas_line_color) +
     ggplot2::geom_segment(ggplot2::aes(x=min(x), xend=max(x), y=resultElec$baseload + resultGas$baseload,
                                        yend=resultElec$baseload + resultGas$baseload),
                           linetype="dashed", color = base_gas_line_color, size=0.5) +
@@ -157,25 +155,38 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
     ggplot2::theme(text = ggplot2::element_text(size=theme_text_size))
   ## fill base load
   p <- p +
-    ggplot2::geom_ribbon(aes(x=xseq, ymin=0, ymax=resultElec$baseload), fill=base_elec_color,
+    ggplot2::geom_ribbon(ggplot2::aes(x=xseq, ymin=0, ymax=resultElec$baseload), fill=base_elec_color,
                          alpha=alpha_base_elec) +
-    ggplot2::geom_ribbon(aes(x=xseq, ymin=resultElec$baseload, ymax=resultElec$baseload + resultGas$baseload),
+    ggplot2::geom_ribbon(ggplot2::aes(x=xseq, ymin=resultElec$baseload, ymax=resultElec$baseload + resultGas$baseload),
                          fill=base_gas_color, alpha=alpha_base_gas)
+  if (plotPoint) {
+    p <- p +
+      ggplot2::geom_point(ggplot2::aes(x=x, y=yElec), colour=elec_line_color) +
+      ggplot2::geom_point(ggplot2::aes(x=x, y=yGas + resultElec$baseload), colour=gas_line_color)
+  }
   lowerElec = 1
   upperElec = length(xseq)
   lowerGas = 1
   upperGas = upperElec
-  if ((resultElec$b2 > 0) && ((min(x) < resultElec$argmin) && (resultElec$argmin < max(x)))) {
-    lowerElec = min(which(xseq > resultElec$argmin))
-  }
-  if ((resultGas$b2 > 0) && ((min(x) < resultGas$argmin) && (resultGas$argmin < max(x)))) {
-    upperGas = max(which(xseq < resultGas$argmin))
-  }
+  ## not sure if I need these
+  ## if ((resultElec$b2 > 0) && ((min(x) < resultElec$argmin) && (resultElec$argmin < max(x)))) {
+  ##   lowerElec = min(which(xseq > resultElec$argmin))
+  ## }
+  ## if ((resultGas$b2 > 0) && ((min(x) < resultGas$argmin) && (resultGas$argmin < max(x)))) {
+  ##   upperGas = max(which(xseq < resultGas$argmin))
+  ## }
+  ## not sure if I need these end
+  ## print(x)
+  ## print(xseq[lowerElec:upperElec])
+  ## print("ymin")
+  ## print(resultElec$baseload + resultGas$baseload)
+  ## print("ymax")
+  ## print((yElecSeq + resultGas$baseload)[lowerElec:upperElec])
   p <- p +
-    ggplot2::geom_ribbon(aes(x=xseq[lowerElec:upperElec], ymin=resultElec$baseload + resultGas$baseload,
+    ggplot2::geom_ribbon(ggplot2::aes(x=xseq[lowerElec:upperElec], ymin=resultElec$baseload + resultGas$baseload,
                              ymax=(yElecSeq + resultGas$baseload)[lowerElec:upperElec]), fill=elec_mk_color,
                          alpha=alpha_elec) +
-    ggplot2::geom_ribbon(aes(x=xseq[lowerGas:upperGas], ymin=resultElec$baseload + resultGas$baseload,
+    ggplot2::geom_ribbon(ggplot2::aes(x=xseq[lowerGas:upperGas], ymin=resultElec$baseload + resultGas$baseload,
                              ymax=(yGasSeq + resultElec$baseload)[lowerGas:upperGas]), fill=gas_mk_color,
                          alpha=alpha_gas)
   p <- p +
