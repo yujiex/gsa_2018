@@ -252,9 +252,10 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
 #' @export
 #' @examples
 #' test_lean_analysis_db()
-stacked_fit_plot <- function(region, buildingType, year, category, plotType, method, methodLabel, lowRange,
-                             highRange, debugFlag=FALSE, plotXLimits, plotYLimits, minorgrid, majorgrid,
-                             sourceEnergy=FALSE, legendloc="bottom", fontSize=10, fontFamily="System Font") {
+stacked_fit_plot <- function(region, buildingType, year, category, plotType, method, methodLabel, lowRange=NULL,
+                             highRange=NULL, debugFlag=FALSE, plotXLimits=NULL, plotYLimits=NULL, minorgrid,
+                             majorgrid, sourceEnergy=FALSE, legendloc="bottom", fontSize=10,
+                             fontFamily="System Font", vline_position=50) {
   datafile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.csv", plotType, region, methodLabel)
   imagefile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.png", plotType, region, methodLabel)
   print(datafile)
@@ -378,22 +379,22 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
   if (plotType == "elec") {
     p <- p +
       ## ggplot2::geom_text(ggplot2::aes(x=80, y=highLabel, label=sprintf("%.1f", highLabel))) +
-      ggplot2::geom_vline(xintercept=80, linetype="dashed")
+      ggplot2::geom_vline(xintercept=vline_position, linetype="dashed")
   } else if (plotType == "gas") {
     p <- p +
       ## ggplot2::geom_text(ggplot2::aes(x=30, y=lowLabel, label=sprintf("%.1f", lowLabel))) +
-      ggplot2::geom_vline(xintercept=50, linetype="dashed")
+      ggplot2::geom_vline(xintercept=vline_position, linetype="dashed")
   }
   print("y plot range")
   print(ggplot2::ggplot_build(p)$layout$panel_ranges[[1]]$y.range)
   print("x plot range")
   print(ggplot2::ggplot_build(p)$layout$panel_ranges[[1]]$x.range)
-  if (!missing(plotXLimits)) {
+  if (!is.null(plotXLimits)) {
     p <- p +
       ## ggplot2::coord_cartesian(xlim = plotXLimits)
       ggplot2::xlim(plotXLimits)
   }
-  if (!missing(plotYLimits)) {
+  if (!is.null(plotYLimits)) {
     if (missing(minorgrid)) {
       p <- p +
         ## ggplot2::coord_cartesian(ylim = plotYLimits)
