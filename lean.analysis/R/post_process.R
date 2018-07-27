@@ -26,11 +26,21 @@ img2tex <- function(df, prefix, suffix, isDesc, outfilename, topn=16, botn=4) {
       {.}
   }
   print(head(df))
-  if (!missing(topn)) {
-    df <- rbind(head(df, n=topn), tail(df, n=botn))
-  }
-  df %>%
+  df <- df %>%
     dplyr::select(`lines`) %>%
+    {.}
+  topData = head(df, n=topn)
+  diff_top = topn - nrow(df)
+  if (0 < topn && diff_top > 0) {
+    topData <- rbind(topData, data.frame(`lines`=rep(paste0(prefix, "dummy.png}"), diff_top)))
+  }
+  botData = tail(df, n=botn)
+  diff_bot = botn - nrow(df)
+  if (0 < botn && diff_bot > 0) {
+    botData <- rbind(botData, data.frame(`lines`=rep(paste0(prefix, "dummy.png}"), diff_bot)))
+  }
+  df <- rbind(topData, botData)
+  df %>%
     write.table(outfilename, sep="\n", row.names=FALSE, col.names = FALSE, quote = FALSE)
 }
 
