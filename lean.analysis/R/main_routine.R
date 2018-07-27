@@ -78,7 +78,8 @@ lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, 
   resultGas <- polynomial_deg_2(y=yGas, x=x)
   fitted_display = plot_fit(yElec=yElec, yGas=yGas, x=x, resultElec=resultElec,
            resultGas=resultGas, plotType=plotType, id=id,
-           methodName="polynomial degree 2", plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=xLabelPrefix)
+           methodName="polynomial degree 2", plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=xLabelPrefix,
+           plotPoint=plotPoint)
   ggplot2::ggsave(file=sprintf("region_report_img/lean/%s_%s.png", plotType, id), width = 2, height=2, units="in")
   return(fitted_display)
 }
@@ -214,7 +215,7 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
     lat_lon_df = db.interface::get_lat_lon_df(building=building)
     ## print("--------head of lat_lon_df---------")
     ## print(head(lat_lon_df))
-    lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE, plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=prefix)
+    lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE, plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=prefix, plotPoint=plotPoint)
     ## print("--------lean result---------")
     ## print(lean_result)
     counter = counter + 1
