@@ -16,10 +16,10 @@ db.interface::view_head_of_table(dbname = "all", tablename = "EUAS_monthly")[,5:
 
 db.interface::view_names_of_table(dbname = "other_input", tablename = "euas_database_of_buildings_cmu")
 
-db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_monthly_with_type")
+db.interface::view_names_of_table(dbname = "all", tablename = "eui_by_fy_tag")
 
 devtools::load_all("db.interface")
-db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_address")
+db.interface::view_names_of_table(dbname = "all", tablename = "EUAS_monthly")
 
 db.interface::view_head_of_table(dbname = "all", tablename = "EUAS_latlng_2")
 
@@ -38,6 +38,14 @@ db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_monthly_with_
     dplyr::filter(n() > 1) %>%
     ## readr::write_csv("csv_FY/db_build_temp_csv/dups.csv")
     head()
+
+db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_ecm", cols=c("Building_Number", "Substantial_Completion_Date")) %>% head()
+
+db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_monthly", cols=c("Building_Number", "year", "month", "Electric_(kBtu)", "Gas_(kBtu)", "Oil_(kBtu)", "Steam_(kBtu)")) %>%
+  dplyr::filter(`year` > 2014) %>%
+  dplyr::filter(`Building_Number` == "DC0028ZZ") %>%
+  dplyr::select(-`Building_Number`) %>%
+  head()
 
 db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>%
   dplyr::filter(`Region_No.`=="9", `Gross_Sq.Ft`==0) %>%
@@ -61,8 +69,13 @@ db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_monthly") %>%
   dplyr::filter(Fiscal_Year == 2016) %>%
     readr::write_csv("temp.csv")
 
-get_unique_value_column(dbname="all", tablename="EUAS_ecm", col="high_level_ECM")
+devtools::load_all("db.interface")
+get_unique_value_column(dbname="all", tablename="EUAS_ecm", col="source_detail")
+get_unique_value_column(dbname="all", tablename="EUAS_ecm", col="source_highlevel")
 
+get_unique_value_column(dbname="all", tablename="EUAS_address", col="source")
+
+get_unique_value_column(dbname="all", tablename="EUAS_city", col="Building_Number")
 
 get_unique_value_column(dbname="all", tablename="EUAS_type_recode", col="data_source")
 
