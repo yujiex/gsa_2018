@@ -21,11 +21,14 @@
 #' @param scaler optional, if supplied, scale the input
 #' @param facetNcol optional, number of columns in facet plot
 #' @param labelCutoff optional, upper bound for label to be visible
+#' @param manual_legend_order optional, manual order of legend
 #' @keywords query count
 #' @export
 #' @examples
-#' stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", tit="EUAS Building Count By Category")
-stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit, legendloc, legendOrient, pal, pal_values, labelFormat, width, verbose, scaler, facetvar=NULL, facetNcol=NULL, labelCutoff=NULL) {
+#' df = tibble::tibble(Fiscal_Year=2013L, Cat=c("A","B","B"))
+#' stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", tit="EUAS Building Count By Category", orderByHeight=TRUE, xlabel="XLABEL", legendloc="bottom", legendOrient="horizontal")
+#' stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", tit="EUAS Building Count By Category", orderByHeight=TRUE, xlabel="XLABEL", legendloc="bottom", legendOrient="horizontal", manual_legend_order=c("B","A"))
+stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit, legendloc, legendOrient, pal, pal_values, labelFormat, width, verbose, scaler, facetvar=NULL, facetNcol=NULL, labelCutoff=NULL, manual_legend_order=ggplot2::waiver()) {
   ncategory = length(unique(df[[fillcol]]))
   if (missing(labelFormat)) {
     labelFormat = "%s"
@@ -184,6 +187,7 @@ stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit
     ggplot2::geom_text(size=3, ggplot2::aes(y=pos, label=barHeightLabel), fontface = "bold", vjust=-0.5) +
     ggplot2::geom_text(size=2.5, position = ggplot2::position_stack(vjust = 0.5),
                        ggplot2::aes(label=`total_label`)) +
+    ggplot2::guides(fill=ggplot2::guide_legend(nrow=1)) +
     ggplot2::theme()
     ## ggplot2::geom_text(ggplot2::aes(y=mid_y), size=2.5)
   if (!missing(legendloc)) {
@@ -211,9 +215,9 @@ stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit
     }
   }
   if (!missing(pal_values)) {
-    g <- g + ggplot2::scale_fill_manual(values=pal_values)
+    g <- g + ggplot2::scale_fill_manual(values=pal_values, breaks=manual_legend_order)
   } else {
-    g <- g + ggplot2::scale_fill_brewer(palette=pal)
+    g <- g + ggplot2::scale_fill_brewer(palette=pal, breaks=manual_legend_order)
   }
   return(g)
 }
@@ -838,7 +842,7 @@ national_overview_over_years <- function(category, type, years, region, pal) {
                orderByHeight=FALSE, labelFormat="%.0f", width=width, verbose=FALSE,
                ## pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "grey"),
                pal_values = national_over_years_pal,
-               labelCutoff=5)
+               labelCutoff=5, manual_legend_order=c("Electric","Gas","Steam","Chilled Water","Oil","Other"))
   print(p)
   ## first two box info start
   EUIs = df_agg_eui %>%
