@@ -10,7 +10,7 @@
 #' @export
 #' @examples
 #' polynomial_deg_2(y, x)
-img2tex <- function(df, prefix, suffix, isDesc, outfilename, topn=16, botn=4) {
+img2tex <- function(df, prefix, suffix, isDesc, outfilename, topn=0, botn=0) {
   print(head(df))
   df <- df %>%
     dplyr::mutate(`lines`=paste0(prefix, `id`, suffix)) %>%
@@ -74,9 +74,18 @@ generate_lean_tex <- function(plotType, region, topn, botn, category) {
       {.}
     categoryTag = sprintf("_%s", category)
   }
-  outfile = sprintf("region_report_img/%s_region_%s%s.tex", plotType, region, categoryTag)
-  img2tex(df, prefix=sprintf("\\includegraphics[width = 0.24\\textwidth, keepaspectratio]{lean/%s_", plotType),
-          suffix=".png}",
-          isDesc=TRUE, outfilename=outfile,
-          topn=topn, botn=botn)
+  if (topn != 0) {
+    outfile = sprintf("region_report_img/%s_region_%s%s_top%s.tex", plotType, region, categoryTag, topn)
+    img2tex(df, prefix=sprintf("\\includegraphics[width = 0.24\\textwidth, keepaspectratio]{lean/%s_", plotType),
+            suffix=".png}",
+            isDesc=TRUE, outfilename=outfile,
+            topn=topn, botn=0)
+  }
+  if (botn != 0) {
+    outfile = sprintf("region_report_img/%s_region_%s%s_bot%s.tex", plotType, region, categoryTag, botn)
+    img2tex(df, prefix=sprintf("\\includegraphics[width = 0.24\\textwidth, keepaspectratio]{lean/%s_", plotType),
+            suffix=".png}",
+            isDesc=TRUE, outfilename=outfile,
+            topn=0, botn=botn)
+  }
 }
