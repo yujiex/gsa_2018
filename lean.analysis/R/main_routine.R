@@ -270,23 +270,23 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
     dfData = readr::read_csv(datafile) %>%
       as.data.frame() %>%
       {.}
-    if (plotType == "elec") {
-      ## select data with large enough temperature range
-      if (!missing(lowRange)) {
-        buildingInRange <- dfData %>%
-          dplyr::group_by(`Building_Number`) %>%
-          dplyr::summarise(`low` = min(`xseq`), `high`=max(`xseq`)) %>%
-          dplyr::filter(`low` < lowRange) %>%
-          {.}
-        if(!missing(highRange)) {
-          buildingInRange <- buildingInRange  %>%
-            dplyr::filter(`high` > highRange) %>%
-            {.}
-        }
-        dfData <- dfData %>%
-          dplyr::filter(`Building_Number` %in% buildingInRange$Building_Number) %>%
+    if (!is.null(lowRange)) {
+      buildingInRange <- dfData %>%
+        dplyr::group_by(`Building_Number`) %>%
+        dplyr::summarise(`low` = min(`xseq`), `high`=max(`xseq`)) %>%
+        dplyr::filter(`low` < lowRange) %>%
+        {.}
+      if(!is.null(highRange)) {
+        buildingInRange <- buildingInRange  %>%
+          dplyr::filter(`high` > highRange) %>%
           {.}
       }
+      dfData <- dfData %>%
+        dplyr::filter(`Building_Number` %in% buildingInRange$Building_Number) %>%
+        {.}
+    }
+    if (plotType == "elec") {
+      ## select data with large enough temperature range
       toDisplay <- dfData %>%
         dplyr::select(`Building_Number`, `highLabel`) %>%
         dplyr::group_by(`Building_Number`, `highLabel`) %>%
