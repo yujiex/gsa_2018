@@ -693,26 +693,6 @@ dollar_saving <- function(category, type, year, region, method="own", topn=10, b
       ggplot2::ggsave(file=sprintf("region_report_img/regional/%s_median_potential_dollar_region_%s_green.png", method, region), width=5, height=3, units = "in")
     }
   }
-  ## ggplot2::geom_text(hjust=hjust)
-  ## yranges = (ggplot2::ggplot_build(p)$layout$panel_ranges[[1]]$y.range)
-  ## print("default y range of plotting")
-  ## print(yranges)
-  ## ylimit = yranges + c(yleftLimit, yrightLimit)
-  ## p <- p +
-  ##   ggplot2::coord_flip(ylim=ylimit) +
-  ##   ggplot2::ylab("Dollar") +
-  ##   ## ggplot2::ylab("Million Dollar") +
-  ##   ggplot2::xlab("Building Number") +
-  ##   ## ggplot2::ggtitle(sprintf("Potential dollar saving%s (%s)", regionTag, method)) +
-  ##   ## reverse the defulat color palette
-  ##   ggplot2::scale_fill_manual(values = c("#8CC482", "#F89728")) +
-  ##   ggplot2::theme_bw() +
-  ##   ggplot2::theme(legend.position=legendloc, panel.grid.major = ggplot2::element_blank(),
-  ##                  panel.grid.minor = ggplot2::element_blank(), panel.border = ggplot2::element_blank(),
-  ##                  axis.title = ggplot2::element_blank(),
-  ##                  text=ggplot2::element_text(size=fontsize, family=fontFamily)
-  ##                  )
-    ## head() %>%
 }
 
 #' Summary table own median vs cbecs median
