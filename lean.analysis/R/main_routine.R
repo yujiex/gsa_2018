@@ -165,7 +165,7 @@ test_lean_analysis_db <- function() {
 #' @export
 #' @examples
 #' test_lean_analysis_db()
-plot_lean_subset <- function(region, buildingType, year, plotType, category, sourceEnergy=FALSE, plotXLimit=NULL, plotYLimit=NULL, topn=16, botn=4) {
+plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotType, category, sourceEnergy=FALSE, plotXLimit=NULL, plotYLimit=NULL, topn=NULL, botn=NULL, plotPoint=FALSE) {
   buildings = db.interface::get_buildings(region=region, buildingType=buildingType, year=year, category=category)
   counter = 1
   acc=NULL
@@ -184,8 +184,13 @@ plot_lean_subset <- function(region, buildingType, year, plotType, category, sou
       {.}
     print(head(dfscore))
     print(tail(dfscore))
-    dfscore <- rbind(head(dfscore, n=topn), tail(dfscore, n=botn))
+    if (!is.null(topn)) {
+      dfscore <- rbind(head(dfscore, n=topn), tail(dfscore, n=botn))
+    }
     buildings = dfscore$Building_Number
+  }
+  if (!missing(buildingNumber)) {
+    buildings = c(buildingNumber)
   }
   for (building in buildings) {
     ## print(sprintf("plot %s %s ---------------", counter, building))
