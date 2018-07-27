@@ -318,13 +318,14 @@ def plot_saving_aggyear(df, timerange_pre,
                     facecolor='lime', alpha=0.5, interpolate=True)
     ax.fill_between(x, y, y_hat, where=y_hat < y, facecolor='red',
                     alpha=0.5, interpolate=True)
-    ax.set_ylabel("kBtu per squar foot per month", fontsize=10)
+    ax.set_ylabel("kBtu per square foot per month", fontsize=10)
     ax.legend([line1, line2],
               ['Actual {1} use in {0}'.format(time_label(timerange_post), lb.title_dict[theme]),
                '\n'.join(tw.wrap('{1} use given {2} habits but {0} weather'.format(time_label(timerange_post),
                                                                                    lb.title_dict[theme],
                                                                                    time_label(timerange_pre)),
                                  wrapwidth))], loc=location)
+    plt.xticks(range(1, 13), ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
     if save_percent > 0:
         ax.set_title('{2} after ({0}) vs before ({4}), {1}% less, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)), fontsize=12)
     else:
@@ -670,6 +671,7 @@ def plot_action_fromdb():
     # FIXME: PA0060ZZ has None in eui_gas
     del names[153]
     names = ['CA0154ZZ']
+    # names = ['CA0306ZZ']
     for i, name in enumerate(names):
         print i, name, '222222222222222222222222222222'
         group = gr.get_group(name)
