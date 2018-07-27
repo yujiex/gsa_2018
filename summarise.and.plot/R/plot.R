@@ -36,12 +36,12 @@ stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit
   if (missing(ycol)) {
     ## dfcount = plyr::count(df, c(xcol, fillcol))
     dfcount = df %>%
-      dplyr::group_by_at(vars(one_of(facetvar, xcol, fillcol))) %>%
+      dplyr::group_by_at(dplyr::vars(dplyr::one_of(facetvar, xcol, fillcol))) %>%
       dplyr::summarise(`freq` = n()) %>%
       dplyr::ungroup() %>%
       {.}
     dftotal = df %>%
-      dplyr::group_by_at(vars(one_of(facetvar, xcol))) %>%
+      dplyr::group_by_at(dplyr::vars(dplyr::one_of(facetvar, xcol))) %>%
       dplyr::summarise(`freq` = n()) %>%
       dplyr::ungroup() %>%
       {.}
