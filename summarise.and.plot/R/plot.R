@@ -1,3 +1,6 @@
+#'@importFrom magrittr %>%
+NULL
+
 #' Stacked bar plot
 #'
 #' This function produces a stacked bar plot, with labels for each stacked
@@ -525,9 +528,11 @@ national_overview <- function(category, type, year, region, pal_values) {
               orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, labelCutoff=cutoff)
   print(p)
   print(sprintf("total gross square foot: %.2f M", sum(df$Gross_Sq.Ft) * 1e-6))
+  print(sprintf("total cost in million dollar: %.2f M", sum(df$`Total_(Cost)`) * 1e-6))
   df %>%
     dplyr::group_by(`Building_Type`, `Category`) %>%
-    dplyr::summarise(cnt=n(), total_million_sqft=sum(Gross_Sq.Ft) * 1e-6) %>%
+    dplyr::summarise(cnt=n(), total_million_sqft=sum(Gross_Sq.Ft) * 1e-6,
+                     total_cost=sum(`Total_(Cost)`) * 1e-6) %>%
     print()
 }
 
@@ -861,8 +866,12 @@ national_overview_over_years <- function(category, type, years, region, pal) {
     dplyr::summarise(DOLLAR = sum(`Cost`)) %>%
     dplyr::ungroup() %>%
     .$DOLLAR
+  print("Dollars over 5 years")
+  print(COST)
   print(sprintf("Dollar savings over five years: %.1fM", (COST[[5]] - COST[[1]]) * 1e-6))
+  print(sprintf("Dollar savings over two years: %.1fM", (COST[[5]] - COST[[3]]) * 1e-6))
   ## the third box info end
+  if (FALSE) {
   p = stackbar(df=dflong_cost, xcol="Fiscal_Year", fillcol="FuelType", ycol="Cost", ylabel="Million Dollar",
                xlabel="Fiscal Year", legendloc = "bottom", legendOrient="h",
                tit=sprintf("Energy cost (million dollar) by year%s", regionTag),
@@ -1007,6 +1016,7 @@ national_overview_over_years <- function(category, type, years, region, pal) {
   ##     ggplot2::theme()
   ##   print(p)
   ## }
+  }
 }
 
 ## national 2017
