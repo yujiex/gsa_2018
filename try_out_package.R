@@ -308,29 +308,275 @@ devtools::load_all("lean.analysis")
 ## y[11:20] <- seq(11, 15, len=10) + rnorm(10, 0, 1.5)
 
 devtools::load_all("lean.analysis")
+
 fontSizeStackLean = 10
+region="9"
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=60, highRange=80, plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5), fontSize=fontSizeStackLean, legendloc="right", vline_position=80)
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5), fontSize=fontSizeStackLean, legendloc="right", vline_position=50)
+
+fontSizeStackLean = 10
+region = "1"
+lowRange = NULL
+highRange = NULL
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=60)
+
+## need to run twice
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=30)
+
+fontSizeStackLean = 10
+region = "2"
+lowRange = 40
+highRange = 60
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=70)
+
+region = "2"
+## need to run twice
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=30)
+
+fontSizeStackLean = 10
+region = "3"
+lowRange = NULL
+highRange = NULL
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=70)
+
+## need to run twice
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=30)
+
+fontSizeStackLean = 10
+region = "4"
+lowRange = 50
+highRange = 70
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=70)
+
+region = "4"
+## need to run twice
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=50)
+
+fontSizeStackLean = 10
+region = "5"
+lowRange = NULL
+highRange = NULL
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=70)
+
+region = "5"
+## need to run twice
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=30)
+
+fontSizeStackLean = 10
+region = "6"
+lowRange = NULL
+highRange = NULL
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=70)
+
+region = "6"
+## need to run twice
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=30)
+
+fontSizeStackLean = 10
+region = "7"
+lowRange = NULL
+highRange = NULL
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=80)
+
+region = "7"
+## need to run twice
+lowRange = 55
+highRange = 80
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=50)
+
+
+fontSizeStackLean = 10
+region = "8"
+lowRange = 35
+highRange = 65
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=70)
+
+region = "8"
+## need to run twice
+lowRange = NULL
+highRange = NULL
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=30)
+
+fontSizeStackLean = 10
+region = "10"
+lowRange = NULL
+highRange = NULL
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=60)
+
+region = "10"
+## need to run twice
+lowRange = NULL
+highRange = NULL
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=40)
+
+fontSizeStackLean = 10
+region = "11"
+lowRange = NULL
+highRange = NULL
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=70)
+
+region = "11"
+## need to run twice
+lowRange = NULL
+highRange = NULL
+plotXLimits = NULL
+plotYLimits = NULL
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=lowRange, highRange=highRange, plotXLimits=plotXLimits, plotYLimits=plotYLimits, fontSize=fontSizeStackLean, legendloc="right", vline_position=30)
+
 ## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::polynomial_deg_2, methodLabel="poly2", lowRange=60, highRange=80, plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5))
-stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="elec", method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=60, highRange=80, plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5), fontSize=fontSizeStackLean, legendloc="right")
 ## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::polynomial_deg_2, methodLabel="poly2", plotXLimits=c(40, 90), plotYLimits=c(-0.5, 17.5))
 ## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(44, 100), plotYLimits=c(1.7, 16.6), minorgrid=seq(2, 14, 2), majorgrid=seq(4, 16, 4))
-stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5), fontSize=fontSizeStackLean, legendloc="right")
 ## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(40, 90))
 
+## region 9
 devtools::load_all("lean.analysis")
 ## plot lean image
 ## maybe add in a whether to redo plotting tag?
-plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60), topn=16, botn=4)
+region=9
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60), topn=16, botn=4)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 40), topn=20, botn=0)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60), topn=20, botn=0)
 
-plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 40), topn=20, botn=0)
-plot_lean_subset(region=9, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(43, 97), plotYLimit=c(-1, 60), topn=20, botn=0)
-
-devtools::load_all("lean.analysis")
 generate_lean_tex(plotType="base", region=9, topn=8, botn=4, category="I")
-
 generate_lean_tex(plotType="base", region=9, topn=4, botn=4, category="A")
-
 generate_lean_tex(plotType="gas", region=9, topn=20, botn=0)
 generate_lean_tex(plotType="elec", region=9, topn=20, botn=0)
+
+devtools::load_all("db.interface")
+devtools::load_all("get.noaa.weather")
+devtools::load_all("lean.analysis")
+
+region=1
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(8, 82), plotYLimit=c(-1, 72))
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(8, 82), plotYLimit=c(-1, 72))
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(8, 82), plotYLimit=c(-1, 72), plotPoint=FALSE)
+
+generate_lean_tex(plotType="base", region=region, topn=8, botn=4, category="I")
+generate_lean_tex(plotType="base", region=region, topn=4, botn=4, category="A")
+generate_lean_tex(plotType="gas", region=region, topn=20, botn=0)
+generate_lean_tex(plotType="elec", region=region, topn=20, botn=0)
+
+region=2
+xlimits = c(0, 84)
+ylimits = c(-1, 70)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+
+region=3
+xlimits = c(5, 85)
+ylimits = c(-1, 40)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+
+region=4
+xlimits = c(25, 90)
+ylimits = c(-1, 30)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+
+region=5
+plot_lean_subset(region=region, buildingType="Office", buildingNumber="MT0000AE", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+
+xlimits = c(-5, 85)
+ylimits = c(-1, 55)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+
+region=6
+xlimits = c(10, 85)
+ylimits = c(-1, 25)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+
+region=7
+xlimits = c(25, 95)
+ylimits = c(-1, 40)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+
+region=8
+xlimits = c(-5, 95)
+ylimits = c(-1, 40)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+
+region=10
+xlimits = c(15, 85)
+ylimits = c(-1, 65)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+
+region=11
+xlimits = c(25, 85)
+ylimits = c(-1, 50)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+
+generate_lean_tex(plotType="base", region=region, topn=8, botn=4, category="I")
+generate_lean_tex(plotType="base", region=region, topn=4, botn=4, category="A")
+generate_lean_tex(plotType="gas", region=region, topn=20, botn=0)
+generate_lean_tex(plotType="elec", region=region, topn=20, botn=0)
+
+## for building TX0211ZZ
+building = "TX0211ZZ"
+plotType = "base"
+energy = db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly_with_type",
+                                          cols=c("Fiscal_Year", "Fiscal_Month", "year", "month", "Building_Type","eui_elec", "eui_gas", "Cat"), building=building) %>%
+  dplyr::arrange(-`year`, -`month`) %>%
+  dplyr::filter(year %in% 2013:2016) %>%
+  {.}
+print(building)
+print(head(energy))
+lat_lon_df = db.interface::get_lat_lon_df(building=building)
+lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE)
 
 test_lean_analysis_db()
 
