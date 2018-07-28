@@ -5,7 +5,9 @@
 \title{Main function}
 \usage{
 lean_analysis(energy, latitude, longitude, lat_lon_df, radius = 100,
-  limit = 5, id, plotType, debugFlag)
+  limit = 5, id, plotType, debugFlag, plotXLimit = NULL,
+  plotYLimit = NULL, xLabelPrefix = "", plotPoint = FALSE,
+  elec_col = "eui_elec", gas_col = "eui_gas")
 }
 \arguments{
 \item{energy, }{a data frame containing 4 columns, year, month,
@@ -16,23 +18,33 @@ eui_elec(electricity kBtu/sqft), eui_gas(gas kBtu/sqft)}
 \item{longitude}{numeric, longitude of the building}
 
 \item{lat_lon_df}{if latitude and longitude are missing, user needs to input
-a dataframe containing three columns: latitude, longitude, Building_Number (an id uniquely identifies the building)}
+a dataframe containing three columns: latitude, longitude, Building_Number
+(an id uniquely identifies the building)}
 
 \item{radius}{(numeric) Radius (in km) to search from the lat,lon
 coordinates, used in isd_station_search}
 
 \item{limit}{the maximum nearest stations returned for each building}
 
-\item{id}{optional, a unique identifier for a building, used to join other static data}
+\item{id}{optional, a unique identifier for a building, used to join other
+static data}
 
 \item{plotType}{optional, "base", "elec", "gas"}
 
-\item{debugFlag}{optional, flag of debugging, with temp file saved to db_build_temp_csv}
+\item{debugFlag}{optional, flag of debugging, with temp file saved to
+db_build_temp_csv}
+
+\item{xLabelPrefix}{optional, the prefix of x label}
+
+\item{elec_col}{optional, the column used in fitting electricity or cooling
+kbtu/sqft. Use "Cooling_(kBtu)" for cooling, and "Cooling_(kBtu)_source"
+for source energy cooling. Same goes with heating.}
 
 \item{isd_data}{optional, returned by rnoaa::isd_stations(refresh = TRUE)}
 }
 \description{
-This function chains all the steps of lean analysis of one single building, fixme: noaa found a station with empty data for building CA0000SS
+This function chains all the steps of lean analysis of one single building,
+fixme: noaa found a station with empty data for building CA0000SS
 }
 \examples{
 lean_analysis(lat_lon_df, radius=100, limit=5)

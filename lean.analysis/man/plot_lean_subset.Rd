@@ -4,15 +4,23 @@
 \alias{plot_lean_subset}
 \title{Lean analysis for a subset of building}
 \usage{
-plot_lean_subset(region, buildingType, year, plotType, category)
+plot_lean_subset(region, buildingType, buildingNumber, year, plotType, category,
+  sourceEnergy = FALSE, plotXLimit = NULL, plotYLimit = NULL,
+  topn = NULL, botn = NULL, plotPoint = FALSE)
 }
 \arguments{
 \item{plotType}{"base", "elec", "gas"}
 
 \item{category}{a vector of "A", "I", etc.}
+
+\item{sourceEnergy, }{optional, whether to use source, instead of site energy}
+
+\item{topn, }{optional, produce the topn score building's lean plot}
+
+\item{botn, }{optional, produce the botn score building's lean plot}
 }
 \description{
-This function tests the main lean analysis routine, with inputs from the db
+This function produces the lean plot included in the regional report
 }
 \examples{
 test_lean_analysis_db()

@@ -4,7 +4,9 @@
 \alias{plot_fit}
 \title{Plot the fit}
 \usage{
-plot_fit(yElec, yGas, x, resultElec, resultGas, plotType, id, methodName)
+plot_fit(yElec, yGas, x, resultElec, resultGas, plotType, id, methodName,
+  plotXLimit = NULL, plotYLimit = NULL, xLabelPrefix = "",
+  plotPoint = FALSE)
 }
 \arguments{
 \item{x}{the vector of the 1-d covariate variable}
@@ -18,6 +20,12 @@ plot_fit(yElec, yGas, x, resultElec, resultGas, plotType, id, methodName)
 \item{id}{optional, unique identifier of a building, default to "XXXXXXXX"}
 
 \item{methodName}{optional, the name of the method}
+
+\item{plotXLimit}{optional, the range of x axis, e.g. c(10, 100)}
+
+\item{plotYLimit}{optional, the range of y axis, e.g. c(10, 100)}
+
+\item{xLabelPrefix}{optional, the prefix of x label}
 
 \item{y}{the vector of the response variable}
 }

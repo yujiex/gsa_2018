@@ -5,12 +5,35 @@
 \title{Lean analysis for a subset of building}
 \usage{
 stacked_fit_plot(region, buildingType, year, category, plotType, method,
-  methodLabel)
+  methodLabel, lowRange = NULL, highRange = NULL, debugFlag = FALSE,
+  plotXLimits = NULL, plotYLimits = NULL, minorgrid, majorgrid,
+  sourceEnergy = FALSE, legendloc = "bottom", fontSize = 10,
+  fontFamily = "System Font", vline_position = 50)
 }
 \arguments{
 \item{category}{a vector of "A", "I", etc.}
 
 \item{plotType}{optional, "elec", "gas"}
+
+\item{lowRange}{require curves plotted have left end of x range lower than lowRange}
+
+\item{highRange}{require curves plotted have right end of x range higher than highRange}
+
+\item{debugFlag}{default to FALSE, set to true to print plot}
+
+\item{plotXLimits}{x limits for plotting, e.g. c(20, 100)}
+
+\item{plotYLimits}{y limits for plotting, e.g. c(20, 100)}
+
+\item{minorgrid}{a sequence of minor breaks, e.g. seq(0 , 100, 5)}
+
+\item{majorgrid}{a sequence of major breaks, e.g. seq(0, 100, 10)}
+
+\item{legendloc}{legend location, default to bottom}
+
+\item{fontSize}{font size for all text}
+
+\item{fontFamily}{font family for all text}
 }
 \description{
 This function tests the main lean analysis routine, with inputs from the db

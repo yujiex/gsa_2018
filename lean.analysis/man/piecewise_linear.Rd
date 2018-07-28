@@ -11,7 +11,7 @@ piecewise_linear(y, x, h)
 
 \item{x}{the vector of the 1-d covariate variable}
 
-\item{h}{required, the h in the segmented::seg.control}
+\item{h}{optional, the h in the segmented::seg.control}
 }
 \description{
 This function fits a piecewise linear regression

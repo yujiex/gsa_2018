@@ -32,7 +32,7 @@ formatted as yyyymmdd (20150101 for Jan 1, 2015)}
 that the user would like in the final output. This integer should be
 formatted as yyyymmdd (20150101 for Jan 1, 2015)}
 
-\item{var}{optional, variable to download, default to TMIN}
+\item{v}{optional, variable to download, default to TMIN}
 
 \item{testing}{optional, if marked true, only the head part of lat_lon_df
 will be evaluated}

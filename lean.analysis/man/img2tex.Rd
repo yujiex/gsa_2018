@@ -4,7 +4,7 @@
 \alias{img2tex}
 \title{Image to tex}
 \usage{
-img2tex(df, prefix, suffix, isDesc, outfilename, topn)
+img2tex(df, prefix, suffix, isDesc, outfilename, topn = 0, botn = 0)
 }
 \arguments{
 \item{df}{required, a data frame with the image identifiers, and a column named "score"}

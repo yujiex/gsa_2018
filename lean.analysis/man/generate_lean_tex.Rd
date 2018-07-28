@@ -4,9 +4,15 @@
 \alias{generate_lean_tex}
 \title{Generate lean tex file}
 \usage{
-generate_lean_tex(plotType, region)
+generate_lean_tex(plotType, region, topn, botn, category)
 }
 \arguments{
+\item{topn}{top n records to include}
+
+\item{botn}{bottom n records to include}
+
+\item{category}{optional, filter for specific category}
+
 \item{df}{required, a data frame with the image identifiers, and a column named "score"}
 
 \item{isDesc}{whether the sort is descending}
