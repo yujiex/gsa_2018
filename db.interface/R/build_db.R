@@ -57,7 +57,7 @@ unify_euas_type <- function() {
 recode_euas_type <- function() {
   df = read_table_from_db(dbname = "all", tablename = "EUAS_type")
   df = df %>%
-    dplyr::mutate_at(vars(`Building_Type`), recode, "Office Building"="Office", "All Other"="Other", "Non-Refrigerated Warehouse"="Warehouse") %>%
+    dplyr::mutate_at(dplyr::vars(`Building_Type`), dplyr::recode, "Office Building"="Office", "All Other"="Other", "Non-Refrigerated Warehouse"="Warehouse") %>%
     {.}
   write_table_to_db(df=df, dbname = "all", tablename = "EUAS_type_recode", overwrite = TRUE)
 }
@@ -115,10 +115,10 @@ drop_table_from_db <- function(dbname, tablename) {
 join_type_and_energy <- function() {
   con = connect("all")
   df1 = DBI::dbGetQuery(con, "SELECT * FROM EUAS_monthly") %>%
-    as_data_frame() %>%
+    tibble::as_data_frame() %>%
     {.}
   df2 = DBI::dbGetQuery(con, "SELECT * FROM EUAS_type_recode")
-    as_data_frame() %>%
+    tibble::as_data_frame() %>%
     {.}
   DBI::dbDisconnect(con)
   df = df1 %>%
@@ -149,27 +149,27 @@ get_eui_by_year <- function(fOrC) {
   df =
     ## DBI::dbGetQuery(con, "SELECT * FROM EUAS_monthly_with_type LIMIT 100") %>%
     DBI::dbGetQuery(con, "SELECT * FROM EUAS_monthly_with_type") %>%
-    as_data_frame() %>%
+    tibble::as_data_frame() %>%
     dplyr::select(-`index`, -`month`, -`Fiscal_Month`) %>%
     {.}
   DBI::dbDisconnect(con)
   df_numeric = df %>%
     dplyr::select(-`Gross_Sq.Ft`) %>%
     dplyr::group_by(`Building_Number`, !!rlang::sym(year_col)) %>%
-    dplyr::summarise_if(is.numeric, funs(sum)) %>%
+    dplyr::summarise_if(is.numeric, dplyr::funs(sum)) %>%
     dplyr::ungroup() %>%
-    ## dplyr::summarise_if(is.character, funs(first)) %>%
+    ## dplyr::summarise_if(is.character, dplyr::funs(first)) %>%
     {.}
   df_char = df %>%
     dplyr::select(`Building_Number`, !!rlang::sym(year_col), `State`, `Cat`, `Gross_Sq.Ft`, `Region_No.`, `Service_Center`, `Area_Field_Office`, `Building_Designation`, `Building_Type`, `type_data_source`) %>%
     ## dplyr::select(`Building_Number`, !!rlang::sym(year_col), `State`, `Cat`, `Gross_Sq.Ft`, `Region_No.`, `Service_Center`, `Area_Field_Office`, `Building_Designation`, `Building_Type`, `type_data_source`, `state_abbr`) %>%
     dplyr::group_by(`Building_Number`, !!rlang::sym(year_col)) %>%
-    dplyr::summarise_all(funs(first)) %>%
+    dplyr::summarise_all(dplyr::funs(first)) %>%
     dplyr::ungroup() %>%
     {.}
   df_year = df_char %>%
     dplyr::left_join(df_numeric) %>%
-    dplyr::select(-one_of(non_year_col)) %>%
+    dplyr::select(-dplyr::one_of(non_year_col)) %>%
     {.}
   write_table_to_db(df=df_year, dbname="all", tablename="eui_by_fy", overwrite=TRUE)
 }
@@ -315,7 +315,7 @@ check_duplicates <- function(dbname, tablename, groupby_vars) {
     tibble::as_data_frame() %>%
     {.}
   dups <- df %>%
-    dplyr::group_by_at(vars(one_of(groupby_vars))) %>%
+    dplyr::group_by_at(dplyr::vars(dplyr::one_of(groupby_vars))) %>%
     dplyr::filter(n() > 1) %>%
     dplyr::ungroup() %>%
     {.}
@@ -366,13 +366,13 @@ recode_state_abbr <- function() {
   print(head(dflookup))
   print("check anti join")
   df %>%
-    dplyr::select(-one_of("state_abbr")) %>%
+    dplyr::select(-dplyr::one_of("state_abbr")) %>%
     dplyr::anti_join(dflookup, by="State") %>%
     nrow() %>%
     print()
   df <- df %>%
     ## if this column is not in there, it will throw out a warning
-    dplyr::select(-one_of("state_abbr")) %>%
+    dplyr::select(-dplyr::one_of("state_abbr")) %>%
     dplyr::left_join(dflookup, by="State") %>%
     dplyr::mutate(`state_abbr_from_id` = substr(`Building_Number`, start=1, stop=2)) %>%
     ## for NA state, if it has "AX", its state does not equal the first two character of the id
