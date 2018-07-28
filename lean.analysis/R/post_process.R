@@ -18,11 +18,11 @@ img2tex <- function(df, prefix, suffix, isDesc, outfilename, topn=0, botn=0) {
   print(head(df))
   if (isDesc) {
     df <- df %>%
-      arrange(desc(`score`)) %>%
+      dplyr::arrange(desc(`score`)) %>%
       {.}
   } else {
     df <- df %>%
-      arrange(`score`) %>%
+      dplyr::arrange(`score`) %>%
       {.}
   }
   print(head(df))

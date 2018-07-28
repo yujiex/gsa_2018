@@ -1,3 +1,5 @@
+#' @importFrom magrittr %>%
+NULL
 ## todo: get lat lon by year to restrict to buildings that appear in the data set
 ## make a single building version of the analysis
 #' Get a data frame of nearby weather stations
@@ -32,7 +34,7 @@ get_nearby_isd_stations <- function (lat_lon_df, isd_data, radius, limit, date_m
   result = v_isd_stations_search(lat = lat_lon_df$latitude, lon = lat_lon_df$longitude, radius = radius)
   acc = lapply(1:ncol(result), function(i){
     b = lat_lon_df$Building_Number[i]
-    result[, i] %>% as_data_frame() %>%
+    result[, i] %>% tibble::as_data_frame() %>%
       dplyr::select(`usaf`, `wban`, `begin`, `end`, `distance`) %>%
       dplyr::mutate(`Building_Number` = b)
   })
@@ -84,8 +86,8 @@ get_unique_stations <- function(station_df) {
   station_to_download = station_df %>%
     dplyr::select(`usaf`, `wban`) %>%
     dplyr::group_by(`usaf`, `wban`) %>%
-    slice(1) %>%
-    ungroup() %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup() %>%
     {.}
   return(station_to_download)
 }
@@ -306,7 +308,7 @@ read_var_by_year <- function(station_df, var, format_fun, year) {
         ## print(sprintf("%s-%s, weight %s", usaf, wban, d))
         tryCatch(
           {data <- rnoaa::isd(usaf=usaf, wban=wban, additional=FALSE, year=year) %>%
-            dplyr::select(one_of("date", "time", var, var_quality)) %>%
+            dplyr::select(dplyr::one_of("date", "time", var, var_quality)) %>%
             ## keep only data points with good quality
             dplyr::filter_(paste(var_quality, "%in% c(\"1\", \"5\")")) %>%
             {.}
