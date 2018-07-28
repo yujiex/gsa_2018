@@ -9,13 +9,15 @@ write_table_to_db(df, dbname, tablename, path, overwrite)
 \arguments{
 \item{df}{required, data frame to write to database}
 
-\item{dbname}{required, the name string of the database, e.g. "all.db" has name "all"}
+\item{dbname}{required, the name string of the database, e.g. "all.db" has
+name "all"}
 
 \item{tablename}{required, the name string of the table to view}
 
 \item{path}{optional, the path to .db file, default is "csv_FY/db/"}
 
-\item{overwrite}{optional, whether to overwrite, default to FALSE}
+\item{overwrite}{optional, whether to overwrite, default to FALSE. If
+overwrite is set to true, a backup csv file will be created in db_build_temp_csv}
 }
 \description{
 This function writes a table to database

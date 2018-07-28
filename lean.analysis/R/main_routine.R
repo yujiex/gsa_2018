@@ -72,7 +72,7 @@ lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, 
   ## print("-----------head of df----------------")
   ## print(head(df))
   yElec = df[[elec_col]]
-  yGas = df$[[gas_col]]
+  yGas = df[[gas_col]]
   x = df$`wt_temperatureFmonth`
   ## print("-----------fit electricity ----------------")
   resultElec <- polynomial_deg_2(y=yElec, x=x)
@@ -161,14 +161,14 @@ test_lean_analysis_db <- function() {
 #' @param year
 #' @param plotType "base", "elec", "gas"
 #' @param category a vector of "A", "I", etc.
-#' @param sourceEnergy, optional, whether to use source, instead of site energy
 #' @param topn, optional, produce the topn score building's lean plot
 #' @param botn, optional, produce the botn score building's lean plot
+#' @param debugFlag, optional, whether to include additional debug columns in energy-weather csv file
 #' @keywords lean test
 #' @export
 #' @examples
 #' test_lean_analysis_db()
-plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotType, category, sourceEnergy=FALSE, plotXLimit=NULL, plotYLimit=NULL, topn=NULL, botn=NULL, plotPoint=FALSE) {
+plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotType, category, plotXLimit=NULL, plotYLimit=NULL, topn=NULL, botn=NULL, plotPoint=FALSE, elec_col, gas_col, debugFlag=FALSE) {
   buildings = db.interface::get_buildings(region=region, buildingType=buildingType, year=year, category=category)
   counter = 1
   acc=NULL
@@ -197,31 +197,32 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
   }
   for (building in buildings) {
     ## print(sprintf("plot %s %s ---------------", counter, building))
+    if (debugFlag) {
     energy = db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly_with_type",
-                                              cols=c("Fiscal_Year", "Fiscal_Month", "year", "month", "Building_Type","eui_elec", "eui_gas", "Cat"), building=building) %>%
+                                              cols=c("Fiscal_Year", "Fiscal_Month", "year", "month", "Building_Type","eui_elec", "eui_gas", "eui_elec_source", "eui_gas_source", "eui_heating", "eui_cooling", "eui_heating_source", "eui_cooling_source", "Cat", "eui_oil", "eui_steam", "eui_chilledWater"), building=building) %>%
       dplyr::arrange(-`Fiscal_Year`, -`Fiscal_Month`) %>%
       head(n=36)
+    } else {
+      energy = db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly_with_type",
+                                                cols=c("Fiscal_Year", "Fiscal_Month", "year", "month", "Building_Type","eui_elec", "eui_gas", "eui_elec_source", "eui_gas_source", "eui_heating", "eui_cooling", "eui_heating_source", "eui_cooling_source", "Cat"), building=building) %>%
+        dplyr::arrange(-`Fiscal_Year`, -`Fiscal_Month`) %>%
+        head(n=36)
+    }
     print(building)
     prefix = ifelse(energy$Cat[[1]] == "I", "(I) ", "")
-    print(head(energy))
-    if (sourceEnergy) {
-      print("modify site to source")
-      energy <- energy %>%
-        dplyr::mutate(`eui_elec` = `eui_elec` * 3.14,
-                      `eui_gas` = `eui_gas` * 1.05) %>%
-        {.}
-    }
     print(head(energy))
     ## print("--------head of energy---------")
     ## print(energy)
     lat_lon_df = db.interface::get_lat_lon_df(building=building)
     ## print("--------head of lat_lon_df---------")
     ## print(head(lat_lon_df))
-    lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE, plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=prefix, plotPoint=plotPoint)
+    lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE, plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=prefix, plotPoint=plotPoint, elec_col=elec_col,
+                                gas_col=gas_col)
     ## print("--------lean result---------")
     ## print(lean_result)
     counter = counter + 1
-    acc = rbind(acc, data.frame(Building_Number = building, score=lean_result$score, Cat=energy$Cat[[1]], Building_Type=energy$Building_Type[[1]]))
+    acc = rbind(acc, data.frame(Building_Number = building, score=lean_result$score, Cat=energy$Cat[[1]], Building_Type=energy$Building_Type[[1]], xrange_left=lean_result$xrange_left, xrange_right=lean_result$xrange_right,
+                yrange_top=lean_result$yrange_top))
     print(acc)
   }
   if (!file.exists(summaryFile)) {

@@ -460,15 +460,24 @@ get_heating_cooling_eui <- function(debugFlag=FALSE) {
     dplyr::mutate(`Heating_(kBtu)` = ifelse(`electric_heating`, `Electric_(kBtu)`, `Heating_(kBtu)`),
                   `Heating_(kBtu)_source` = ifelse(`electric_heating`, `Electric_(kBtu)` * 3.14,
                                                    `Heating_(kBtu)_source`)) %>%
+    dplyr::mutate(`Electric_(kBtu)_source` = `Electric_(kBtu)` * 3.14) %>%
+    dplyr::mutate(`Gas_(kBtu)_source` = `Gas_(kBtu)` * 1.05) %>%
+    dplyr::mutate(`eui_elec_source` = `Electric_(kBtu)_source` / `Gross_Sq.Ft`,
+                  `eui_gas_source` = `Gas_(kBtu)_source` / `Gross_Sq.Ft`,
+                  `eui_heating` = `Heating_(kBtu)` / `Gross_Sq.Ft`,
+                  `eui_cooling` = `Cooling_(kBtu)` / `Gross_Sq.Ft`,
+                  `eui_heating_source` = `Heating_(kBtu)_source` / `Gross_Sq.Ft`,
+                  `eui_cooling_source` = `Cooling_(kBtu)_source` / `Gross_Sq.Ft`) %>%
     {.}
   if (debugFlag) {
     df %>%
       dplyr::select(`Building_Number`, `Fiscal_Year`, `Fiscal_Month`, `Electric_(kBtu)`, `Chilled_Water_(kBtu)`,
                     `Gas_(kBtu)`, `Oil_(kBtu)`, `Steam_(kBtu)`, `electric_heating`, `Heating_(kBtu)`, `Cooling_(kBtu)`,
-                    `Heating_(kBtu)_source`, `Cooling_(kBtu)_source`) %>%
+                    `Heating_(kBtu)_source`, `Cooling_(kBtu)_source`, `Electric_(kBtu)_source`, `Gas_(kBtu)_source`) %>%
       readr::write_csv("~/Dropbox/gsa_2017/csv_FY/db_build_temp_csv/EUAS_monthly_heating_cooling_source.csv")
+  } else {
+    write_table_to_db(df, dbname = "all", tablename = "EUAS_monthly", overwrite = TRUE)
   }
-  write_table_to_db(df, dbname = "all", tablename = "EUAS_monthly", overwrite = TRUE)
 }
 
 #' Join EUAS_monthly and EUAS_type
@@ -492,9 +501,9 @@ main_db_build <- function() {
   ## add_chilled_water_eui()
   ## check_duplicates(dbname="all", tablename="EUAS_monthly",
   ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
-  ## get_heating_cooling_eui()
-  ## check_duplicates(dbname="all", tablename="EUAS_monthly",
-  ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
+  get_heating_cooling_eui(debugFlag=FALSE)
+  check_duplicates(dbname="all", tablename="EUAS_monthly",
+                   groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
   recode_euas_type()
   check_duplicates(dbname="all", tablename="EUAS_type_recode",
                    groupby_vars=c("Building_Number", "Building_Type", "data_source"))

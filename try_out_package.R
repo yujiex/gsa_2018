@@ -515,14 +515,31 @@ plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base
 plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
 plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
 
+devtools::load_all("lean.analysis")
 region=5
-plot_lean_subset(region=region, buildingType="Office", buildingNumber="MT0000AE", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
-
-xlimits = c(-5, 85)
-ylimits = c(-1, 55)
-plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
-plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
-plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=xlimits, plotYLimit=ylimits)
+## xlimits = c(-5, 85)
+## ylimits = c(-1, 55)
+range_file = sprintf("~/Dropbox/gsa_2017/csv_FY/base_lean_score_region_%s.csv", region)
+if (file.exists(range_file)) {
+  print("asdfasdfsd")
+  dfrange = readr::read_csv(range_file)
+  xlimits = c(min(dfrange$`xrange_left`), max(dfrange$`xrange_right`))
+  ylimits = c(-1, max(dfrange$`yrange_top`))
+} else {
+  xlimits = NULL
+  ylimits = NULL
+}
+print("xlimits")
+print(xlimits)
+print("ylimits")
+print(ylimits)
+elec_col = "eui_cooling_source"
+gas_col = "eui_heating_source"
+## elec_col = "eui_elec_source"
+## gas_col = "eui_gas_source"
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, plotPoint = TRUE)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col)
 
 region=6
 xlimits = c(10, 85)
@@ -562,8 +579,23 @@ plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec
 
 generate_lean_tex(plotType="base", region=region, topn=8, botn=4, category="I")
 generate_lean_tex(plotType="base", region=region, topn=4, botn=4, category="A")
+
+generate_lean_tex(plotType="base", region=region, topn=20, botn=0)
 generate_lean_tex(plotType="gas", region=region, topn=20, botn=0)
 generate_lean_tex(plotType="elec", region=region, topn=20, botn=0)
+
+devtools::load_all("db.interface")
+
+devtools::load_all("get.noaa.weather")
+
+devtools::load_all("lean.analysis")
+
+buildingNumber="MT0000AE"
+xlimits = NULL
+ylimits = NULL
+elec_col = "eui_elec"
+gas_col = "eui_gas"
+plot_lean_subset(buildingNumber=buildingNumber, year=2017, plotType="elec", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, debugFlag=TRUE)
 
 ## for building TX0211ZZ
 building = "TX0211ZZ"

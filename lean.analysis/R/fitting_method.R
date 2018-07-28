@@ -116,6 +116,7 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
     yGasSeq = 0
     yGasFitted = 0
   }
+  yTotalSeq = yElecSeq + yGasSeq
   gas_line_color = '#C63631'
   gas_mk_color = '#C63631'
   elec_line_color = '#68C5EF'
@@ -127,6 +128,7 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   base_gas_line_color = '#E47A3A'
   paleAlpha = 0.1
   fullAlpha = 1.0
+  data_point_size = 0.5
   alpha_base_gas = paleAlpha
   alpha_base_elec = paleAlpha
   alpha_gas = paleAlpha
@@ -152,7 +154,7 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
     ggplot2::geom_segment(ggplot2::aes(x=min(x), xend=max(x), y=resultElec$baseload + resultGas$baseload,
                                        yend=resultElec$baseload + resultGas$baseload),
                           linetype="dashed", color = base_gas_line_color, size=0.5) +
-    ggplot2::geom_line(ggplot2::aes(x=xseq, y=yElecSeq + yGasSeq), colour=total_line_color) +
+    ggplot2::geom_line(ggplot2::aes(x=xseq, y=yTotalSeq), colour=total_line_color) +
     ggplot2::theme_bw() +
     ggplot2::theme(text = ggplot2::element_text(size=theme_text_size))
   ## fill base load
@@ -163,8 +165,8 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
                          fill=base_gas_color, alpha=alpha_base_gas)
   if (plotPoint) {
     p <- p +
-      ggplot2::geom_point(ggplot2::aes(x=x, y=yElec), colour=elec_line_color) +
-      ggplot2::geom_point(ggplot2::aes(x=x, y=yGas + resultElec$baseload), colour=gas_line_color)
+      ggplot2::geom_point(ggplot2::aes(x=x, y=yElec), colour=elec_line_color, size=data_point_size) +
+      ggplot2::geom_point(ggplot2::aes(x=x, y=yGas + resultElec$baseload), colour=gas_line_color, size=data_point_size)
   }
   lowerElec = 1
   upperElec = length(xseq)
@@ -213,7 +215,7 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
       ggplot2::ylim(plotYLimit)
   }
   print(p)
-  return(list(img = p, score=fitted_display))
+  return(list(img = p, score=fitted_display, xrange_left=min(x), xrange_right=max(x), yrange_top=max(yTotalSeq)))
 }
 
 #' Testing fitting methods
