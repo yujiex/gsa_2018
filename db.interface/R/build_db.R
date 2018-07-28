@@ -18,15 +18,15 @@ unify_euas_type <- function() {
   df = get_euas_buildings()
   con <- connect("other_input")
   df1 = DBI::dbGetQuery(con, "SELECT DISTINCT Building_Number, Predominant_Use AS Building_Type FROM Entire_GSA_Building_Portfolio_input") %>%
-    as_data_frame() %>%
+    tibble::as_data_frame() %>%
     dplyr::mutate(`data_source`="Entire_GSA_Building_Portfolio_input::Predominant_Use") %>%
     {.}
   df2 = DBI::dbGetQuery(con, "SELECT DISTINCT Building_Number, [Self-Selected_Primary_Function] AS Building_Type FROM PortfolioManager_sheet0_input") %>%
-    as_data_frame() %>%
+    tibble::as_data_frame() %>%
     dplyr::mutate(`data_source`="PortfolioManager_sheet0_input::Self-Selected_Primary_Function") %>%
     {.}
   df3 = DBI::dbGetQuery(con, "SELECT Building_Number, [GSA Property Type] AS Building_Type FROM euas_database_of_buildings_cmu") %>%
-    as_data_frame() %>%
+    tibble::as_data_frame() %>%
     dplyr::mutate(`data_source`="euas_database_of_buildings_cmu::[GSA Property Type]") %>%
     {.}
   DBI::dbDisconnect(con)

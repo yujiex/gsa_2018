@@ -1,3 +1,5 @@
+#' @importFrom magrittr %>%
+NULL
 #' Main function
 #'
 #' This function chains all the steps of lean analysis of one single building,

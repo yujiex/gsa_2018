@@ -1,3 +1,5 @@
+#'@importFrom magrittr %>%
+NULL
 # This file contains fitting method implementations of the package, each method
 # will output "base load", and fitted values
 
