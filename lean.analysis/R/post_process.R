@@ -77,15 +77,56 @@ generate_lean_tex <- function(plotType, region, topn, botn, category) {
   if (topn != 0) {
     outfile = sprintf("region_report_img/%s_region_%s%s_top%s.tex", plotType, region, categoryTag, topn)
     img2tex(df, prefix=sprintf("\\includegraphics[width = 0.24\\textwidth, keepaspectratio]{lean/%s_", plotType),
-            suffix=".png}",
+            suffix=paste0(presuffix, ".png}"),
             isDesc=TRUE, outfilename=outfile,
             topn=topn, botn=0)
   }
   if (botn != 0) {
     outfile = sprintf("region_report_img/%s_region_%s%s_bot%s.tex", plotType, region, categoryTag, botn)
     img2tex(df, prefix=sprintf("\\includegraphics[width = 0.24\\textwidth, keepaspectratio]{lean/%s_", plotType),
-            suffix=".png}",
+            suffix=paste0(presuffix, ".png}"),
             isDesc=TRUE, outfilename=outfile,
             topn=0, botn=botn)
   }
+}
+
+#' Generate side by side lean plot comparison
+#'
+#' This function generates a tex file to be included to display two sets of
+#' plots in two columns. One set of plots have suffixes
+#' "*source_electric_gas.png", in folder "lean/", the other set of plots ends
+#' with "*source_heating_cooling", the rows are aligned by base_xxxxxxxx, where
+#' "xxxxxxxx" is the building ID. When a building only has one plot, fill the
+#' other missing one with a dummy blank plot
+#' @param df required, a data frame with the image identifiers, and a column
+#'   named "score"
+#' @keywords image to tex
+#' @export
+#' @examples
+#' polynomial_deg_2(y, x)
+generate_building_by_building_cmp <- function() {
+  files_1 = list.files(path="~/Dropbox/gsa_2017/region_report_img/lean/", pattern="*_electric_gas.png")
+  files_prefix_1 = unlist(lapply(files_1, function (x) {gsub(x=x, "source_electric_gas.png", "")}))
+  files_2 = list.files(path="~/Dropbox/gsa_2017/region_report_img/lean/", pattern="*_heating_cooling.png")
+  files_prefix_2 = unlist(lapply(files_2, function (x) {gsub(x=x, "source_heating_cooling.png", "")}))
+  df1 = data.frame(`id`=files_prefix_1, `notes`="source_electric_gas")
+  df2 = data.frame(`id`=files_prefix_2, `notes`="source_heating_cooling")
+  img_prefix="\\includegraphics[width = 0.48\\textwidth, keepaspectratio]{lean/"
+  lines <- df1 %>%
+    dplyr::full_join(df2, by="id") %>%
+    dplyr::mutate(`name1`=ifelse(is.na(`notes.x`), paste0(img_prefix, "base_dummy"),
+                                 paste0(img_prefix, `id`, `notes.x`, ".png}")),
+                  `name2`=ifelse(is.na(`notes.y`), paste0(img_prefix, "base_dummy"),
+                                 paste0(img_prefix, `id`, `notes.y`, ".png}"))) %>%
+    dplyr::select(-`notes.x`, -`notes.y`, -`id`) %>%
+    t() %>%
+    as.matrix() %>%
+    as.vector() %>%
+    {.}
+  outfilename = "region_5_cmp.tex"
+  df = data.frame(`lines`=lines)
+  print(head(df))
+  df %>%
+    write.table(outfilename, sep="\n", row.names=FALSE, col.names = FALSE, quote = FALSE)
+  print("write to file")
 }
