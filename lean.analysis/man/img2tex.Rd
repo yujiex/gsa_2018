@@ -7,7 +7,11 @@
 img2tex(df, prefix, suffix, isDesc, outfilename, topn = 0, botn = 0)
 }
 \arguments{
-\item{df}{required, a data frame with the image identifiers, and a column named "score"}
+\item{df}{required, a data frame with the image identifiers (column called id), and a column named "score"}
+
+\item{prefix}{required, usually the \includegraphics settings, prior to the image identifiers}
+
+\item{suffix}{required, usually the .png}
 
 \item{isDesc}{whether the sort is descending}
 

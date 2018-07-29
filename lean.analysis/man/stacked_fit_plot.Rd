@@ -6,14 +6,24 @@
 \usage{
 stacked_fit_plot(region, buildingType, year, category, plotType, method,
   methodLabel, lowRange = NULL, highRange = NULL, debugFlag = FALSE,
-  plotXLimits = NULL, plotYLimits = NULL, minorgrid, majorgrid,
-  sourceEnergy = FALSE, legendloc = "bottom", fontSize = 10,
-  fontFamily = "System Font", vline_position = 50)
+  plotXLimits = NULL, plotYLimits = NULL, minorgrid = NULL,
+  majorgrid = NULL, sourceEnergy = FALSE, legendloc = "bottom",
+  fontSize = 10, fontFamily = "System Font", vline_position = 50)
 }
 \arguments{
-\item{category}{a vector of "A", "I", etc.}
+\item{region}{optional, region number}
+
+\item{buildingType}{optional, building type}
+
+\item{year}{optional, restrict to data with fiscal year = year}
+
+\item{category}{optional, restrict to data with category in a vector of
+categories, c(a vector of categories, e.g. "A", "I")}
 
 \item{plotType}{optional, "elec", "gas"}
+
+\item{method}{required, plotting method, choose from ""polynomial degree
+2", and "piecewise"}
 
 \item{lowRange}{require curves plotted have left end of x range lower than lowRange}
 
@@ -27,19 +37,24 @@ stacked_fit_plot(region, buildingType, year, category, plotType, method,
 
 \item{minorgrid}{a sequence of minor breaks, e.g. seq(0 , 100, 5)}
 
-\item{majorgrid}{a sequence of major breaks, e.g. seq(0, 100, 10)}
+\item{majorgrid}{a sequence of major breaks, e.g. seq(0, 100, 10), assume minorgrid and majorgrid either both have values or both NA}
 
 \item{legendloc}{legend location, default to bottom}
 
 \item{fontSize}{font size for all text}
 
 \item{fontFamily}{font family for all text}
+
+\item{vline_position}{optional, the x location for the dotted vertical line, default is 50F}
 }
 \description{
 This function tests the main lean analysis routine, with inputs from the db
 }
 \examples{
-test_lean_analysis_db()
+stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec",
+                 method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=60, highRange=80,
+                 plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5), fontSize=fontSizeStackLean,
+                 legendloc="right", vline_position=80)
 }
 \keyword{lean}
 \keyword{test}

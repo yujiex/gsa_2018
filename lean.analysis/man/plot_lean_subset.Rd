@@ -5,19 +5,32 @@
 \title{Lean analysis for a subset of building}
 \usage{
 plot_lean_subset(region, buildingType, buildingNumber, year, plotType, category,
-  sourceEnergy = FALSE, plotXLimit = NULL, plotYLimit = NULL,
-  topn = NULL, botn = NULL, plotPoint = FALSE)
+  plotXLimit = NULL, plotYLimit = NULL, topn = NULL, botn = NULL,
+  plotPoint = FALSE, elec_col, gas_col, debugFlag = FALSE, suffix = NULL)
 }
 \arguments{
+\item{region}{optional, region number}
+
+\item{buildingType}{optional, building type}
+
+\item{year}{optional, restrict to data with fiscal year = year}
+
 \item{plotType}{"base", "elec", "gas"}
 
-\item{category}{a vector of "A", "I", etc.}
+\item{category}{optional, restrict to data with category in a vector of
+categories, c(a vector of categories, e.g. "A", "I")}
 
-\item{sourceEnergy, }{optional, whether to use source, instead of site energy}
+\item{topn, }{optional, produce the topn highest score buildings' lean plot, commonly high score is bad usage}
 
-\item{topn, }{optional, produce the topn score building's lean plot}
+\item{botn, }{optional, produce the botn lowest score buildings' lean plot}
 
-\item{botn, }{optional, produce the botn score building's lean plot}
+\item{elec_col, }{required, column to plot the blue curve and yellow baseload}
+
+\item{gas_col, }{required, column to plot the red curve and orange baseload}
+
+\item{debugFlag, }{optional, whether to include additional debug columns in energy-weather csv file}
+
+\item{suffix, }{optional, summary file suffixes}
 }
 \description{
 This function produces the lean plot included in the regional report

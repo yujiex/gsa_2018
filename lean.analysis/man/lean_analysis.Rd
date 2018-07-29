@@ -7,7 +7,7 @@
 lean_analysis(energy, latitude, longitude, lat_lon_df, radius = 100,
   limit = 5, id, plotType, debugFlag, plotXLimit = NULL,
   plotYLimit = NULL, xLabelPrefix = "", plotPoint = FALSE,
-  elec_col = "eui_elec", gas_col = "eui_gas")
+  elec_col = "eui_elec", gas_col = "eui_gas", suffix = NULL)
 }
 \arguments{
 \item{energy, }{a data frame containing 4 columns, year, month,

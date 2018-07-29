@@ -4,7 +4,7 @@
 \alias{generate_lean_tex}
 \title{Generate lean tex file}
 \usage{
-generate_lean_tex(plotType, region, topn, botn, category)
+generate_lean_tex(plotType, region, topn, botn, category, presuffix = "")
 }
 \arguments{
 \item{topn}{top n records to include}
@@ -13,7 +13,13 @@ generate_lean_tex(plotType, region, topn, botn, category)
 
 \item{category}{optional, filter for specific category}
 
+\item{presuffix}{optional, the tail identifier of data source (source_heating_cooling, source_electric_gas)}
+
 \item{df}{required, a data frame with the image identifiers, and a column named "score"}
+
+\item{prefix}{required, usually the \includegraphics settings, prior to the image identifiers}
+
+\item{suffix}{required, usually the .png}
 
 \item{isDesc}{whether the sort is descending}
 }
@@ -21,7 +27,8 @@ generate_lean_tex(plotType, region, topn, botn, category)
 This function generates the include image part of lean image tex file
 }
 \examples{
-polynomial_deg_2(y, x)
+presuffix="_source_heating_cooling"
+generate_lean_tex(plotType="base", region=region, topn=20, botn=0, presuffix=presuffix)
 }
 \keyword{image}
 \keyword{tex}
