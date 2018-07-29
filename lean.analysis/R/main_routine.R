@@ -30,7 +30,7 @@ NULL
 #' lean_analysis(lat_lon_df, radius=100, limit=5)
 lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, limit=5, id, plotType, debugFlag,
                            plotXLimit=NULL, plotYLimit=NULL, xLabelPrefix="", plotPoint=FALSE, elec_col="eui_elec",
-                           gas_col="eui_gas") {
+                           gas_col="eui_gas", suffix=NULL) {
   ## get the years of data to download
   if (missing(id)) {
     id = "XXXXXXXX"
@@ -82,7 +82,11 @@ lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, 
            resultGas=resultGas, plotType=plotType, id=id,
            methodName="polynomial degree 2", plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=xLabelPrefix,
            plotPoint=plotPoint)
-  ggplot2::ggsave(file=sprintf("region_report_img/lean/%s_%s.png", plotType, id), width = 2, height=2, units="in")
+  if (is.null(suffix)) {
+    ggplot2::ggsave(file=sprintf("region_report_img/lean/%s_%s.png", plotType, id), width = 2, height=2, units="in")
+  } else {
+    ggplot2::ggsave(file=sprintf("region_report_img/lean/%s_%s_%s.png", plotType, id, suffix), width = 2, height=2, units="in")
+  }
   return(fitted_display)
 }
 
@@ -177,9 +181,12 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
   } else {
     regionTag = sprintf("_region_%s", region)
   }
-  summaryFile = sprintf("csv_FY/%s_lean_score%s.csv", plotType, regionTag)
+  if (is.null(suffix)) {
+    summaryFile = sprintf("csv_FY/%s_lean_score%s.csv", plotType, regionTag)
+  } else {
+    summaryFile = sprintf("csv_FY/%s_lean_score%s_%s.csv", plotType, regionTag, suffix)
+  }
   if (file.exists(summaryFile)) {
-    print("111111111111111")
     dfscore = readr::read_csv(summaryFile) %>%
       ## remove zero consumptions
       dplyr::filter(`score` != 0) %>%
@@ -217,7 +224,7 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
     ## print("--------head of lat_lon_df---------")
     ## print(head(lat_lon_df))
     lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE, plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=prefix, plotPoint=plotPoint, elec_col=elec_col,
-                                gas_col=gas_col)
+                                gas_col=gas_col, suffix=suffix)
     ## print("--------lean result---------")
     ## print(lean_result)
     counter = counter + 1
@@ -229,36 +236,43 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
     print("write to file")
     acc %>%
       dplyr::mutate(type = plotType) %>%
-      readr::write_csv(sprintf("csv_FY/%s_lean_score_region_%s.csv", plotType, region))
+      readr::write_csv(summaryFile)
+    print("write to summary file")
   }
 }
 
 #' Lean analysis for a subset of building
 #'
 #' This function tests the main lean analysis routine, with inputs from the db
-#' @param region
-#' @param buildingType
-#' @param year
-#' @param category a vector of "A", "I", etc.
+#' @param region optional, region number
+#' @param buildingType optional, building type
+#' @param year optional, restrict to data with fiscal year = year
+#' @param category optional, restrict to data with category in a vector of
+#'   categories, c(a vector of categories, e.g. "A", "I")
 #' @param plotType optional, "elec", "gas"
-#' @param method
+#' @param method required, plotting method, choose from ""polynomial degree
+#'   2", and "piecewise"
 #' @param lowRange require curves plotted have left end of x range lower than lowRange
 #' @param highRange require curves plotted have right end of x range higher than highRange
 #' @param debugFlag default to FALSE, set to true to print plot
 #' @param plotXLimits x limits for plotting, e.g. c(20, 100)
 #' @param plotYLimits y limits for plotting, e.g. c(20, 100)
 #' @param minorgrid a sequence of minor breaks, e.g. seq(0 , 100, 5)
-#' @param majorgrid a sequence of major breaks, e.g. seq(0, 100, 10)
+#' @param majorgrid a sequence of major breaks, e.g. seq(0, 100, 10), assume minorgrid and majorgrid either both have values or both NA
 #' @param legendloc legend location, default to bottom
 #' @param fontSize font size for all text
 #' @param fontFamily font family for all text
+#' @param vline_position optional, the x location for the dotted vertical line, default is 50F
 #' @keywords lean test
 #' @export
 #' @examples
-#' test_lean_analysis_db()
+#' stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I", "A"), plotType="elec",
+#'                  method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=60, highRange=80,
+#'                  plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5), fontSize=fontSizeStackLean,
+#'                  legendloc="right", vline_position=80)
 stacked_fit_plot <- function(region, buildingType, year, category, plotType, method, methodLabel, lowRange=NULL,
-                             highRange=NULL, debugFlag=FALSE, plotXLimits=NULL, plotYLimits=NULL, minorgrid,
-                             majorgrid, sourceEnergy=FALSE, legendloc="bottom", fontSize=10,
+                             highRange=NULL, debugFlag=FALSE, plotXLimits=NULL, plotYLimits=NULL, minorgrid=NULL,
+                             majorgrid=NULL, sourceEnergy=FALSE, legendloc="bottom", fontSize=10,
                              fontFamily="System Font", vline_position=50) {
   datafile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.csv", plotType, region, methodLabel)
   imagefile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.png", plotType, region, methodLabel)
