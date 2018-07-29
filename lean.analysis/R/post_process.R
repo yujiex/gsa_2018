@@ -1,9 +1,9 @@
 #' Image to tex
 #'
 #' This function compiles images in a data frame to a tex file, with sorting
-#' @param df required, a data frame with the image identifiers, and a column named "score"
-#' @param prefix
-#' @param suffix
+#' @param df required, a data frame with the image identifiers (column called id), and a column named "score"
+#' @param prefix required, usually the \includegraphics settings, prior to the image identifiers
+#' @param suffix required, usually the .png
 #' @param isDesc whether the sort is descending
 #' @param topn optional, if supplied, only write out the top n records
 #' @keywords image to tex
@@ -48,17 +48,19 @@ img2tex <- function(df, prefix, suffix, isDesc, outfilename, topn=0, botn=0) {
 #'
 #' This function generates the include image part of lean image tex file
 #' @param df required, a data frame with the image identifiers, and a column named "score"
-#' @param prefix
-#' @param suffix
+#' @param prefix required, usually the \includegraphics settings, prior to the image identifiers
+#' @param suffix required, usually the .png
 #' @param isDesc whether the sort is descending
 #' @param category optional, filter for specific category
 #' @param topn top n records to include
 #' @param botn bottom n records to include
+#' @param presuffix optional, the tail identifier of data source (source_heating_cooling, source_electric_gas)
 #' @keywords image to tex
 #' @export
 #' @examples
-#' polynomial_deg_2(y, x)
-generate_lean_tex <- function(plotType, region, topn, botn, category) {
+#' presuffix="_source_heating_cooling"
+#' generate_lean_tex(plotType="base", region=region, topn=20, botn=0, presuffix=presuffix)
+generate_lean_tex <- function(plotType, region, topn, botn, category, presuffix="") {
   df = readr::read_csv(sprintf("csv_FY/%s_lean_score_region_%s.csv", plotType, region)) %>%
     dplyr::rename(`id`=`Building_Number`) %>%
     {.}

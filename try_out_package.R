@@ -580,9 +580,10 @@ plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec
 generate_lean_tex(plotType="base", region=region, topn=8, botn=4, category="I")
 generate_lean_tex(plotType="base", region=region, topn=4, botn=4, category="A")
 
-generate_lean_tex(plotType="base", region=region, topn=20, botn=0)
-generate_lean_tex(plotType="gas", region=region, topn=20, botn=0)
-generate_lean_tex(plotType="elec", region=region, topn=20, botn=0)
+presuffix="_source_heating_cooling"
+generate_lean_tex(plotType="base", region=region, topn=20, botn=0, presuffix=presuffix)
+generate_lean_tex(plotType="gas", region=region, topn=20, botn=0, presuffix=presuffix)
+generate_lean_tex(plotType="elec", region=region, topn=20, botn=0, presuffix=presuffix)
 
 devtools::load_all("db.interface")
 
