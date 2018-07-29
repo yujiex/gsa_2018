@@ -519,7 +519,13 @@ devtools::load_all("lean.analysis")
 region=5
 ## xlimits = c(-5, 85)
 ## ylimits = c(-1, 55)
-range_file = sprintf("~/Dropbox/gsa_2017/csv_FY/base_lean_score_region_%s.csv", region)
+## elec_col = "eui_cooling_source"
+## gas_col = "eui_heating_source"
+suffix = "source_heating_cooling"
+elec_col = "eui_elec_source"
+gas_col = "eui_gas_source"
+## suffix = "source_electric_gas"
+range_file = sprintf("~/Dropbox/gsa_2017/csv_FY/base_lean_score_region_%s_%s.csv", region, suffix)
 if (file.exists(range_file)) {
   print("asdfasdfsd")
   dfrange = readr::read_csv(range_file)
@@ -533,13 +539,25 @@ print("xlimits")
 print(xlimits)
 print("ylimits")
 print(ylimits)
+
+## Following generates individual building plots using one of the two source
+## consumption: electric-gas, or heating-cooling
+suffix = "source_electric_gas"
+elec_col = "eui_elec_source"
+gas_col = "eui_gas_source"
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, plotPoint = TRUE, suffix=suffix)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
 elec_col = "eui_cooling_source"
 gas_col = "eui_heating_source"
-## elec_col = "eui_elec_source"
-## gas_col = "eui_gas_source"
-plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, plotPoint = TRUE)
-plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col)
-plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col)
+suffix = "source_heating_cooling"
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, plotPoint = TRUE, suffix=suffix)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
+
+## Following generates building-by-building side by side cmp of using the two sources
+devtools::load_all("lean.analysis")
+generate_building_by_building_cmp()
 
 region=6
 xlimits = c(10, 85)

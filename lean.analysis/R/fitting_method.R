@@ -14,7 +14,7 @@ NULL
 #' polynomial_deg_2(y, x)
 polynomial_deg_2 <- function(y, x) {
   if (sum(y == 0) == length(y)) {
-    return(list(baseload=0, output=NULL, argmin=min(x), b0=0, b1=0, b2=0))
+    return(list(baseload=0, output=NULL, argmin=min(x), b0=0, b1=0, b2=0, cvrmse=NA))
   }
   output = lm(y ~ x+I(x^2))
   ## print(summary(output))
@@ -37,8 +37,10 @@ polynomial_deg_2 <- function(y, x) {
     argmin = c(lowerbound, upperbound)[which.min(predict(output, newdata = data.frame(x=c(lowerbound, upperbound))))]
   }
   baseload = max(baseload, 0)
+  y_hat = fitted.values(output)
+  cvrmse = CVRMSE(y=y, y_hat=y_hat, n_par=3)
   ## print(sprintf("base load %s is achieved at %s", baseload, argmin))
-  return(list(baseload=baseload, output=output, argmin=argmin, b0=b0, b1=b1, b2=b2))
+  return(list(baseload=baseload, output=output, argmin=argmin, b0=b0, b1=b1, b2=b2, cvrmse=cvrmse))
 }
 
 #' Piecewise Linear Regression
@@ -66,8 +68,10 @@ piecewise_linear <- function(y, x, h) {
   ## segmentedFit <- segmented::segmented(lin.mod, seg.Z = ~x, psi=60)
   tryCatch({
     segmentedFit <- segmented::segmented(lin.mod, seg.Z = ~x, psi=median(x), segmented::seg.control(h = h))
+    yhat = (segmented::broken.line(segmentedFit,link=FALSE)$fit)
+    cvrmse = CVRMSE(y=y, y_hat=y_hat, n_par=4)
     ## plot(segmentedFit, add=TRUE)
-    return(list(output=segmentedFit))},
+    return(list(output=segmentedFit, cvrmse=cvrmse))},
     warning = function(w) {
       print("warning")
       print(w)},
@@ -77,6 +81,18 @@ piecewise_linear <- function(y, x, h) {
       print(sprintf("reducing h to: %s", h))
       piecewise_linear(y, x, h)}
     )
+}
+
+
+#' Return CVRMSE of the estimate
+#'
+#' This function computes the cvrmse of the estimate
+#' @param y the vector of the response variable
+#' @param y_hat the vector of fitted values
+#' @param n_par number of parameters in the model
+CVRMSE <- function(y, y_hat, n_par) {
+  n = length(y)
+  return(sqrt(sum((y_hat - y) ^ 2) / (n - n_par))/mean(y))
 }
 
 #' Plot the fit
@@ -105,16 +121,20 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   if (!is.null(resultElec$output)) {
     yElecSeq = predict(resultElec$output, newdata = data.frame(`x` = seq(from=min(x), to=max(x), length.out=200)))
     yElecFitted = fitted.values(resultElec$output)
+    elec_cvrmse = resultElec$cvrmse
   } else {
     yElecSeq = 0
     yElecFitted = 0
+    elec_cvrmse = NA
   }
   if (!is.null(resultGas$output)) {
     yGasSeq = predict(resultGas$output, newdata = data.frame(`x` = seq(from=min(x), to=max(x), length.out=200)))
     yGasFitted = fitted.values(resultGas$output)
+    gas_cvrmse = resultGas$cvrmse
   } else {
     yGasSeq = 0
     yGasFitted = 0
+    gas_cvrmse = NA
   }
   yTotalSeq = yElecSeq + yGasSeq
   gas_line_color = '#C63631'
@@ -136,6 +156,7 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   ## font sizes
   fitted_display_size = 4
   theme_text_size = 12
+  title_font_size = 8
   if (plotType == "base") {
     alpha_base_elec = fullAlpha
     alpha_base_gas = fullAlpha
@@ -155,8 +176,10 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
                                        yend=resultElec$baseload + resultGas$baseload),
                           linetype="dashed", color = base_gas_line_color, size=0.5) +
     ggplot2::geom_line(ggplot2::aes(x=xseq, y=yTotalSeq), colour=total_line_color) +
+    ggplot2::ggtitle(sprintf("cvrmse: blue (%.2f), red (%.2f)", elec_cvrmse, gas_cvrmse)) +
     ggplot2::theme_bw() +
-    ggplot2::theme(text = ggplot2::element_text(size=theme_text_size))
+    ggplot2::theme(text = ggplot2::element_text(size=theme_text_size),
+                   plot.title = ggplot2::element_text(size=title_font_size))
   ## fill base load
   p <- p +
     ggplot2::geom_ribbon(ggplot2::aes(x=xseq, ymin=0, ymax=resultElec$baseload), fill=base_elec_color,
