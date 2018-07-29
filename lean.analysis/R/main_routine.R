@@ -160,20 +160,25 @@ test_lean_analysis_db <- function() {
 #' Lean analysis for a subset of building
 #'
 #' This function produces the lean plot included in the regional report
-#' @param region
-#' @param buildingType
-#' @param year
+#' @param region optional, region number
+#' @param buildingType optional, building type
+#' @param year optional, restrict to data with fiscal year = year
+#' @param category optional, restrict to data with category in a vector of
+#'   categories, c(a vector of categories, e.g. "A", "I")
 #' @param plotType "base", "elec", "gas"
-#' @param category a vector of "A", "I", etc.
-#' @param topn, optional, produce the topn score building's lean plot
-#' @param botn, optional, produce the botn score building's lean plot
+#' @param topn, optional, produce the topn highest score buildings' lean plot, commonly high score is bad usage
+#' @param botn, optional, produce the botn lowest score buildings' lean plot
+#' @param elec_col, required, column to plot the blue curve and yellow baseload
+#' @param gas_col, required, column to plot the red curve and orange baseload
 #' @param debugFlag, optional, whether to include additional debug columns in energy-weather csv file
+#' @param suffix, optional, summary file suffixes
 #' @keywords lean test
 #' @export
 #' @examples
 #' test_lean_analysis_db()
-plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotType, category, plotXLimit=NULL, plotYLimit=NULL, topn=NULL, botn=NULL, plotPoint=FALSE, elec_col, gas_col, debugFlag=FALSE) {
+plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotType, category, plotXLimit=NULL, plotYLimit=NULL, topn=NULL, botn=NULL, plotPoint=FALSE, elec_col, gas_col, debugFlag=FALSE, suffix=NULL) {
   buildings = db.interface::get_buildings(region=region, buildingType=buildingType, year=year, category=category)
+  print("asdfasdfasd")
   counter = 1
   acc=NULL
   if (missing(region)) {
@@ -202,6 +207,7 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
   if (!missing(buildingNumber)) {
     buildings = c(buildingNumber)
   }
+  print(buildings)
   for (building in buildings) {
     ## print(sprintf("plot %s %s ---------------", counter, building))
     if (debugFlag) {
@@ -413,7 +419,7 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
       ggplot2::xlim(plotXLimits)
   }
   if (!is.null(plotYLimits)) {
-    if (missing(minorgrid)) {
+    if (is.null(minorgrid)) {
       p <- p +
         ## ggplot2::coord_cartesian(ylim = plotYLimits)
         ggplot2::ylim(plotYLimits)
