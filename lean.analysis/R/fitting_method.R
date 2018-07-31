@@ -108,12 +108,14 @@ CVRMSE <- function(y, y_hat, n_par) {
 #' @param plotXLimit optional, the range of x axis, e.g. c(10, 100)
 #' @param plotYLimit optional, the range of y axis, e.g. c(10, 100)
 #' @param xLabelPrefix optional, the prefix of x label
+#' @param plotPoint optional, whether to show the data points
+#' @param plotTitle optional, whether to show the plot title, with cvrmse
 #' @keywords polynomial
 #' @export
 #' @examples
 #' plot_fit(y=df$`eui_elect`, x=df$`wt_temperatureFmonth`, output, color="red", methodName=NULL)
 plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, methodName, plotXLimit=NULL,
-                     plotYLimit=NULL, xLabelPrefix="", plotPoint=FALSE) {
+                     plotYLimit=NULL, xLabelPrefix="", plotPoint=FALSE, plotTitle=FALSE) {
   if (missing(id)) {
     id = "XXXXXXXX"
   }
@@ -175,8 +177,12 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
     ggplot2::geom_segment(ggplot2::aes(x=min(x), xend=max(x), y=resultElec$baseload + resultGas$baseload,
                                        yend=resultElec$baseload + resultGas$baseload),
                           linetype="dashed", color = base_gas_line_color, size=0.5) +
-    ggplot2::geom_line(ggplot2::aes(x=xseq, y=yTotalSeq), colour=total_line_color) +
-    ggplot2::ggtitle(sprintf("cvrmse: blue (%.2f), red (%.2f)", elec_cvrmse, gas_cvrmse)) +
+    ggplot2::geom_line(ggplot2::aes(x=xseq, y=yTotalSeq), colour=total_line_color)
+  if (plotTitle) {
+    p <- p +
+      ggplot2::ggtitle(sprintf("cvrmse: blue (%.2f), red (%.2f)", elec_cvrmse, gas_cvrmse))
+  }
+  p <- p +
     ggplot2::theme_bw() +
     ggplot2::theme(text = ggplot2::element_text(size=theme_text_size),
                    plot.title = ggplot2::element_text(size=title_font_size))
