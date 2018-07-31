@@ -1,6 +1,8 @@
 library(dplyr)
 
 devtools::load_all("db.interface")
+devtools::load_all("get.noaa.weather")
+devtools::load_all("lean.analysis")
 
 devtools::load_all("summarise.and.plot")
 summarise.and.plot::national_overview(category=c("I", "A"), year=2017)
@@ -484,15 +486,37 @@ devtools::load_all("db.interface")
 devtools::load_all("get.noaa.weather")
 devtools::load_all("lean.analysis")
 
-region=1
-plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(8, 82), plotYLimit=c(-1, 72))
-plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(8, 82), plotYLimit=c(-1, 72))
-plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), sourceEnergy=TRUE, plotXLimit=c(8, 82), plotYLimit=c(-1, 72), plotPoint=FALSE)
+region=9
+suffix = "source_heating_cooling"
+range_file = sprintf("~/Dropbox/gsa_2017/csv_FY/base_lean_score_region_%s_%s.csv", region, suffix)
+if (file.exists(range_file)) {
+  print("asdfasdfsd")
+  dfrange = readr::read_csv(range_file)
+  xlimits = c(min(dfrange$`xrange_left`), max(dfrange$`xrange_right`))
+  ylimits = c(-1, max(dfrange$`yrange_top`))
+} else {
+  xlimits = NULL
+  ylimits = NULL
+}
+print("xlimits")
+print(xlimits)
+print("ylimits")
+print(ylimits)
 
-generate_lean_tex(plotType="base", region=region, topn=8, botn=4, category="I")
-generate_lean_tex(plotType="base", region=region, topn=4, botn=4, category="A")
-generate_lean_tex(plotType="gas", region=region, topn=20, botn=0)
-generate_lean_tex(plotType="elec", region=region, topn=20, botn=0)
+elec_col = "eui_cooling_source"
+gas_col = "eui_heating_source"
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
+
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
+
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
+
+presuffix="_source_heating_cooling"
+generate_lean_tex(plotType="base", region=region, topn=20, botn=0, presuffix=presuffix)
+generate_lean_tex(plotType="gas", region=region, topn=20, botn=0, presuffix=presuffix)
+generate_lean_tex(plotType="elec", region=region, topn=20, botn=0, presuffix=presuffix)
+## generate_lean_tex(plotType="base", region=region, topn=8, botn=4, category="I")
+## generate_lean_tex(plotType="base", region=region, topn=4, botn=4, category="A")
 
 region=2
 xlimits = c(0, 84)
