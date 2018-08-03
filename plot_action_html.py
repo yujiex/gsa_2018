@@ -289,11 +289,13 @@ def plot_saving_aggyear(df, timerange_pre,
     if theme == 'eui_gas':
         c1 = 'brown'
         c2 = 'lightsalmon'
+        # location = 'lower left'
         location = 'upper center'
         wrapwidth = 30
     else:
         c1 = 'navy'
         c2 = 'lightskyblue'
+        # location = 'upper left'
         location = 'lower center'
         wrapwidth = 99
     energy = df.groupby(['month']).mean()
@@ -325,6 +327,8 @@ def plot_saving_aggyear(df, timerange_pre,
                                                                                    lb.title_dict[theme],
                                                                                    time_label(timerange_pre)),
                                  wrapwidth))], loc=location)
+                                # following is for region 9 ppt one building
+                                # wrapwidth))], loc=location, fontsize='xx-small')
     plt.xticks(range(1, 13), ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
     if save_percent > 0:
         ax.set_title('{2} after ({0}) vs before ({4}), {1}% less, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)), fontsize=12)
