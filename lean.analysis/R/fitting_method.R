@@ -170,7 +170,14 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
     alpha_gas = fullAlpha
     fitted_display = sprintf("%.1f", (mean(yGasFitted) - resultGas$baseload) * 12)
   }
+  ## fill base load
   p <- ggplot2::ggplot() +
+    ggplot2::geom_ribbon(ggplot2::aes(x=xseq, ymin=0, ymax=resultElec$baseload), fill=base_elec_color,
+                         alpha=alpha_base_elec) +
+    ggplot2::geom_ribbon(ggplot2::aes(x=xseq, ymin=resultElec$baseload, ymax=resultElec$baseload + resultGas$baseload),
+                         fill=base_gas_color, alpha=alpha_base_gas)
+  p <- p +
+  ## p <- ggplot2::ggplot() +
     ggplot2::geom_line(ggplot2::aes(x=xseq, y=yElecSeq + resultGas$baseload), colour=elec_line_color) +
     ggplot2::geom_segment(ggplot2::aes(x=min(x), xend=max(x), y=resultElec$baseload, yend=resultElec$baseload), linetype="dashed", color = base_elec_line_color, size=0.5) +
     ggplot2::geom_line(ggplot2::aes(x=xseq, y=yGasSeq + resultElec$baseload), colour=gas_line_color) +
@@ -186,15 +193,9 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
     ggplot2::theme_bw() +
     ggplot2::theme(text = ggplot2::element_text(size=theme_text_size),
                    plot.title = ggplot2::element_text(size=title_font_size))
-  ## fill base load
-  p <- p +
-    ggplot2::geom_ribbon(ggplot2::aes(x=xseq, ymin=0, ymax=resultElec$baseload), fill=base_elec_color,
-                         alpha=alpha_base_elec) +
-    ggplot2::geom_ribbon(ggplot2::aes(x=xseq, ymin=resultElec$baseload, ymax=resultElec$baseload + resultGas$baseload),
-                         fill=base_gas_color, alpha=alpha_base_gas)
   if (plotPoint) {
     p <- p +
-      ggplot2::geom_point(ggplot2::aes(x=x, y=yElec), colour=elec_line_color, size=data_point_size) +
+      ggplot2::geom_point(ggplot2::aes(x=x, y=yElec + resultGas$baseload), colour=elec_line_color, size=data_point_size) +
       ggplot2::geom_point(ggplot2::aes(x=x, y=yGas + resultElec$baseload), colour=gas_line_color, size=data_point_size)
   }
   lowerElec = 1

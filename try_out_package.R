@@ -632,13 +632,13 @@ devtools::load_all("db.interface")
 devtools::load_all("get.noaa.weather")
 
 devtools::load_all("lean.analysis")
-
-buildingNumber="MT0000AE"
-xlimits = NULL
-ylimits = NULL
-elec_col = "eui_elec"
-gas_col = "eui_gas"
-plot_lean_subset(buildingNumber=buildingNumber, year=2017, plotType="elec", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, debugFlag=TRUE)
+buildingNumber="IL0214ZZ"
+xlimits = c(0, 85)
+ylimits = c(0, 55)
+elec_col = "eui_cooling_source"
+gas_col = "eui_heating_source"
+presuffix="_source_heating_cooling"
+plot_lean_subset(buildingNumber=buildingNumber, year=2017, plotType="base", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, debugFlag=TRUE, plotPoint=TRUE)
 
 ## for building TX0211ZZ
 building = "TX0211ZZ"
