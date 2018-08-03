@@ -2,6 +2,7 @@
 .RData
 csv/
 csv_FY/
+manual_image/
 plot_FY/
 plot_dynamic/
 plot_FY_cal/
