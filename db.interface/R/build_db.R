@@ -62,6 +62,92 @@ recode_euas_type <- function() {
   write_table_to_db(df=df, dbname = "all", tablename = "EUAS_type_recode", overwrite = TRUE)
 }
 
+dump_static <- function() {
+    ## following is transfered from python version
+  ## df2 = readr::read_csv('input/FY/static info/Entire GSA Building Portfolio.csv') %>%
+  ##   tibble::as_data_frame() %>%
+  ##   dplyr::rename(`Building Number`=`Building ID`,
+  ##                 `Street Address`=`Street`) %>%
+  ##   {.}
+  ## write_table_to_db(df2, dbname="other_input", tablename="Entire_GSA_Building_Portfolio_input", overwrite=TRUE)
+  ## export a csv to visually check
+  ## read_table_from_db(dbname="other_input", tablename="Entire_GSA_Building_Portfolio_input") %>%
+  ##   readr::write_csv("temp/Entire_GSA_Building_Portfolio_input.csv")
+  ## this part needs to copy in old files from other computer
+  # filename = os.getcwd() + '/csv/all_column/sheet-0-all_col.csv'
+  # df_use = pd.read_csv(filename)
+  # df_use['Property Name'] = df_use['Property Name'].map(lambda x: x.partition(' ')[0][:8])
+  # df_use.rename(columns={'Property Name': 'Building Number',
+  #                        'City/Municipality': 'City', 'Postal Code':
+  #                        'Zip Code'}, inplace=True)
+  # df_use.to_sql('PortfolioManager_sheet0_input', conn,
+  #               if_exists='replace')
+  ## df3 = readr::read_csv('input/FY/static info/buildings_in_facility_fy15.csv', skip=6,
+  ##                       col_names=c('Region Number', 'Facility Number', 'Building Number', 'Facility total gsf',
+  ##                                   'Building gsf')) %>%
+  ##   tibble::as_data_frame() %>%
+  ##   head(-2) %>%
+  ##   {.}
+  ## write_table_to_db(df3, dbname="other_input", tablename="buildings_in_facility_fy15", overwrite=TRUE)
+  ## df4 =
+  ##   readr::read_csv('input/FY/static info/euas_database_of_buildings_cmu.csv') %>%
+  ##   tibble::as_data_frame() %>%
+  ##   dplyr::select(-`Building ID`, -`Historical Status Desc`) %>%
+  ##   dplyr::mutate(`Building Date - Construction Completed`=as.Date(`Building Date - Construction Completed`,
+  ##                                                                  origin = "1899-12-30")) %>%
+  ##   dplyr::mutate(`Building Date - Last Modernization`=as.Date(`Building Date - Last Modernization`,
+  ##                                                                  origin = "1899-12-30")) %>%
+  ##   dplyr::rename(`Building_Number`=`Location Facility Code`, `Street_Address`=`Street Address`,
+  ##                 `State`=`State Code`) %>%
+  ##   {.}
+  ## write_table_to_db(df4, dbname="other_input", tablename="euas_database_of_buildings_cmu", overwrite=TRUE)
+  ## df5 =
+  ##   readr::read_csv("input/FY/static info/GSA National Energy Reduction Target Workbook FY17_sheet3.csv",
+  ##                   skip = 3) %>%
+  ##   tibble::as_data_frame() %>%
+  ##   dplyr::select(-one_of(paste0("X", 1:78))) %>%
+  ##   dplyr::select(1:38) %>%
+  ##   head(-1) %>%
+  ##   dplyr::rename(`Standardized HDD`=`Standardized DD`,
+  ##                 `Standardized CDD`=`Standardized DD_1`,
+  ##                 `Heating Degree Day Multiplier`=`Degree Day Multiplier`,
+  ##                 `Cooling Degree Day Multiplier`=`Degree Day Multiplier_1`,
+  ##                 `Building_Number`=`Building Number`) %>%
+  ##   dplyr::filter(!is.na(`Building_Number`), `Building_Number`!="Building Number",
+  ##                 `Building_Number`!="(Multiple Items)") %>%
+  ##   {.}
+  ## ## df5 %>%
+  ## ##   dplyr::group_by(`Building_Number`) %>%
+  ## ##   dplyr::filter(n()>1) %>%
+  ## ##   head() %>%
+  ## ##   print()
+  ## ## duplicate records for Building Number in model 3, 
+  ## ## `Region No.` Building_Number Cat   `Average of Gross Sq.… `Sum of Total mmBT…
+  ## ## <chr>        <chr>           <chr> <chr>                  <chr>
+  ## ## 7            TX0000TG        A     95,942                 1,518
+  ## ## 7            TX0000TG        I     95,942                 9,161
+  ## ## because there's several chuncks of data, and year 2016-12 and 2017 data
+  ## ## are mixed, the building is A in 2016, I in 2017
+  ## write_table_to_db(df5, dbname="other_input", tablename="GSA_National_Energy_Reduction_Target_Workbook_FY17_sheet3",
+  ##                   overwrite=TRUE)
+  df6 =
+    readr::read_csv("input/FY/static info/GSA National Energy Reduction Target Workbook FY17_sheet7.csv") %>%
+    dplyr::select(-one_of(paste0("X", 1:14))) %>%
+    dplyr::select(1:7) %>%
+    dplyr::rename(`Building_Number`=`Location Code`) %>%
+    na.omit() %>%
+    {.}
+  ## write_table_to_db(df6, dbname="other_input", tablename="GSA_National_Energy_Reduction_Target_Workbook_FY17_sheet7",
+  ##                   overwrite=TRUE)
+  df7 =
+    readr::read_csv("input/FY/static info/GSA National Energy Reduction Target Workbook FY17_sheet10.csv") %>%
+    tibble::as_data_frame() %>%
+    dplyr::rename(`Building_Number`=`Building #`) %>%
+    {.}
+  write_table_to_db(df7, dbname="other_input",
+                    tablename="GSA_National_Energy_Reduction_Target_Workbook_FY17_sheet10", overwrite=TRUE)
+}
+
 #' Write table from db
 #'
 #' This function writes a table to database
@@ -145,23 +231,20 @@ get_eui_by_year <- function(fOrC) {
     year_col = "year"
     non_year_col = "Fiscal_Year"
   }
-  con = connect("all")
   df =
-    ## DBI::dbGetQuery(con, "SELECT * FROM EUAS_monthly_with_type LIMIT 100") %>%
-    DBI::dbGetQuery(con, "SELECT * FROM EUAS_monthly_with_type") %>%
+    read_table_from_db(dbname="all", tablename="EUAS_monthly_with_type") %>%
     tibble::as_data_frame() %>%
     dplyr::select(-`index`, -`month`, -`Fiscal_Month`) %>%
     {.}
-  DBI::dbDisconnect(con)
   df_numeric = df %>%
-    dplyr::select(-`Gross_Sq.Ft`) %>%
+    dplyr::select(-`Gross_Sq.Ft`, -`datacenter_sqft`, -`lab_sqft`, -`Occupancy`) %>%
     dplyr::group_by(`Building_Number`, !!rlang::sym(year_col)) %>%
     dplyr::summarise_if(is.numeric, dplyr::funs(sum)) %>%
     dplyr::ungroup() %>%
     ## dplyr::summarise_if(is.character, dplyr::funs(first)) %>%
     {.}
   df_char = df %>%
-    dplyr::select(`Building_Number`, !!rlang::sym(year_col), `State`, `Cat`, `Gross_Sq.Ft`, `Region_No.`, `Service_Center`, `Area_Field_Office`, `Building_Designation`, `Building_Type`, `type_data_source`) %>%
+    dplyr::select(`Building_Number`, !!rlang::sym(year_col), `State`, `Cat`, `Gross_Sq.Ft`, `datacenter_sqft`, `lab_sqft`, `Occupancy`, `Region_No.`, `Service_Center`, `Area_Field_Office`, `Building_Designation`, `Building_Type`, `type_data_source`) %>%
     ## dplyr::select(`Building_Number`, !!rlang::sym(year_col), `State`, `Cat`, `Gross_Sq.Ft`, `Region_No.`, `Service_Center`, `Area_Field_Office`, `Building_Designation`, `Building_Type`, `type_data_source`, `state_abbr`) %>%
     dplyr::group_by(`Building_Number`, !!rlang::sym(year_col)) %>%
     dplyr::summarise_all(dplyr::funs(first)) %>%
