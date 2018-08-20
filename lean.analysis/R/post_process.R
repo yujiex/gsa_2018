@@ -61,7 +61,7 @@ img2tex <- function(df, prefix, suffix, isDesc, outfilename, topn=0, botn=0) {
 #' presuffix="_source_heating_cooling"
 #' generate_lean_tex(plotType="base", region=region, topn=20, botn=0, presuffix=presuffix)
 generate_lean_tex <- function(plotType, region, topn, botn, category, presuffix="") {
-  df = readr::read_csv(sprintf("csv_FY/%s_lean_score_region_%s.csv", plotType, region)) %>%
+  df = readr::read_csv(sprintf("csv_FY/%s_lean_score_region_%s%s.csv", plotType, region, presuffix)) %>%
     dplyr::rename(`id`=`Building_Number`) %>%
     {.}
   if (plotType != "base") {
