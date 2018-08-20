@@ -22,15 +22,16 @@ NULL
 #'   db_build_temp_csv
 #' @param xLabelPrefix optional, the prefix of x label
 #' @param elec_col optional, the column used in fitting electricity or cooling
-#'   kbtu/sqft. Use "Cooling_(kBtu)" for cooling, and "Cooling_(kBtu)_source"
+#'   kbtu/sqft. Use "eui_cooling" for cooling, and "eui_cooling_source"
 #'   for source energy cooling. Same goes with heating.
+#' @param overwriteEnergy optional, whether to use the passed in energy data frame to overwrite the local file in directory energy_temp
 #' @keywords lean
 #' @export
 #' @examples
 #' lean_analysis(lat_lon_df, radius=100, limit=5)
 lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, limit=5, id, plotType, debugFlag,
                            plotXLimit=NULL, plotYLimit=NULL, xLabelPrefix="", plotPoint=FALSE, elec_col="eui_elec",
-                           gas_col="eui_gas", suffix=NULL) {
+                           gas_col="eui_gas", suffix=NULL, overwriteEnergy=FALSE) {
   ## get the years of data to download
   if (missing(id)) {
     id = "XXXXXXXX"
@@ -41,6 +42,26 @@ lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, 
   years = unique(energy$year)
   ## print("-----------------id----------------")
   ## print(id)
+  if (overwriteEnergy) {
+    print("overwrite energy part of the local file")
+    if (file.exists(sprintf("csv_FY/weather/energy_temp/%s.csv", id))) {
+      df = readr::read_csv(sprintf("csv_FY/weather/energy_temp/%s.csv", id)) %>%
+        tibble::as_data_frame() %>%
+        {.}
+      nrow_before_join = nrow(df)
+      df <- df %>%
+        dplyr::select(`year`, `month`, `wt_temperatureFmonth`) %>%
+        dplyr::inner_join(energy, by=c("year", "month")) %>%
+        {.}
+      if (nrow_before_join != nrow(df)) {
+        print(sprintf("inner join has dropped some rows: %s", id))
+      }
+      df %>%
+        readr::write_csv(sprintf("csv_FY/weather/energy_temp/%s.csv", id))
+    } else {
+      print(sprintf("no weather file exist for %s", id))
+    }
+  }
   if (file.exists(sprintf("csv_FY/weather/energy_temp/%s.csv", id))) {
     ## print("load from file")
     df = readr::read_csv(sprintf("csv_FY/weather/energy_temp/%s.csv", id))
@@ -178,7 +199,6 @@ test_lean_analysis_db <- function() {
 #' test_lean_analysis_db()
 plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotType, category, plotXLimit=NULL, plotYLimit=NULL, topn=NULL, botn=NULL, plotPoint=FALSE, elec_col, gas_col, debugFlag=FALSE, suffix=NULL) {
   buildings = db.interface::get_buildings(region=region, buildingType=buildingType, year=year, category=category)
-  print("asdfasdfasd")
   counter = 1
   acc=NULL
   if (missing(region)) {
@@ -230,7 +250,7 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
     ## print("--------head of lat_lon_df---------")
     ## print(head(lat_lon_df))
     lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE, plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=prefix, plotPoint=plotPoint, elec_col=elec_col,
-                                gas_col=gas_col, suffix=suffix)
+                                gas_col=gas_col, suffix=suffix, overwriteEnergy=TRUE)
     ## print("--------lean result---------")
     ## print(lean_result)
     counter = counter + 1
@@ -269,6 +289,7 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
 #' @param fontSize font size for all text
 #' @param fontFamily font family for all text
 #' @param vline_position optional, the x location for the dotted vertical line, default is 50F
+#' @param plot_col optional, the column to use as y in plots
 #' @keywords lean test
 #' @export
 #' @examples
@@ -279,9 +300,10 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
 stacked_fit_plot <- function(region, buildingType, year, category, plotType, method, methodLabel, lowRange=NULL,
                              highRange=NULL, debugFlag=FALSE, plotXLimits=NULL, plotYLimits=NULL, minorgrid=NULL,
                              majorgrid=NULL, sourceEnergy=FALSE, legendloc="bottom", fontSize=10,
-                             fontFamily="System Font", vline_position=50) {
-  datafile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.csv", plotType, region, methodLabel)
-  imagefile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s.png", plotType, region, methodLabel)
+                             fontFamily="System Font", vline_position_elec=80, vline_position_gas=50,
+                             plot_col="eui_elec_source", cvrmse_upper=0.5) {
+  datafile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s_%s.csv", plotType, region, methodLabel, plot_col)
+  imagefile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s_%s.png", plotType, region, methodLabel, plot_col)
   print(datafile)
   if (plotType == "elec") {
     keyword = "electricity"
@@ -292,6 +314,8 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
     print("load cached result")
     dfData = readr::read_csv(datafile) %>%
       as.data.frame() %>%
+      ## filter out models with too large error
+      dplyr::filter(cvrmse < cvrmse_upper) %>%
       {.}
     if (!is.null(lowRange)) {
       buildingInRange <- dfData %>%
@@ -330,7 +354,7 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
         dplyr::arrange(`lowLabel`) %>%
         ## remove the ones with unrealistic out of sample prediction
         dplyr::filter(`lowLabel` >= -0.5) %>%
-        slice(c(1:2,(n()-4):n())) %>%
+        slice(c(1:2,(max(1, n()-4):n()))) %>%
         {.}
     }
     displaySet = unique(toDisplay$Building_Number)
@@ -359,35 +383,29 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
           ggplot2::geom_point()
         print(p1)
       }
-      if (plotType == "elec") {
-        y <- df$`eui_elec`
-        if (sourceEnergy) {
-          y <- y * 3.14
-        }
-      } else if (plotType == "gas") {
-        y <- df$`eui_gas`
-        if (sourceEnergy) {
-          y <- y * 1.05
-        }
-      }
+      y <- df[[plot_col]]
+      print(head(y))
       if (sum(y == 0) > 32/36) {
         print(sprintf("too man zero y values for building %s", building))
         next
       }
       x <- df$`wt_temperatureFmonth`
+      print(head(x))
       if (methodLabel == "piecewise") {
-        output = method(y, x, h=1)$output
+        model_result = method(y, x, h=1)
+        output = model_result$output
+        cvrmse = model_result$cvrmse
       } else {
         output = method(y, x)$output
       }
       xseq <- seq(from=min(x), to=max(x), length.out=200)
       yseq <- predict(output, newdata = data.frame(x=xseq))
-      predLabels <- predict(output, newdata=data.frame(x=c(30, 80)))
+      predLabels <- predict(output, newdata=data.frame(x=c(vline_position_gas, vline_position_elec)))
       ## print(sprintf("y estimation at 30F: %.1f", predict(output, newdata=data.frame(x=30))))
       ## print(sprintf("y estimation at 80F: %.1f", predict(output, newdata=data.frame(x=80))))
       dfData = rbind(dfData, data.frame(Building_Number = building, xseq=xseq, yseq=yseq,
                                   lowLabel=predLabels[[1]],
-                                  highLabel=predLabels[[2]]))
+                                  highLabel=predLabels[[2]], cvrmse=cvrmse))
       counter = counter + 1
     }
     dfData %>%
@@ -401,13 +419,27 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
     ggplot2::ylab(sprintf("%s kBtu per sqft per month at that given temperature", keyword)) +
     ggplot2::theme(legend.position=legendloc, text=ggplot2::element_text(size=fontSize, family=fontFamily))
   if (plotType == "elec") {
+    df_label = dfData %>%
+      dplyr::group_by(`Building_Number`, highLabel) %>%
+      dplyr::slice(1) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(vline_position_elec=vline_position_elec) %>%
+      {.}
     p <- p +
-      ## ggplot2::geom_text(ggplot2::aes(x=80, y=highLabel, label=sprintf("%.1f", highLabel))) +
-      ggplot2::geom_vline(xintercept=vline_position, linetype="dashed")
+      ggplot2::geom_point(ggplot2::aes(x=vline_position_elec, y=highLabel)) +
+      ggrepel::geom_text_repel(data=df_label, ggplot2::aes(x=vline_position_elec, y=highLabel, label=`Building_Number`)) +
+      ggplot2::geom_vline(xintercept=vline_position_elec, linetype="dashed")
   } else if (plotType == "gas") {
+    df_label = dfData %>%
+      dplyr::group_by(`Building_Number`, lowLabel) %>%
+      dplyr::slice(1) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(vline_position_gas=vline_position_gas) %>%
+      {.}
     p <- p +
-      ## ggplot2::geom_text(ggplot2::aes(x=30, y=lowLabel, label=sprintf("%.1f", lowLabel))) +
-      ggplot2::geom_vline(xintercept=vline_position, linetype="dashed")
+      ggplot2::geom_point(ggplot2::aes(x=vline_position_gas, y=lowLabel)) +
+      ggrepel::geom_text_repel(data=df_label, ggplot2::aes(x=vline_position_gas, y=lowLabel, label=`Building_Number`)) +
+      ggplot2::geom_vline(xintercept=vline_position_gas, linetype="dashed")
   }
   print("y plot range")
   print(ggplot2::ggplot_build(p)$layout$panel_ranges[[1]]$y.range)

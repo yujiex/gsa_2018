@@ -68,7 +68,7 @@ piecewise_linear <- function(y, x, h) {
   ## segmentedFit <- segmented::segmented(lin.mod, seg.Z = ~x, psi=60)
   tryCatch({
     segmentedFit <- segmented::segmented(lin.mod, seg.Z = ~x, psi=median(x), segmented::seg.control(h = h))
-    yhat = (segmented::broken.line(segmentedFit,link=FALSE)$fit)
+    y_hat = (segmented::broken.line(segmentedFit,link=FALSE)$fit)
     cvrmse = CVRMSE(y=y, y_hat=y_hat, n_par=4)
     ## plot(segmentedFit, add=TRUE)
     return(list(output=segmentedFit, cvrmse=cvrmse))},
@@ -110,12 +110,13 @@ CVRMSE <- function(y, y_hat, n_par) {
 #' @param xLabelPrefix optional, the prefix of x label
 #' @param plotPoint optional, whether to show the data points
 #' @param plotTitle optional, whether to show the plot title, with cvrmse
+#' @param debugFlag optional, if set, save data to data frame
 #' @keywords polynomial
 #' @export
 #' @examples
 #' plot_fit(y=df$`eui_elect`, x=df$`wt_temperatureFmonth`, output, color="red", methodName=NULL)
 plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, methodName, plotXLimit=NULL,
-                     plotYLimit=NULL, xLabelPrefix="", plotPoint=FALSE, plotTitle=FALSE) {
+                     plotYLimit=NULL, xLabelPrefix="", plotPoint=FALSE, plotTitle=FALSE, debugFlag=FALSE) {
   if (missing(id)) {
     id = "XXXXXXXX"
   }
@@ -159,16 +160,53 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   fitted_display_size = 4
   theme_text_size = 12
   title_font_size = 8
+  ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+  ## deciding boundaries for fill color and stacking gas and electricity heating
+  ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+  lowerElec = 1
+  upperElec = length(xseq)
+  lowerGas = 1
+  upperGas = upperElec
+  yElecHeating = 0
+  yElecHeatingFitted = rep(0, 36)
+  ## not sure if I need these
+  print(min(x))
+  print(resultElec$argmin)
+  print(max(x))
+  if ((resultElec$b2 > 0) && ((min(x) < resultElec$argmin) && (resultElec$argmin < max(x)))) {
+    lowerElec = min(which(xseq > resultElec$argmin))
+    yElecHeating = c((yElecSeq - resultElec$baseload)[1:lowerElec],
+                     rep(0, upperElec - lowerElec))
+    yElecHeatingFitted = yElecFitted[which(x < yElecSeq[lowerElec])]
+    yElecHeatingFitted = c(yElecHeatingFitted, rep(0, 36 - length(yElecHeatingFitted)))
+  }
+  ## if ((resultGas$b2 > 0) && ((min(x) < resultGas$argmin) && (resultGas$argmin < max(x)))) {
+  ##   upperGas = max(which(xseq < resultGas$argmin))
+  ## }
+  ## not sure if I need these end
+  ## print(x)
+  ## print(xseq[lowerElec:upperElec])
+  ## print("ymin")
+  ## print(resultElec$baseload + resultGas$baseload)
+  ## print("ymax")
+  ## print((yElecSeq + resultGas$baseload)[lowerElec:upperElec])
   if (plotType == "base") {
     alpha_base_elec = fullAlpha
     alpha_base_gas = fullAlpha
     fitted_display = sprintf("%.1f", (resultElec$baseload + resultGas$baseload) * 12)
   } else if (plotType == "elec") {
     alpha_elec = fullAlpha
-    fitted_display = sprintf("%.1f", (mean(yElecFitted) - resultElec$baseload) * 12)
+    ## fitted_display = sprintf("%.1f", (mean(yElecFitted) - resultElec$baseload) * 12)
+    ## only count for the "cooling" part of the curve
+    fitted_display = sprintf("%.1f", (mean(yElecFitted[which(x >= yElecSeq[lowerElec])]) - resultElec$baseload) * 12)
   } else if (plotType == "gas") {
     alpha_gas = fullAlpha
-    fitted_display = sprintf("%.1f", (mean(yGasFitted) - resultGas$baseload) * 12)
+    ## fitted_display = sprintf("%.1f", (mean(yGasFitted) - resultGas$baseload) * 12)
+    ## only count for the "heating" part of the curve
+    fitted_display = sprintf("%.1f", (mean(yGasFitted + yElecHeatingFitted) - resultGas$baseload) * 12)
+    print("length of the two")
+    print(length(yGasFitted))
+    print(length(yElecHeatingFitted))
   }
   ## fill base load
   p <- ggplot2::ggplot() +
@@ -176,11 +214,14 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
                          alpha=alpha_base_elec) +
     ggplot2::geom_ribbon(ggplot2::aes(x=xseq, ymin=resultElec$baseload, ymax=resultElec$baseload + resultGas$baseload),
                          fill=base_gas_color, alpha=alpha_base_gas)
+  data.frame("yElecSeq"=yElecSeq, "yGasSeq"=yGasSeq, "yElecHeating"=yElecHeating, "base_gas"=resultGas$baseload,
+             "base_elec"=resultElec$baseload) %>%
+    readr::write_csv("~/Dropbox/gsa_2017/temp/fitting.csv")
   p <- p +
   ## p <- ggplot2::ggplot() +
     ggplot2::geom_line(ggplot2::aes(x=xseq, y=yElecSeq + resultGas$baseload), colour=elec_line_color) +
     ggplot2::geom_segment(ggplot2::aes(x=min(x), xend=max(x), y=resultElec$baseload, yend=resultElec$baseload), linetype="dashed", color = base_elec_line_color, size=0.5) +
-    ggplot2::geom_line(ggplot2::aes(x=xseq, y=yGasSeq + resultElec$baseload), colour=gas_line_color) +
+    ggplot2::geom_line(ggplot2::aes(x=xseq, y=yGasSeq + resultElec$baseload + yElecHeating), colour=gas_line_color) +
     ggplot2::geom_segment(ggplot2::aes(x=min(x), xend=max(x), y=resultElec$baseload + resultGas$baseload,
                                        yend=resultElec$baseload + resultGas$baseload),
                           linetype="dashed", color = base_gas_line_color, size=0.5) +
@@ -198,30 +239,15 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
       ggplot2::geom_point(ggplot2::aes(x=x, y=yElec + resultGas$baseload), colour=elec_line_color, size=data_point_size) +
       ggplot2::geom_point(ggplot2::aes(x=x, y=yGas + resultElec$baseload), colour=gas_line_color, size=data_point_size)
   }
-  lowerElec = 1
-  upperElec = length(xseq)
-  lowerGas = 1
-  upperGas = upperElec
-  ## not sure if I need these
-  ## if ((resultElec$b2 > 0) && ((min(x) < resultElec$argmin) && (resultElec$argmin < max(x)))) {
-  ##   lowerElec = min(which(xseq > resultElec$argmin))
-  ## }
-  ## if ((resultGas$b2 > 0) && ((min(x) < resultGas$argmin) && (resultGas$argmin < max(x)))) {
-  ##   upperGas = max(which(xseq < resultGas$argmin))
-  ## }
-  ## not sure if I need these end
-  ## print(x)
-  ## print(xseq[lowerElec:upperElec])
-  ## print("ymin")
-  ## print(resultElec$baseload + resultGas$baseload)
-  ## print("ymax")
-  ## print((yElecSeq + resultGas$baseload)[lowerElec:upperElec])
   p <- p +
+    ggplot2::geom_ribbon(ggplot2::aes(x=xseq[1:lowerElec], ymin=resultElec$baseload + resultGas$baseload,
+                                      ymax=(yElecSeq + resultGas$baseload)[1:lowerElec]), fill=base_elec_color,
+                         alpha=alpha_base_elec) +
     ggplot2::geom_ribbon(ggplot2::aes(x=xseq[lowerElec:upperElec], ymin=resultElec$baseload + resultGas$baseload,
                              ymax=(yElecSeq + resultGas$baseload)[lowerElec:upperElec]), fill=elec_mk_color,
                          alpha=alpha_elec) +
     ggplot2::geom_ribbon(ggplot2::aes(x=xseq[lowerGas:upperGas], ymin=resultElec$baseload + resultGas$baseload,
-                             ymax=(yGasSeq + resultElec$baseload)[lowerGas:upperGas]), fill=gas_mk_color,
+                             ymax=(yGasSeq + resultElec$baseload + yElecHeating)[lowerGas:upperGas]), fill=gas_mk_color,
                          alpha=alpha_gas)
   p <- p +
     ggplot2::xlab(paste0(xLabelPrefix, id)) +
