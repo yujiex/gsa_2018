@@ -700,6 +700,26 @@ dollar_saving <- function(category, type, year, region, method="own", topn=10, b
   }
 }
 
+#' Summary table gsa national median eui vs sqft weighted eui (total energy over total gsf) by type
+#'
+#' This function generates a data frame with building type, gsa national median, and total kbtu over total gsf, for specific year
+#' @keywords median summary
+#' @export
+#' @examples
+#' dollar_saving(category=c("I", "A"), year=2017, region="9")
+gsa_national_median_energy_gsf <- function() {
+  df = get_filter_set(category=c("A", "I"), year=2017) %>%
+    tibble::as_data_frame() %>%
+    dplyr::select(`Building_Type`, `Building_Number`, `Gross_Sq.Ft`, `Total_(kBtu)`, `eui_total`) %>%
+    {.}
+  df %>%
+    dplyr::group_by(`Building_Type`) %>%
+    dplyr::summarise(n=n(), total_kBtu = sum(`Total_(kBtu)`), median_eui = median(`eui_total`), total_gsf = sum(`Gross_Sq.Ft`)) %>%
+    dplyr::ungroup()%>%
+    dplyr::mutate(`weighted_eui`=`total_kBtu`/`total_gsf`) %>%
+    print()
+}
+
 #' Summary table own median vs cbecs median
 #'
 #' This function generates a data frame with building type, cbecs median, region 1 median, ..., region 11 median
