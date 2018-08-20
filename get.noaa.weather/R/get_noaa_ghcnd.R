@@ -107,7 +107,10 @@ download_stations_from_top <- function(stations, date_min, date_max, v, v_out, t
     data = rnoaa::ghcnd_search(stationid=s, date_min=date_min, date_max=date_max, var=v)[[v_out]] %>%
       {.}
     ## print(data)
-    if (nrow(data) == 0) {
+    if (!(v_out %in% names(data))){
+      print(sprintf("bad station %s, %s not in data", s, v_out))
+      bad_stations <- c(bad_stations, s)
+    } else if (nrow(data) == 0) {
       print(sprintf("bad station %s no data", s))
       bad_stations <- c(bad_stations, s)
     } else if (NA %in% data[[v_out]]) {
