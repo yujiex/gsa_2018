@@ -674,8 +674,9 @@ def plot_action_fromdb():
     lines = ['Building_Number,Time,Action,Electric_Saving,Gas_Saving,Electric_Before,Electric_After,Gas_Before,Gas_After,Electric_CVRMSE,Gas_CVRMSE']
     # FIXME: PA0060ZZ has None in eui_gas
     del names[153]
-    names = ['CA0154ZZ']
+    # names = ['CA0154ZZ']
     # names = ['CA0306ZZ']
+    names = ['IL0302ZZ', 'IN1703ZZ']
     for i, name in enumerate(names):
         print i, name, '222222222222222222222222222222'
         group = gr.get_group(name)
