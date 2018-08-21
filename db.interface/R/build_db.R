@@ -186,7 +186,7 @@ write_table_to_db <- function(df, dbname, tablename, path, overwrite) {
 #' drop_table_from_db("all", "EUAS_type_")
 drop_table_from_db <- function(dbname, tablename) {
   con = connect(dbname)
-  dbRemoveTable(con, tablename)
+  DBI::dbRemoveTable(con, tablename)
   DBI::dbDisconnect(con)
   print(sprintf("Dropped table: %s", tablename))
 }
@@ -564,6 +564,118 @@ get_heating_cooling_eui <- function(debugFlag=FALSE) {
   }
 }
 
+#' Add occupancy to data
+#' This function adds an occupancy column to the energy data table, assuming occupancy is fixed over years
+#' @keywords occupancy
+#' @export
+#' @examples
+#' add_occ()
+add_occ <- function() {
+  df_base = read_table_from_db(dbname="all", tablename="EUAS_monthly", cols=c("Building_Number")) %>%
+    dplyr::group_by(`Building_Number`) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup() %>%
+    {.}
+  print("number of buildings")
+  print(nrow(df_base))
+  df = read_table_from_db(dbname="other_input",
+                          tablename="GSA_National_Energy_Reduction_Target_Workbook_FY17_sheet10") %>%
+    tibble::as_data_frame() %>%
+    {.}
+  df_building = df %>%
+    dplyr::filter(`Facility` == FALSE) %>%
+    dplyr::select(`Building_Number`, `Occupancy`) %>%
+    dplyr::mutate(`BuildingOrFacility`="Building") %>%
+    {.}
+  df_facility = df %>%
+    dplyr::filter(`Facility` != FALSE) %>%
+    dplyr::group_by(`Facility`) %>%
+    dplyr::summarise(`Occupancy`=sum(`Occupancy`)) %>%
+    dplyr::ungroup() %>%
+    dplyr::rename(`Building_Number`=`Facility`) %>%
+    dplyr::mutate(`BuildingOrFacility`="Facility") %>%
+    {.}
+  df_to_join = df_building %>%
+    dplyr::bind_rows(df_facility) %>%
+    dplyr::mutate(`data_source`="GSA_National_Energy_Reduction_Target_Workbook_FY17") %>%
+    {.}
+  print(head(df_to_join))
+  print(tail(df_to_join))
+  print("# EUAS building with occ")
+  df_base <- df_base %>%
+    dplyr::left_join(df_to_join, by="Building_Number") %>%
+    {.}
+  write_table_to_db(df=df_base, dbname="all", "EUAS_occupancy", overwrite=TRUE)
+  df_base <- df_base %>%
+    na.omit() %>%
+    dplyr::select(`Building_Number`, `Occupancy`) %>%
+    {.}
+  df_euas_monthly = read_table_from_db(dbname="all", tablename="EUAS_monthly") %>%
+    tibble::as_data_frame() %>%
+    {.}
+  df_euas_monthly <- df_euas_monthly %>%
+    dplyr::left_join(df_base, by="Building_Number") %>%
+    {.}
+  write_table_to_db(df=df_euas_monthly, dbname="all", tablename="EUAS_monthly", overwrite=TRUE)
+}
+
+#' Add the area of lab and data center in euas monthly table
+#'
+#' This function adds a table EUAS_area_lab_datacenter, and join the area of lab
+#' and datacenter to the table EUAS_monthly
+#' @keywords area lab datacenter
+#' @export
+#' @examples
+#' main_db_build()
+add_area_lab_datacenter <- function() {
+  df_base = read_table_from_db(dbname="all", tablename="EUAS_monthly", cols=c("Building_Number")) %>%
+    dplyr::group_by(`Building_Number`) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup() %>%
+    {.}
+  df = read_table_from_db(dbname="other_input",
+                          tablename="GSA_National_Energy_Reduction_Target_Workbook_FY17_sheet7") %>%
+    tibble::as_data_frame() %>%
+    {.}
+  df_building = df %>%
+    dplyr::filter(`Facility` == FALSE) %>%
+    dplyr::select(`Building_Number`, `ADP`, `LAB`) %>%
+    dplyr::mutate(`BuildingOrFacility`="Building") %>%
+    {.}
+  df_facility = df %>%
+    dplyr::filter(`Facility` != FALSE) %>%
+    dplyr::group_by(`Facility`) %>%
+    dplyr::summarise(`ADP`=sum(`ADP`), `LAB`=sum(`LAB`)) %>%
+    dplyr::ungroup() %>%
+    dplyr::rename(`Building_Number`=`Facility`) %>%
+    dplyr::mutate(`BuildingOrFacility`="Facility") %>%
+    {.}
+  df_to_join = df_building %>%
+    dplyr::bind_rows(df_facility) %>%
+    dplyr::mutate(`data_source`="GSA_National_Energy_Reduction_Target_Workbook_FY17") %>%
+    {.}
+  print(head(df_to_join))
+  print(tail(df_to_join))
+  df_base <- df_base %>%
+    dplyr::left_join(df_to_join, by="Building_Number") %>%
+    dplyr::rename(`datacenter_sqft`=`ADP`, `lab_sqft`=`LAB`) %>%
+    {.}
+  print(head(df_base))
+  print(nrow(df_base))
+  write_table_to_db(df=df_base, dbname="all", "EUAS_area_lab_datacenter", overwrite=TRUE)
+  df_base <- df_base %>%
+    na.omit() %>%
+    dplyr::select(`Building_Number`, `datacenter_sqft`, `lab_sqft`) %>%
+    {.}
+  df_euas_monthly = read_table_from_db(dbname="all", tablename="EUAS_monthly") %>%
+    tibble::as_data_frame() %>%
+    {.}
+  df_euas_monthly <- df_euas_monthly %>%
+    dplyr::left_join(df_base, by="Building_Number") %>%
+    {.}
+  write_table_to_db(df=df_euas_monthly, dbname="all", tablename="EUAS_monthly", overwrite=TRUE)
+}
+
 #' Join EUAS_monthly and EUAS_type
 #'
 #' This function joins EUAS_monthly and EUAS_type
@@ -583,6 +695,12 @@ main_db_build <- function() {
   ## check_duplicates(dbname="all", tablename="EUAS_type",
   ##                  groupby_vars=c("Building_Number", "Building_Type", "data_source"))
   ## add_chilled_water_eui()
+  ## check_duplicates(dbname="all", tablename="EUAS_monthly",
+  ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
+  ## add_occ()
+  ## check_duplicates(dbname="all", tablename="EUAS_monthly",
+  ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
+  ## add_area_lab_datacenter()
   ## check_duplicates(dbname="all", tablename="EUAS_monthly",
   ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
   get_heating_cooling_eui(debugFlag=FALSE)
