@@ -70,7 +70,6 @@ piecewise_linear <- function(y, x, h) {
     segmentedFit <- segmented::segmented(lin.mod, seg.Z = ~x, psi=median(x), segmented::seg.control(h = h))
     y_hat = (segmented::broken.line(segmentedFit,link=FALSE)$fit)
     cvrmse = CVRMSE(y=y, y_hat=y_hat, n_par=4)
-    ## plot(segmentedFit, add=TRUE)
     return(list(output=segmentedFit, cvrmse=cvrmse))},
     warning = function(w) {
       print("warning")
