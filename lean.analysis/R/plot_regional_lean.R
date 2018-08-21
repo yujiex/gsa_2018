@@ -27,27 +27,10 @@ plot_regional <- function (region, suffix="source_electric_gas", elec_col="eui_e
   } else {
     xlimits = NULL
     ylimits = NULL
+    plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
   }
-  print("xlimits")
-  print(xlimits)
-  print("ylimits")
-  print(ylimits)
-  plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
-  range_file = sprintf("~/Dropbox/gsa_2017/csv_FY/base_lean_score_region_%s_%s.csv", region, suffix)
-  if (file.exists(range_file)) {
-    dfrange = readr::read_csv(range_file)
-    xlimits = c(min(dfrange$`xrange_left`), max(dfrange$`xrange_right`))
-    ylimits = c(-1, max(dfrange$`yrange_top`))
-  } else {
-    xlimits = NULL
-    ylimits = NULL
-  }
-  print("xlimits")
-  print(xlimits)
-  print("ylimits")
-  print(ylimits)
   ## rerun to get the right global scale
-  plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
+  ## plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="base", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
   ## plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
   plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="elec", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, elec_col=elec_col, gas_col=gas_col, suffix=suffix)
   presuffix = sprintf("_%s", suffix)
