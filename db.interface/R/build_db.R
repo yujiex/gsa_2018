@@ -540,9 +540,10 @@ get_heating_cooling_eui <- function(debugFlag=FALSE) {
     {.}
   df <- df %>%
     dplyr::left_join(df_tag, by=c("Building_Number", "Fiscal_Year")) %>%
-    dplyr::mutate(`Heating_(kBtu)` = ifelse(`electric_heating`, `Electric_(kBtu)`, `Heating_(kBtu)`),
-                  `Heating_(kBtu)_source` = ifelse(`electric_heating`, `Electric_(kBtu)` * 3.14,
-                                                   `Heating_(kBtu)_source`)) %>%
+    ## remove the copy in electricity if no heating fuel
+    ## dplyr::mutate(`Heating_(kBtu)` = ifelse(`electric_heating`, `Electric_(kBtu)`, `Heating_(kBtu)`),
+    ##               `Heating_(kBtu)_source` = ifelse(`electric_heating`, `Electric_(kBtu)` * 3.14,
+    ##                                                `Heating_(kBtu)_source`)) %>%
     dplyr::mutate(`Electric_(kBtu)_source` = `Electric_(kBtu)` * 3.14) %>%
     dplyr::mutate(`Gas_(kBtu)_source` = `Gas_(kBtu)` * 1.05) %>%
     dplyr::mutate(`eui_elec_source` = `Electric_(kBtu)_source` / `Gross_Sq.Ft`,
