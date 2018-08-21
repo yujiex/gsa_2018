@@ -79,9 +79,9 @@ lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, 
     ## join weather and energy
     if (debugFlag) {
       weather %>%
-        readr::write_csv("csv_FY/db_build_temp_csv/weather.csv")
+        readr::write_csv("csv_FY/temp/weather.csv")
       energy %>%
-        readr::write_csv("csv_FY/db_build_temp_csv/energy.csv")
+        readr::write_csv("csv_FY/temp/energy.csv")
     }
     df = energy %>%
       dplyr::left_join(weather) %>%
@@ -102,7 +102,7 @@ lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, 
   fitted_display = plot_fit(yElec=yElec, yGas=yGas, x=x, resultElec=resultElec,
            resultGas=resultGas, plotType=plotType, id=id,
            methodName="polynomial degree 2", plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=xLabelPrefix,
-           plotPoint=plotPoint)
+           plotPoint=plotPoint, debugFlag=debugFlag)
   if (is.null(suffix)) {
     ggplot2::ggsave(file=sprintf("region_report_img/lean/%s_%s.png", plotType, id), width = 2, height=2, units="in")
   } else {
@@ -231,7 +231,7 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
   for (building in buildings) {
     ## print(sprintf("plot %s %s ---------------", counter, building))
     if (debugFlag) {
-    energy = db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly_with_type",
+      energy = db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly_with_type",
                                               cols=c("Fiscal_Year", "Fiscal_Month", "year", "month", "Building_Type","eui_elec", "eui_gas", "eui_elec_source", "eui_gas_source", "eui_heating", "eui_cooling", "eui_heating_source", "eui_cooling_source", "Cat", "eui_oil", "eui_steam", "eui_chilledWater"), building=building) %>%
       dplyr::arrange(-`Fiscal_Year`, -`Fiscal_Month`) %>%
       head(n=36)
@@ -364,7 +364,7 @@ stacked_fit_plot <- function(region=NULL, buildingType=NULL, year=NULL, category
         dplyr::arrange(`highLabel`) %>%
         ## remove the ones with unrealistic out of sample prediction
         dplyr::filter(`highLabel` >= -0.5) %>%
-        slice(c(1:2,(n()-4):n())) %>%
+        slice(c(1:2,(max(1, n()-4):n()))) %>%
         {.}
       print(nrow(toDisplay))
     } else if (plotType == "gas") {
@@ -463,6 +463,8 @@ stacked_fit_plot <- function(region=NULL, buildingType=NULL, year=NULL, category
       dplyr::ungroup() %>%
       dplyr::mutate(vline_position_elec=vline_position_elec) %>%
       {.}
+    print(head(df_label))
+    print(sprintf("vline_position_elec :%s", vline_position_elec))
     p <- p +
       ggplot2::geom_point(ggplot2::aes(x=vline_position_elec, y=highLabel)) +
       ggrepel::geom_text_repel(data=df_label, ggplot2::aes(x=vline_position_elec, y=highLabel, label=`Building_Number`)) +
