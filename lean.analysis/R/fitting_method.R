@@ -149,6 +149,7 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   base_elec_color = '#F7EE58'
   base_elec_line_color = 'gray'
   base_gas_line_color = '#E47A3A'
+  elec_heating_mk_color = '#EFD743'
   paleAlpha = 0.1
   fullAlpha = 1.0
   data_point_size = 0.5
@@ -156,6 +157,7 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   alpha_base_elec = paleAlpha
   alpha_gas = paleAlpha
   alpha_elec = paleAlpha
+  alpha_elec_heating = paleAlpha
   ## font sizes
   fitted_display_size = 4
   theme_text_size = 12
@@ -193,14 +195,19 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   if (plotType == "base") {
     alpha_base_elec = fullAlpha
     alpha_base_gas = fullAlpha
+    alpha_elec_heating = fullAlpha
     fitted_display = sprintf("%.1f", (resultElec$baseload + resultGas$baseload) * 12)
   } else if (plotType == "elec") {
     alpha_elec = fullAlpha
     ## fitted_display = sprintf("%.1f", (mean(yElecFitted) - resultElec$baseload) * 12)
     ## only count for the "cooling" part of the curve
-    fitted_display = sprintf("%.1f", (mean(yElecFitted[which(x >= yElecSeq[lowerElec])]) - resultElec$baseload) * 12)
+    print(sprintf("lowerElec: %s", lowerElec))
+    print(sprintf("yElecSeq[lowerElec]: %s", yElecSeq[lowerElec]))
+    print(sprintf("xseq[lowerElec]: %s", xseq[lowerElec]))
+    fitted_display = sprintf("%.1f", (mean(yElecFitted[which(x >= xseq[lowerElec])]) - resultElec$baseload) * 12)
   } else if (plotType == "gas") {
     alpha_gas = fullAlpha
+    alpha_elec_heating = fullAlpha
     ## fitted_display = sprintf("%.1f", (mean(yGasFitted) - resultGas$baseload) * 12)
     ## only count for the "heating" part of the curve
     fitted_display = sprintf("%.1f", (mean(yGasFitted + yElecHeatingFitted) - resultGas$baseload) * 12)
@@ -241,12 +248,17 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   }
   p <- p +
     ggplot2::geom_ribbon(ggplot2::aes(x=xseq[1:lowerElec], ymin=resultElec$baseload + resultGas$baseload,
-                                      ymax=(yElecSeq + resultGas$baseload)[1:lowerElec]), fill=base_elec_color,
-                         alpha=alpha_base_elec) +
+                                      ymax=(resultElec$baseload + resultGas$baseload + yElecHeating)[1:lowerElec]),
+                         fill=elec_heating_mk_color,
+                         alpha=alpha_elec_heating) +
+    ## ggplot2::geom_ribbon(ggplot2::aes(x=xseq[1:lowerElec], ymin=resultElec$baseload + resultGas$baseload,
+    ##                                   ymax=(yElecSeq + resultGas$baseload)[1:lowerElec]), fill=base_elec_color,
+    ##                      alpha=alpha_base_elec) +
     ggplot2::geom_ribbon(ggplot2::aes(x=xseq[lowerElec:upperElec], ymin=resultElec$baseload + resultGas$baseload,
                              ymax=(yElecSeq + resultGas$baseload)[lowerElec:upperElec]), fill=elec_mk_color,
                          alpha=alpha_elec) +
-    ggplot2::geom_ribbon(ggplot2::aes(x=xseq[lowerGas:upperGas], ymin=resultElec$baseload + resultGas$baseload,
+    ggplot2::geom_ribbon(ggplot2::aes(x=xseq[lowerGas:upperGas],
+                                      ymin=resultElec$baseload + resultGas$baseload + yElecHeating,
                              ymax=(yGasSeq + resultElec$baseload + yElecHeating)[lowerGas:upperGas]), fill=gas_mk_color,
                          alpha=alpha_gas)
   p <- p +
