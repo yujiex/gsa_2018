@@ -275,6 +275,7 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
 #' @param year optional, restrict to data with fiscal year = year
 #' @param category optional, restrict to data with category in a vector of
 #'   categories, c(a vector of categories, e.g. "A", "I")
+#' @param buildingNumber optional, restrict to data for the specific building, mainly for debug
 #' @param plotType optional, "elec", "gas"
 #' @param method required, plotting method, choose from ""polynomial degree
 #'   2", and "piecewise"
@@ -297,26 +298,45 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
 #'                  method=lean.analysis::piecewise_linear, methodLabel="piecewise", lowRange=60, highRange=80,
 #'                  plotXLimits=c(44, 100), plotYLimits=c(-0.5, 17.5), fontSize=fontSizeStackLean,
 #'                  legendloc="right", vline_position=80)
-stacked_fit_plot <- function(region, buildingType, year, category, plotType, method, methodLabel, lowRange=NULL,
+stacked_fit_plot <- function(region=NULL, buildingType=NULL, year=NULL, category=NULL, buildingNumber=NULL,
+                             plotType, method, methodLabel, lowRange=NULL,
                              highRange=NULL, debugFlag=FALSE, plotXLimits=NULL, plotYLimits=NULL, minorgrid=NULL,
-                             majorgrid=NULL, sourceEnergy=FALSE, legendloc="bottom", fontSize=10,
+                             majorgrid=NULL, legendloc="bottom", fontSize=10,
                              fontFamily="System Font", vline_position_elec=80, vline_position_gas=50,
                              plot_col="eui_elec_source", cvrmse_upper=0.5) {
-  datafile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s_%s.csv", plotType, region, methodLabel, plot_col)
-  imagefile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s_%s.png", plotType, region, methodLabel, plot_col)
-  print(datafile)
-  if (plotType == "elec") {
-    keyword = "electricity"
-  } else if (plotType == "gas") {
-    keyword = "gas"
+  if (is.null(buildingNumber)) {
+    datafile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s_%s.csv", plotType, region, methodLabel, plot_col)
+    imagefile = sprintf("region_report_img/stack_lean/%s_stack_lean_region_%s_%s_%s.png", plotType, region, methodLabel, plot_col)
+  } else {
+    datafile = sprintf("region_report_img/stack_lean/temp/%s.csv", buildingNumber)
+    imagefile = sprintf("region_report_img/stack_lean/temp/%s.png", buildingNumber)
   }
-  if (file.exists(datafile)) {
+  print(datafile)
+  if (plot_col == "eui_elec") {
+    keyword = "electricity"
+  } else if (plot_col == "eui_gas") {
+    keyword = "gas"
+  } else if (plot_col == "eui_elec_source") {
+    keyword = "source electric"
+  } else if (plot_col == "eui_gas_source") {
+    keyword = "source gas"
+  } else if (plot_col == "eui_heating") {
+    keyword = "heating fuel"
+  } else if (plot_col == "eui_cooling") {
+    keyword = "cooling fuel"
+  } else if (plot_col == "eui_heating_source") {
+    keyword = "source heating fuel"
+  } else if (plot_col == "eui_cooling_source") {
+    keyword = "source cooling fuel"
+  }
+  if (file.exists(datafile) && !(debugFlag)) {
     print("load cached result")
     dfData = readr::read_csv(datafile) %>%
       as.data.frame() %>%
       ## filter out models with too large error
       dplyr::filter(cvrmse < cvrmse_upper) %>%
       {.}
+    print(sprintf("after filtering cvrmse: nrow(dfData) = %s", nrow(dfData)))
     if (!is.null(lowRange)) {
       buildingInRange <- dfData %>%
         dplyr::group_by(`Building_Number`) %>%
@@ -328,9 +348,11 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
           dplyr::filter(`high` > highRange) %>%
           {.}
       }
-      dfData <- dfData %>%
-        dplyr::filter(`Building_Number` %in% buildingInRange$Building_Number) %>%
-        {.}
+      if (is.null(buildingNumber)) {
+        dfData <- dfData %>%
+          dplyr::filter(`Building_Number` %in% buildingInRange$Building_Number) %>%
+          {.}
+      }
     }
     if (plotType == "elec") {
       ## select data with large enough temperature range
@@ -358,30 +380,41 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
         {.}
     }
     displaySet = unique(toDisplay$Building_Number)
+    if (!is.null(buildingNumber)) {
+      displaySet = buildingNumber
+    }
     print("displaySet")
     print(displaySet)
-    ## print(sprintf("before filter %s", nrow(dfData)))
+    print(sprintf("before filter %s", nrow(dfData)))
     dfData <- dfData %>%
       dplyr::filter(`Building_Number` %in% displaySet)
-    ## print(sprintf("before filter %s", nrow(dfData)))
+    print(sprintf("before filter %s", nrow(dfData)))
   } else {
-    buildings = db.interface::get_buildings(region=region, buildingType=buildingType, year=year, category=category)
+    ## this assumes other region and buildingType etc. variables have proper values
+    if (is.null(buildingNumber)) {
+      buildings = db.interface::get_buildings(region=region, buildingType=buildingType, year=year, category=category)
+    } else {
+      buildings = c(buildingNumber)
+    }
     counter = 1
     dfData = NULL
+    dfPoints = NULL
     for (building in buildings) {
       print(sprintf("Fit %s, %s", counter, building))
       if (file.exists(sprintf("csv_FY/weather/energy_temp/%s.csv", building))) {
         df = readr::read_csv(sprintf("csv_FY/weather/energy_temp/%s.csv", building))
       } else {
         lat_lon_df = db.interface::get_lat_lon_df(building=building)
-        get_energy_weather_file(id=building, lat_lon_df=lat_lon_df, debugFlag=FALSE)
+        get_energy_weather_file(id=building, lat_lon_df=lat_lon_df, debugFlag=debugFlag)
       }
       if (debugFlag) {
         print(df)
         p1 <- df %>%
-          ggplot2::ggplot(ggplot2::aes(x = `wt_temperatureFmonth`, y=`eui_elec`, color=`year`)) +
+          dplyr::mutate(year=as.character(year)) %>%
+          ggplot2::ggplot(ggplot2::aes_string(x = "wt_temperatureFmonth", y=plot_col, color="year")) +
           ggplot2::geom_point()
         print(p1)
+        ggplot2::ggsave(gsub(".png", "_points.png", imagefile), width=5, height=8, unit="in")
       }
       y <- df[[plot_col]]
       print(head(y))
@@ -403,6 +436,7 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
       predLabels <- predict(output, newdata=data.frame(x=c(vline_position_gas, vline_position_elec)))
       ## print(sprintf("y estimation at 30F: %.1f", predict(output, newdata=data.frame(x=30))))
       ## print(sprintf("y estimation at 80F: %.1f", predict(output, newdata=data.frame(x=80))))
+      dfPoints = rbind(dfPoints, data.frame(x=x, y=y, `Building_Number`=building))
       dfData = rbind(dfData, data.frame(Building_Number = building, xseq=xseq, yseq=yseq,
                                   lowLabel=predLabels[[1]],
                                   highLabel=predLabels[[2]], cvrmse=cvrmse))
@@ -418,6 +452,10 @@ stacked_fit_plot <- function(region, buildingType, year, category, plotType, met
     ggplot2::xlab("Average Monthly Temperature (F)") +
     ggplot2::ylab(sprintf("%s kBtu per sqft per month at that given temperature", keyword)) +
     ggplot2::theme(legend.position=legendloc, text=ggplot2::element_text(size=fontSize, family=fontFamily))
+  if (debugFlag) {
+    p <- p +
+      ggplot2::geom_point(ggplot2::aes(x=x, y=y, color=`Building_Number`), data=dfPoints)
+  }
   if (plotType == "elec") {
     df_label = dfData %>%
       dplyr::group_by(`Building_Number`, highLabel) %>%
