@@ -287,24 +287,25 @@ def plot_saving_aggyear(b, df, timerange_pre, timerange_post, theme, ax, cvrmse)
     yearcol, timefilter = util.get_time_filter(timerange_post)
     df['in_range'] = df[yearcol].map(timefilter)
     df = df[df['in_range']]
-    # green_face_color = 'lime'
-    # red_face_color = 'red'
-    green_face_color = '#94CB89'
-    red_face_color = '#D07969'
+    green_face_color = 'lime'
+    red_face_color = 'red'
+    # green_face_color = '#94CB89'
+    # red_face_color = '#D07969'
     ylabel_font_name = 'Open Sans'
     if theme == 'eui_gas':
-        # c1 = 'brown'
-        # c2 = 'lightsalmon'
-        c1 = '#4A4A4A'
-        c2 = '#4A4A4A'
+        c1 = 'brown'
+        c2 = 'lightsalmon'
+        # c1 = '#4A4A4A'
+        # c2 = '#4A4A4A'
         # location = 'lower left'
         location = 'upper center'
-        wrapwidth = 30
+        # wrapwidth = 30
+        wrapwidth = 99
     else:
-        c1 = '#4A4A4A'
-        c2 = '#4A4A4A'
-        # c1 = 'navy'
-        # c2 = 'lightskyblue'
+        # c1 = '#4A4A4A'
+        # c2 = '#4A4A4A'
+        c1 = 'navy'
+        c2 = 'lightskyblue'
         # location = 'upper left'
         location = 'lower center'
         wrapwidth = 99
@@ -328,39 +329,40 @@ def plot_saving_aggyear(b, df, timerange_pre, timerange_post, theme, ax, cvrmse)
         else:
             spaceloc = timerange.rfind(' ')
             return "{} -- {}".format(timerange[:4], timerange[spaceloc + 1: spaceloc + 5])
-    line1, = ax.plot(x, y, c=c1, ls='-', lw=2, marker='o', markersize=5)
-    # line1, = ax.plot(x, y, c=c1, ls='-', lw=2, marker='o')
-    line2, = ax.plot(x, y_hat, c=c2, ls='--', lw=2, marker='o', markersize=5)
-    # line2, = ax.plot(x, y_hat, c=c2, ls='-', lw=2, marker='o')
+    # line1, = ax.plot(x, y, c=c1, ls='-', lw=2, marker='o', markersize=5)
+    line1, = ax.plot(x, y, c=c1, ls='-', lw=2, marker='o')
+    # line2, = ax.plot(x, y_hat, c=c2, ls='--', lw=2, marker='o', markersize=5)
+    line2, = ax.plot(x, y_hat, c=c2, ls='-', lw=2, marker='o')
     ax.fill_between(x, y, y_hat, where=y_hat >= y,
                     facecolor=green_face_color, alpha=0.5, interpolate=True)
     ax.fill_between(x, y, y_hat, where=y_hat < y, facecolor=red_face_color,
                     alpha=0.5, interpolate=True)
-    ax.set_ylabel("Weather Normalized {} Usage\n(kBtu/sq.ft/month)".format(lb.title_dict[theme]), fontsize=7, fontname=ylabel_font_name, fontweight='bold')
-    ya = ax.get_yaxis()
-    ya.set_major_locator(MaxNLocator(integer=True))
+    ax.set_ylabel("Weather Normalized {} Usage\n(kBtu/sq.ft/month)".format(lb.title_dict[theme]), fontsize=7, fontname=ylabel_font_name)
+    # ya = ax.get_yaxis()
+    # ya.set_major_locator(MaxNLocator(integer=True))
     # ax.set_ylabel("kBtu per square foot per month", fontsize=10)
-    # ax.legend([line1, line2],
-    #           ['Actual {1} use in {0}'.format(time_label(timerange_post), lb.title_dict[theme]),
-    #            '\n'.join(tw.wrap('{1} use given {2} habits but {0} weather'.format(time_label(timerange_post),
-    #                                                                                lb.title_dict[theme],
-    #                                                                                time_label(timerange_pre)),
+    ax.legend([line1, line2],
+              # ['Actual {1} use in {0}'.format(time_label(timerange_post), lb.title_dict[theme]),
+              #  '\n'.join(tw.wrap('{1} use given {2} habits but {0} weather'.format(time_label(timerange_post),
+                                                                                   # lb.title_dict[theme],
+                                                                                   # time_label(timerange_pre)),
+              ['Actual {1} {0}'.format(time_label(timerange_post), lb.title_dict[theme]),
+               '\n'.join(tw.wrap('Predicted {1} past 3 yr performance at {0} weather CVRMSE {2}'.format(time_label(timerange_post), lb.title_dict[theme], round(cvrmse, 2)), wrapwidth)
                                  # put legend below plot
+                                 )], loc='upper center', bbox_to_anchor=(0.5, 1.15), prop={'size': 8}, ncol=2)
                                  # wrapwidth))], loc=9, bbox_to_anchor=(0.5, -0.1))
                                  # wrapwidth))], loc=location)
                                 # following is for region 9 ppt one building
                                 # wrapwidth))], loc=location, fontsize='xx-small')
-    plt.rcParams["font.weight"] = "bold"
-    plt.xticks(range(1, 13), ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], fontsize=8, fontweight='bold')
-    plt.subplots_adjust(right=0.75)
+    # plt.rcParams["font.weight"] = "bold"
+    plt.xticks(range(1, 13), ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], fontsize=8)
+    # plt.subplots_adjust(right=0.75)
     ax.tick_params('y', labelsize=8)
     if save_percent > 0:
-        ax.set_title('{2} usage after {0} vs before {4}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_post)), fontsize=12, fontweight='bold')
-        ax.text(13, (max(y_hat) + min(y_hat))/2.0, 'Saved\n{0}%\nCVRMSE: {1}'.format(abs(save_percent), round(cvrmse, 2)), fontsize=8)
+        print('{2} after ({0}) vs before ({4}), {1}% less, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)))
         # ax.set_title('{2} after ({0}) vs before ({4}), {1}% less, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)), fontsize=12)
     else:
-        ax.set_title('{2} usage after ({0}) vs before ({4}), {1}% more, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)), fontsize=12, fontweight='bold')
-        ax.text(13, (max(y_hat) + min(y_hat))/2.0, 'increased\n{0}%\nCVRMSE: {1}'.format(abs(save_percent), round(cvrmse, 2)), fontsize=8)
+        print('{2} usage after ({0}) vs before ({4}), {1}% more, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)))
         # ax.set_title('{2} usage after ({0}) vs before ({4}), {1}% more, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)), fontsize=12, fontweight='bold')
     ax.grid(linewidth=0.5)
     return save_percent, before, after
