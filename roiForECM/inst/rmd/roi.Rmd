@@ -1,0 +1,184 @@
+---
+title: "ROI calculation"
+author: "Yujie Xu"
+date: "8/21/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+## Introduction
+
+In this document we demonstrated how the simplified ROI is calculated for two example buildings
+
+The following information are needed for the retrofit ROI calculation: retrofit action, retrofit time, retrofit budget, energy and weather data before the retrofit, energy and weather data after the retrofit.
+
+Following we'll demonstrate for a single building how the ROI analysis is conducted.
+
+The building is "XXXXXXXX" (placeholder)
+```{r ecm, echo=FALSE}
+# building = "UT0032ZZ"
+# building = "OK0063ZZ"
+# building = "IL0302ZZ"
+# building = "IN1703ZZ"
+building = "GA0138ZZ"
+library("devtools")
+library("dplyr")
+#getwd()
+devtools::load_all("~/Dropbox/gsa_2017/db.interface")
+devtools::load_all("~/Dropbox/gsa_2017/get.noaa.weather")
+devtools::load_all("~/Dropbox/gsa_2017/lean.analysis")
+devtools::load_all("~/Dropbox/gsa_2017/roiForECM")
+action =
+  dfECM %>%
+  dplyr::filter(`Building_Number`==building) %>%
+  dplyr::mutate(`action_time`=lubridate::ymd(`Substantial_Completion_Date`)) %>%
+  dplyr::select(`Building_Number`, `high_level_ECM`, `detail_level_ECM`, `action_time`) %>%
+  {.}
+print(action)
+```
+
+We'll retrieve the before and after period for both actions
+
+```{r period, echo=FALSE}
+library(lubridate)
+load("~/Dropbox/gsa_2017/roiForECM/data/analysisStartEnd.rda")
+timeframe = analysisStartEnd %>%
+  dplyr::filter(`Building_Number`==building) %>%
+  {.}
+print(head(timeframe))
+action_times = timeframe$`action_time`
+```
+
+Then retrieve energy data
+
+```{r energy, echo=FALSE}
+buildingEnergy = energy %>%
+  dplyr::select(-`Electric_(kBtu)`, -`Gas_(kBtu)`) %>%
+  dplyr::filter(`Building_Number`==building) %>%
+  dplyr::mutate(`Date`=lubridate::ymd(sprintf("%.0f-%.0f-01", `year`, `month`))) %>%
+  {.}
+buildingEnergy %>%
+  head()
+```
+
+Plot electricity data and action time
+
+```{r plotTrendEnergy, echo=FALSE, out.width='60%', fig.align='center'}
+par(mfrow = c(2,1))
+p = buildingEnergy %>%
+  ggplot2::ggplot(ggplot2::aes(y=`Electricity_(KWH)`, x=`Date`)) +
+  ggplot2::ylab("Electricity(KWH)") +
+  ggplot2::xlab("Time") +
+  ggplot2::geom_line()
+for (t in action_times) {
+  p <- p + ggplot2::geom_vline(xintercept=t, linetype="dashed",
+                               color="red")
+}
+p <- p + ggplot2::theme_bw()
+print(p)
+ggplot2::ggsave(sprintf("%s_elec_trend.png", building), width=8, height=4)
+p = buildingEnergy %>%
+  ggplot2::ggplot(ggplot2::aes(y=`Gas_(Cubic_Ft)`, x=`Date`)) +
+  ggplot2::ylab("Gas(Cubic Foot)") +
+  ggplot2::xlab("Time") +
+  ggplot2::geom_line()
+for (t in action_times) {
+  p <- p + ggplot2::geom_vline(xintercept=t, linetype="dashed",
+                               color="red")
+}
+p <- p + ggplot2::theme_bw()
+print(p)
+ggplot2::ggsave(sprintf("%s_gas_trend.png", building), width=8, height=4)
+```
+
+Get utility cost
+
+```{r utility_cost}
+buildingUtilityCost =
+  utilityCost %>%
+  dplyr::filter(`Building_Number`==building) %>%
+  dplyr::mutate(`Date`=lubridate::ymd(sprintf("%.0f-%.0f-01", `year`, `month`))) %>%
+  dplyr::arrange(desc(`Date`)) %>%
+  {.}
+print(head(buildingUtilityCost))
+```
+
+Plot utility cost
+
+```{r utilityCost, echo=FALSE, out.width='60%', fig.align='center'}
+par(mfrow = c(2,1))
+p = buildingUtilityCost %>%
+  ggplot2::ggplot(ggplot2::aes(y=`Electric ($/KWH)`, x=`Date`)) +
+  ggplot2::xlab("Time") +
+  ggplot2::geom_line()
+for (t in action_times) {
+  p <- p + ggplot2::geom_vline(xintercept=t, linetype="dashed",
+                               color="red")
+}
+p <- p + ggplot2::theme_bw()
+print(p)
+ggplot2::ggsave(sprintf("%s_elec_cost.png", building), width=8, height=4)
+p = buildingUtilityCost %>%
+  ggplot2::ggplot(ggplot2::aes(y=`Gas ($/Cubic Ft)`, x=`Date`)) +
+  ggplot2::xlab("Time") +
+  ggplot2::geom_line()
+for (t in action_times) {
+  p <- p + ggplot2::geom_vline(xintercept=t, linetype="dashed",
+                               color="red")
+}
+p <- p + ggplot2::theme_bw()
+print(p)
+ggplot2::ggsave(sprintf("%s_gas_cost.png", building), width=8, height=4)
+```
+
+Use the most recent three year's average utility cost in the ROI analysis
+
+```{r avgUtility}
+utilityRateElec = mean(head(buildingUtilityCost, n=36)$`Electric ($/KWH)`)
+utilityRateGas = mean(head(buildingUtilityCost, n=36)$`Gas ($/Cubic Ft)`)
+sprintf("Electricity utility rate: %.2f $/KWH", utilityRateElec)
+sprintf("Gas utility rate: %.2f $/Cubic Foot", utilityRateGas)
+```
+
+Get weather data (use getWeatherData.R) from NOAA GHCND, variable definitions can be found [here]{ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt}
+
+```{r weather}
+library(feather)
+weather =
+  feather::read_feather(sprintf("../../data-raw/building_TAVG/compiled/%s_TAVG.feather", building)) %>%
+  tibble::as_data_frame() %>%
+  dplyr::mutate(`year`=year(`Date`),
+                `month`=month(`Date`)) %>%
+  dplyr::group_by(`year`, `month`) %>%
+  dplyr::summarise(`Monthly Mean Temperature`=mean(`TAVG`)) %>%
+  dplyr::ungroup() %>%
+  {.}
+print(head(weather))
+```
+
+Join weather and energy data
+
+```{r energyWeather}
+energy_weather = buildingEnergy %>%
+  inner_join(weather, by=c("year", "month")) %>%
+  {.}
+print(head(energy_weather))
+```
+
+## Lean Analysis
+
+```{r leanPlots, fig.align='center', fig.asp=0.6}
+setwd("~/Dropbox/gsa_2017")
+roiForECM::add_lean(building=building)
+```
+
+## Fit models
+
+```{r fitModel}
+setwd("~/Dropbox/gsa_2017")
+roiBuilding(building=building)
+```

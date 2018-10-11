@@ -1,0 +1,61 @@
+\documentclass{article}
+\usepackage{graphicx}
+\graphicspath{{../images/}}
+\usepackage{placeins}
+\begin{document}
+\section{Phase 1}
+% retrofit and time
+% lean
+\begin{figure}
+  \centering
+  \includegraphics[width=0.4\textwidth]{lean/GA0138ZZ_2008-03-09_2011-03-09.png}
+  \includegraphics[width=0.4\textwidth]{lean/GA0138ZZ_2011-03-09_2014-03-09.png}
+\end{figure}
+\pagebreak
+% models
+\subsection{model 1: loess}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{GA0138ZZ_reg_elec_loess_2011-03-09.png}
+  \includegraphics[width=0.7\textwidth]{GA0138ZZ_trend_elec_loess_2011-03-09.png}
+  \includegraphics[width=0.7\textwidth]{fill_between/GA0138ZZ_elec_loess_2011-03-09.png}
+\end{figure}
+\pagebreak
+\FloatBarrier
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{GA0138ZZ_reg_gas_loess_2011-03-09.png}
+  \includegraphics[width=0.7\textwidth]{GA0138ZZ_trend_gas_loess_2011-03-09.png}
+  \includegraphics[width=0.7\textwidth]{fill_between/GA0138ZZ_gas_loess_2011-03-09.png}
+\end{figure}
+\pagebreak
+\subsection{model 2: piecewise linear}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{GA0138ZZ_reg_elec_piecewise_2011-03-09.png}
+  \includegraphics[width=0.7\textwidth]{GA0138ZZ_trend_elec_piecewise_2011-03-09.png}
+  \includegraphics[width=0.7\textwidth]{fill_between/GA0138ZZ_elec_piecewise_2011-03-09.png}
+\end{figure}
+\pagebreak
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{GA0138ZZ_reg_gas_piecewise_2011-03-09.png}
+  \includegraphics[width=0.7\textwidth]{GA0138ZZ_trend_gas_piecewise_2011-03-09.png}
+  \includegraphics[width=0.7\textwidth]{fill_between/GA0138ZZ_gas_piecewise_2011-03-09.png}
+\end{figure}
+\pagebreak
+\subsection{model 3: polynomial degree 2}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{GA0138ZZ_reg_elec_poly2_2011-03-09.png}
+  \includegraphics[width=0.7\textwidth]{GA0138ZZ_trend_elec_poly2_2011-03-09.png}
+  \includegraphics[width=0.7\textwidth]{fill_between/GA0138ZZ_elec_poly2_2011-03-09.png}
+\end{figure}
+\pagebreak
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{GA0138ZZ_reg_gas_poly2_2011-03-09.png}
+  \includegraphics[width=0.7\textwidth]{GA0138ZZ_trend_gas_poly2_2011-03-09.png}
+  \includegraphics[width=0.7\textwidth]{fill_between/GA0138ZZ_gas_poly2_2011-03-09.png}
+\end{figure}
+\end{document}

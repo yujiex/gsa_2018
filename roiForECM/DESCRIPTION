@@ -1,0 +1,18 @@
+Package: roiForECM
+Title: Computes ROI for a Set of Building ECM Retrofit
+Version: 0.0.0.9000
+Authors@R: person("Yujie", "Xu", email = "first.last@example.com", role = c("aut", "cre"))
+Description: What the package does (one paragraph).
+Depends: R (>= 3.4.3)
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports:
+  magrittr,
+  dplyr,
+  readr,
+  rlang,
+  db.interface,
+  lean.analysis,
+  RSQLite
+RoxygenNote: 6.0.1.9000
