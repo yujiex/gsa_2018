@@ -49,12 +49,13 @@ df %>%
   readr::write_csv("~/Dropbox/gsa_2017/csv_FY/db_build_temp_csv/actual_vs_weather_normalized_671.csv")
 
 df = readr::read_csv("temp/cmp_normalized_actual_671building.csv")
+
+head(df)
 ## regional
-df_regional <- df %>%
-  dplyr::select(`Building_Number`, `Fiscal_Year`, `Gross_Sq.Ft`, `Region_No.`, `actual`, `normalized_fill_na`, `normalized_only_good`) %>%
-  dplyr::mutate(`normalized_fill_na`=ifelse(`Fiscal_Year`==2015, `actual`, `normalized_fill_na`)) %>%
-  dplyr::mutate(`normalized_only_good`=ifelse(`Fiscal_Year`==2015, `actual`, `normalized_only_good`)) %>%
-  tidyr::gather(`type`, `kbtu`, `actual`:`normalized_only_good`) %>%
+df_regional <-
+  df %>%
+  dplyr::select(`Building_Number`, `Fiscal_Year`, `Gross_Sq.Ft`, `Region_No.`, `EUAS Site Energy (kBtu)`, `normalized w/ credits only`, `normalized w/debit + credits`) %>%
+  tidyr::gather(`type`, `kbtu`, `EUAS Site Energy (kBtu)`:`normalized w/debit + credits`) %>%
   na.omit() %>%
   dplyr::group_by(`Fiscal_Year`, `Region_No.`, `type`) %>%
   dplyr::summarise(kbtu = sum(kbtu), `Gross_Sq.Ft`=sum(`Gross_Sq.Ft`)) %>%
@@ -73,6 +74,10 @@ df_regional %>%
   dplyr::filter(`Fiscal_Year` %in% c(2015, 2017)) %>%
   dplyr::mutate(`Region_No.`=factor(`Region_No.`, levels=as.character(1:11)),
                 `Fiscal_Year`=factor(as.integer(`Fiscal_Year`))) %>%
+  ## use 2015 EUAS as baseline for all three facets
+  dplyr::group_by(`Region_No.`, `Fiscal_Year`) %>%
+  dplyr::mutate(`eui`=ifelse(`Fiscal_Year`==2015, first(`eui`), `eui`)) %>%
+  dplyr::ungroup() %>%
   ggplot2::ggplot(ggplot2::aes(x=Fiscal_Year, y=`eui`, fill=`type`)) +
   ggplot2::geom_bar(stat="identity", position="dodge") +
   ggplot2::scale_fill_brewer(palette="Set2") +
@@ -87,14 +92,19 @@ df_regional %>%
   dplyr::filter(`Fiscal_Year` %in% c(2015, 2017), `Region_No.`==5) %>%
   dplyr::mutate(`Region_No.`=factor(`Region_No.`, levels=as.character(1:11)),
                 `Fiscal_Year`=factor(as.integer(`Fiscal_Year`))) %>%
-  dplyr::mutate(`type`=recode(`type`, "actual"="EUAS", "normalized_only_good"="normalized w/ credits only",
-                              "normalized_fill_na"="normalized w/debit + credit")) %>%
-  dplyr::mutate(`type`=factor(`type`, levels=c("EUAS", "normalized w/ credits only", "normalized w/debit + credit"))) %>%
-  ggplot2::ggplot(ggplot2::aes(x=Fiscal_Year, y=`eui`, fill=`type`)) +
+  dplyr::group_by(`Region_No.`, `Fiscal_Year`) %>%
+  dplyr::mutate(`eui`=ifelse(`Fiscal_Year`==2015, first(`eui`), `eui`)) %>%
+  dplyr::ungroup() %>%
+  ## dplyr::mutate(`type`=recode(`type`, "actual"="EUAS", "normalized_only_good"="normalized w/ credits only",
+  ##                             "normalized_fill_na"="normalized w/debit + credit")) %>%
+  ## dplyr::mutate(`type`=factor(`type`, levels=c("EUAS", "normalized w/ credits only", "normalized w/debit + credit"))) %>%
+  ggplot2::ggplot(ggplot2::aes(x=Fiscal_Year, y=`eui`, fill=`type`, label=sprintf("%.0f", `eui`))) +
   ggplot2::geom_bar(stat="identity", position="dodge") +
   ggplot2::scale_fill_brewer(palette="Set2") +
+  ggplot2::geom_text(vjust=-1) +
   ggplot2::xlab("Fiscal Year") +
   ggplot2::ylab("GSF weighted average EUI") +
+  ggplot2::expand_limits(y=85) +
   ggplot2::facet_wrap(.~`type`, ncol=11) +
   ## ggplot2::facet_wrap(`type`~`Region_No.`, ncol=11) +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1),
@@ -284,8 +294,9 @@ df <- df %>%
   dplyr::arrange(`Fiscal_Year`, `Building_Number`) %>%
   dplyr::rename(`EUAS Site Energy (kBtu)`=`Total_(kBtu)`,
                 `PM Weather Normalized Site Energy Use (kBtu)`=`Weather Normalized Site Energy Use (kBtu)`) %>%
-  dplyr::mutate(`Debit`=max(0, `PM Weather Normalized Site Energy Use (kBtu)` - `Site Energy Use (kBtu)`)) %>%
-  dplyr::mutate(`Credit`=max(0, `Site Energy Use (kBtu)` - `PM Weather Normalized Site Energy Use (kBtu)`)) %>%
+  dplyr::mutate(`Debit`=pmax(0, `PM Weather Normalized Site Energy Use (kBtu)` - `Site Energy Use (kBtu)`)) %>%
+  dplyr::mutate(`Credit`=pmax(0, `Site Energy Use (kBtu)` - `PM Weather Normalized Site Energy Use (kBtu)`)) %>%
+  tidyr::replace_na(list(`Debit`=0, `Credit`=0)) %>%
   dplyr::mutate(`normalized w/ credits only`=`EUAS Site Energy (kBtu)` - `Credit`) %>%
   dplyr::mutate(`normalized w/debit + credits`=`EUAS Site Energy (kBtu)` - `Credit` + `Debit`) %>%
   {.}
@@ -958,14 +969,14 @@ stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I"
 
 devtools::load_all("lean.analysis")
 ## plot lean image
-for (region in 1:1) {
+for (region in 5:5) {
   plot_regional (region=region, suffix="source_heating_cooling", elec_col="eui_cooling_source", gas_col="eui_heating_source")
   ## plot_regional (region=region, suffix="source_electric_gas", elec_col="eui_elec_source", gas_col="eui_gas_source")
 }
 
 ## copy the top 20 images to page_data using their ranks as name
 devtools::load_all("lean.analysis")
-for (regionnum in 1:11) {
+for (regionnum in 5:5) {
   copy_image_rename_with_rank (region=regionnum, suffix="source_heating_cooling", plotType="elec", pagedatakey="cooling")
   copy_image_rename_with_rank (region=regionnum, suffix="source_heating_cooling", plotType="gas", pagedatakey="heating")
   copy_image_rename_with_rank (region=regionnum, suffix="source_heating_cooling", plotType="base", pagedatakey="baseload")

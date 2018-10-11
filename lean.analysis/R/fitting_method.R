@@ -187,8 +187,8 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   ## font sizes
   fitted_display_size = 4
   theme_text_size = 12
-  title_font_size = 8
-  title_font_family = "ActivGrotesk"
+  title_font_size = 12
+  ## title_font_family = "ActivGrotesk"
   ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
   ## deciding boundaries for fill color and stacking gas and electricity heating
   ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
@@ -268,7 +268,8 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   p <- p +
     ggplot2::theme_bw() +
     ggplot2::theme(text = ggplot2::element_text(size=theme_text_size),
-                   plot.title = ggplot2::element_text(size=title_font_size, family = title_font_family))
+                   plot.title = ggplot2::element_text(size=title_font_size))
+                  ## plot.title = ggplot2::element_text(size=title_font_size, family = title_font_family))
   if (plotPoint) {
     p <- p +
       ggplot2::geom_point(ggplot2::aes(x=x, y=yElec + resultGas$baseload), colour=elec_line_color, size=data_point_size) +
