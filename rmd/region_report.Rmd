@@ -1,0 +1,117 @@
+---
+title: "region report"
+params:
+  region: 1
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_knit$set(root.dir = "~/Dropbox/gsa_2017")
+```
+
+---
+title: GSA Region `r params$region` Energy Data Exchange
+---
+
+This document captures the past five years of portfolio energy performance for your region in comparison to your peers. Beginning with a National Overview, the document dives into the building EUAS data for xx GSA owned facilities in your region. Energy use
+totals, energy use per square foot, LEAN analysis, and buildings with the greatest cost savings compared to national medians are identified. Prior energy saving investment outcomes from a national overview are profiled alongside selected case studies of
+successful energy retrofits in your region.
+
+## National Overview
+
+### Building count and sqft
+
+```{r count_by_type, message=FALSE, out.width="100%"}
+library(devtools)
+library(DBI)
+library(dplyr)
+library(tidyr)
+library(RSQLite)
+library(ggplot2)
+devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
+devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
+setwd("/Users/yujiex/Dropbox/gsa_2017/")
+summarise.and.plot::national_overview(category=c("I", "A"), year=2017, pal_values = c("#FFFFB3", "#8DD3C7"))
+national_overview_facetRegion(category=c("I", "A"), years=c(2015, 2017))
+```
+
+### Consumption and cost per sqft over years
+
+```{r eui_over_year, message=FALSE, out.width="100%"}
+# library(devtools)
+# library(DBI)
+# library(dplyr)
+# library(tidyr)
+# library(RSQLite)
+# library(ggplot2)
+# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
+# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
+# setwd("/Users/yujiex/Dropbox/gsa_2017/")
+# national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), pal="Set3")
+```
+
+---
+
+## Region Overview
+
+### Building count and sqft
+
+```{r region_overview, message=FALSE, out.width="100%"}
+# library(devtools)
+# library(DBI)
+# library(dplyr)
+# library(tidyr)
+# library(RSQLite)
+# library(ggplot2)
+# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
+# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
+# setwd("/Users/yujiex/Dropbox/gsa_2017/")
+# for (region in as.character(5:5)) {
+#  summarise.and.plot::national_overview(category=c("I", "A"), year=2017, pal_values = c("#FFFFB3", "#8DD3C7"), region=region)
+# national_overview_facetRegion(category=c("I", "A"), years=c(2015, 2017), region=region)
+# }
+```
+
+### Consumption and cost per sqft over years
+
+```{r region_eui_over_year, message=FALSE, out.width="100%"}
+# library(devtools)
+# library(DBI)
+# library(dplyr)
+# library(tidyr)
+# library(RSQLite)
+# library(ggplot2)
+# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
+# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
+# setwd("/Users/yujiex/Dropbox/gsa_2017/")
+# for (region in as.character(1:11)) {
+#   national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), region=region, pal="Set3")
+# }
+```
+
+### Potential dollar saving
+```{r dollar_saving, message=FALSE, fig.height=8, fig.width=5, out.width="60%"}
+# library(devtools)
+# library(DBI)
+# library(dplyr)
+# library(tidyr)
+# library(RSQLite)
+# library(ggplot2)
+# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
+# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
+# setwd("/Users/yujiex/Dropbox/gsa_2017/")
+# yrightLimits = list("1"=0, "2"=0, "3"=0, "4"=0, "5"=0,
+#                  "6"=0, "7"=0, "8"=0, "9"=200000, "10"=0,
+#                  "11"=0)
+# for (r in as.character(1:11)) {
+#   print(sprintf("Region %s", r))
+#   dollar_saving(category=c("I", "A"), year=2017, region=r, method="hybrid", legendloc="bottom", topn=8, botn=7, yrightLimit=yrightLimits[[r]], yleftLimit=0, hjust=0)
+# }
+
+# for (r in as.character(1:11)) {
+#   dollar_saving(category=c("I", "A"), year=2017, region=r, method="cbecs")
+# }
+```
