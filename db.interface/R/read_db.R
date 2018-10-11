@@ -190,7 +190,7 @@ get_euas_buildings <- function() {
 #' This function returns a vector of building id's
 #' @param region optional, region number
 #' @param buildingType optional, building type
-#' @param year optional, restrict to data with fiscal year = year
+#' @param year optional, restrict to data with fiscal year = year, or in the vector of years
 #' @param category optional, restrict to data with category in a vector of
 #'   categories, c(a vector of categories, e.g. "A", "I")
 #' @keywords get all buildings
@@ -204,7 +204,7 @@ get_buildings <- function(region, buildingType, year, category) {
     tibble::as_data_frame() %>%
     dplyr::filter(`Gross_Sq.Ft` != 0) %>%
     dplyr::filter(`eui_elec` != 0) %>%
-    dplyr::mutate(`Region_No.` = as.numeric(`Region_No.`))
+    dplyr::mutate(`Region_No.` = as.numeric(`Region_No.`)) %>%
     {.}
   if (!missing(region)) {
     df <- df %>%
@@ -213,7 +213,7 @@ get_buildings <- function(region, buildingType, year, category) {
   }
   if (!missing(year)) {
     df <- df %>%
-      dplyr::filter(`Fiscal_Year` == year) %>%
+      dplyr::filter(`Fiscal_Year` %in% year) %>%
       {.}
   }
   if (!missing(buildingType)) {

@@ -25,17 +25,17 @@ successful energy retrofits in your region.
 ### Building count and sqft
 
 ```{r count_by_type, message=FALSE, out.width="100%"}
-# library(devtools)
-# library(DBI)
-# library(dplyr)
-# library(tidyr)
-# library(RSQLite)
-# library(ggplot2)
-# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
-# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
-# setwd("/Users/yujiex/Dropbox/gsa_2017/")
-# summarise.and.plot::national_overview(category=c("I", "A"), year=2017, pal_values = c("#FFFFB3", "#8DD3C7"))
-# national_overview_facetRegion(category=c("I", "A"), years=c(2015, 2017))
+library(devtools)
+library(DBI)
+library(dplyr)
+library(tidyr)
+library(RSQLite)
+library(ggplot2)
+devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
+devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
+setwd("/Users/yujiex/Dropbox/gsa_2017/")
+summarise.and.plot::national_overview(category=c("I", "A"), year=2017, pal_values = c("#FFFFB3", "#8DD3C7"))
+national_overview_facetRegion(category=c("I", "A"), years=c(2015, 2017))
 ```
 
 ### Consumption and cost per sqft over years
@@ -69,7 +69,7 @@ successful energy retrofits in your region.
 # devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
 # devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
 # setwd("/Users/yujiex/Dropbox/gsa_2017/")
-# for (region in as.character(1:11)) {
+# for (region in as.character(5:5)) {
 #  summarise.and.plot::national_overview(category=c("I", "A"), year=2017, pal_values = c("#FFFFB3", "#8DD3C7"), region=region)
 # national_overview_facetRegion(category=c("I", "A"), years=c(2015, 2017), region=region)
 # }
@@ -78,18 +78,18 @@ successful energy retrofits in your region.
 ### Consumption and cost per sqft over years
 
 ```{r region_eui_over_year, message=FALSE, out.width="100%"}
-library(devtools)
-library(DBI)
-library(dplyr)
-library(tidyr)
-library(RSQLite)
-library(ggplot2)
-devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
-devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
-setwd("/Users/yujiex/Dropbox/gsa_2017/")
-for (region in as.character(1:11)) {
-  national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), region=region, pal="Set3")
-}
+# library(devtools)
+# library(DBI)
+# library(dplyr)
+# library(tidyr)
+# library(RSQLite)
+# library(ggplot2)
+# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/db.interface")
+# devtools::load_all("/Users/yujiex/Dropbox/gsa_2017/summarise.and.plot")
+# setwd("/Users/yujiex/Dropbox/gsa_2017/")
+# for (region in as.character(5:5)) {
+#   national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), region=region, pal="Set3")
+# }
 ```
 
 ### Potential dollar saving

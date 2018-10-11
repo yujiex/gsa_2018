@@ -30,8 +30,8 @@ NULL
 #' @examples
 #' lean_analysis(lat_lon_df, radius=100, limit=5)
 lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, limit=5, id, plotType, debugFlag,
-                           plotXLimit=NULL, plotYLimit=NULL, xLabelPrefix="", plotPoint=FALSE, elec_col="eui_elec",
-                           gas_col="eui_gas", suffix=NULL, overwriteEnergy=FALSE) {
+                           plotXLimit=NULL, plotYLimit=NULL, xLabelPrefix="", plotPoint=FALSE, plotTitle=FALSE,
+                           elec_col="eui_elec", gas_col="eui_gas", suffix=NULL, overwriteEnergy=FALSE) {
   ## get the years of data to download
   if (missing(id)) {
     id = "XXXXXXXX"
@@ -102,7 +102,7 @@ lean_analysis <- function (energy, latitude, longitude, lat_lon_df, radius=100, 
   fitted_display = plot_fit(yElec=yElec, yGas=yGas, x=x, resultElec=resultElec,
            resultGas=resultGas, plotType=plotType, id=id,
            methodName="polynomial degree 2", plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=xLabelPrefix,
-           plotPoint=plotPoint, debugFlag=debugFlag)
+           plotPoint=plotPoint, plotTitle=plotTitle, debugFlag=debugFlag)
   if (is.null(suffix)) {
     ggplot2::ggsave(file=sprintf("region_report_img/lean/%s_%s.png", plotType, id), width = 2, height=2, units="in")
   } else {
@@ -197,7 +197,7 @@ test_lean_analysis_db <- function() {
 #' @export
 #' @examples
 #' test_lean_analysis_db()
-plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotType, category, plotXLimit=NULL, plotYLimit=NULL, topn=NULL, botn=NULL, plotPoint=FALSE, elec_col, gas_col, debugFlag=FALSE, suffix=NULL) {
+plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotType, category, plotXLimit=NULL, plotYLimit=NULL, topn=NULL, botn=NULL, plotPoint=FALSE, plotTitle=FALSE, elec_col, gas_col, debugFlag=FALSE, suffix=NULL) {
   buildings = db.interface::get_buildings(region=region, buildingType=buildingType, year=year, category=category)
   counter = 1
   acc=NULL
@@ -249,7 +249,8 @@ plot_lean_subset <- function(region, buildingType, buildingNumber, year, plotTyp
     lat_lon_df = db.interface::get_lat_lon_df(building=building)
     ## print("--------head of lat_lon_df---------")
     ## print(head(lat_lon_df))
-    lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE, plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=prefix, plotPoint=plotPoint, elec_col=elec_col,
+    lean_result = lean_analysis(energy = energy, lat_lon_df = lat_lon_df, id=building, plotType=plotType, debug=TRUE, plotXLimit=plotXLimit, plotYLimit=plotYLimit, xLabelPrefix=prefix, plotPoint=plotPoint, plotTitle=plotTitle,
+                                elec_col=elec_col,
                                 gas_col=gas_col, suffix=suffix, overwriteEnergy=TRUE)
     ## print("--------lean result---------")
     ## print(lean_result)
@@ -359,12 +360,12 @@ stacked_fit_plot <- function(region=NULL, buildingType=NULL, year=NULL, category
       toDisplay <- dfData %>%
         dplyr::select(`Building_Number`, `highLabel`) %>%
         dplyr::group_by(`Building_Number`, `highLabel`) %>%
-        slice(1) %>%
+        dplyr::slice(1) %>%
         dplyr::ungroup() %>%
         dplyr::arrange(`highLabel`) %>%
         ## remove the ones with unrealistic out of sample prediction
         dplyr::filter(`highLabel` >= -0.5) %>%
-        slice(c(1:2,(max(1, n()-4):n()))) %>%
+        dplyr::slice(c(1:2,(max(1, n()-4):n()))) %>%
         {.}
       print(nrow(toDisplay))
     } else if (plotType == "gas") {
@@ -428,6 +429,8 @@ stacked_fit_plot <- function(region=NULL, buildingType=NULL, year=NULL, category
         model_result = method(y, x, h=1)
         output = model_result$output
         cvrmse = model_result$cvrmse
+        print("piecewise ----------")
+        print(summary(output))
       } else {
         output = method(y, x)$output
       }

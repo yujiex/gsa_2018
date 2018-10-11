@@ -43,6 +43,21 @@ polynomial_deg_2 <- function(y, x) {
   return(list(baseload=baseload, output=output, argmin=argmin, b0=b0, b1=b1, b2=b2, cvrmse=cvrmse))
 }
 
+#' local polynomial regression
+#'
+#' This function fits a local polynomial regression model
+#' @param y the vector of the response variable
+#' @param x the vector of the 1-d covariate variable
+#' @keywords local polynomial
+#' @export
+#' @examples
+#' loess_fit(y, x)
+loess_fit <- function(y, x) {
+  loess_result = loess(y ~ x)
+  ## didn't compute cvrmse, since don't know number of parameters
+  return(list(output=loess_result, cvrmse=NA))
+}
+
 #' Piecewise Linear Regression
 #'
 #' This function fits a piecewise linear regression
@@ -53,7 +68,7 @@ polynomial_deg_2 <- function(y, x) {
 #' @export
 #' @examples
 #' piecewise_linear(y, x)
-piecewise_linear <- function(y, x, h) {
+piecewise_linear <- function(y, x, h=1) {
   lin.mod = lm(y ~ x)
   ## print("duplicated")
   ## print(duplicated(x))
@@ -67,9 +82,17 @@ piecewise_linear <- function(y, x, h) {
   ## plot(y ~ x)
   ## segmentedFit <- segmented::segmented(lin.mod, seg.Z = ~x, psi=60)
   tryCatch({
+    if (h < 1e-50) {
+      print("fail to fit the segmented model")
+      return(list(output=NULL, cvrmse=NA))
+    }
     segmentedFit <- segmented::segmented(lin.mod, seg.Z = ~x, psi=median(x), segmented::seg.control(h = h))
     y_hat = (segmented::broken.line(segmentedFit,link=FALSE)$fit)
     cvrmse = CVRMSE(y=y, y_hat=y_hat, n_par=4)
+    plot(y ~ x)
+    plot(segmentedFit,add=TRUE,link=FALSE,lwd=2,col=2:3, lty=c(1,3))
+    lines(segmentedFit,col=2,pch=19,bottom=FALSE,lwd=2)
+    points(segmentedFit,col=4, link=FALSE)
     return(list(output=segmentedFit, cvrmse=cvrmse))},
     warning = function(w) {
       print("warning")
@@ -82,16 +105,19 @@ piecewise_linear <- function(y, x, h) {
     )
 }
 
-
 #' Return CVRMSE of the estimate
 #'
 #' This function computes the cvrmse of the estimate
 #' @param y the vector of the response variable
 #' @param y_hat the vector of fitted values
-#' @param n_par number of parameters in the model
+#' @param n_par number of parameters in the model, optional, if not supplied the n - n_par is removed
 CVRMSE <- function(y, y_hat, n_par) {
   n = length(y)
-  return(sqrt(sum((y_hat - y) ^ 2) / (n - n_par))/mean(y))
+  if (!missing(n_par)) {
+    return(sqrt(sum((y_hat - y) ^ 2) / (n - n_par))/mean(y))
+  } else {
+    return(sqrt(sum((y - y_hat)^2)) / n / mean(y))
+  }
 }
 
 #' Plot the fit
@@ -115,7 +141,8 @@ CVRMSE <- function(y, y_hat, n_par) {
 #' @examples
 #' plot_fit(y=df$`eui_elect`, x=df$`wt_temperatureFmonth`, output, color="red", methodName=NULL)
 plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, methodName, plotXLimit=NULL,
-                     plotYLimit=NULL, xLabelPrefix="", plotPoint=FALSE, plotTitle=FALSE, debugFlag=FALSE) {
+                     plotYLimit=NULL, xLabelPrefix="", plotPoint=FALSE, plotTitle=FALSE, debugFlag=FALSE,
+                     titleText="") {
   if (missing(id)) {
     id = "XXXXXXXX"
   }
@@ -161,6 +188,7 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   fitted_display_size = 4
   theme_text_size = 12
   title_font_size = 8
+  title_font_family = "ActivGrotesk"
   ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
   ## deciding boundaries for fill color and stacking gas and electricity heating
   ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
@@ -171,9 +199,9 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
   yElecHeating = 0
   yElecHeatingFitted = rep(0, 36)
   ## not sure if I need these
-  print(min(x))
-  print(resultElec$argmin)
-  print(max(x))
+  ## print(min(x))
+  ## print(resultElec$argmin)
+  ## print(max(x))
   if ((resultElec$b2 > 0) && ((min(x) < resultElec$argmin) && (resultElec$argmin < max(x)))) {
     lowerElec = min(which(xseq > resultElec$argmin))
     yElecHeating = c((yElecSeq - resultElec$baseload)[1:lowerElec],
@@ -234,12 +262,13 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
     ggplot2::geom_line(ggplot2::aes(x=xseq, y=yTotalSeq), colour=total_line_color)
   if (plotTitle) {
     p <- p +
-      ggplot2::ggtitle(sprintf("cvrmse: blue (%.2f), red (%.2f)", elec_cvrmse, gas_cvrmse))
+      ## ggplot2::ggtitle(sprintf("cvrmse: blue (%.2f), red (%.2f)", elec_cvrmse, gas_cvrmse))
+      ggplot2::ggtitle(paste0(xLabelPrefix, id))
   }
   p <- p +
     ggplot2::theme_bw() +
     ggplot2::theme(text = ggplot2::element_text(size=theme_text_size),
-                   plot.title = ggplot2::element_text(size=title_font_size))
+                   plot.title = ggplot2::element_text(size=title_font_size, family = title_font_family))
   if (plotPoint) {
     p <- p +
       ggplot2::geom_point(ggplot2::aes(x=x, y=yElec + resultGas$baseload), colour=elec_line_color, size=data_point_size) +
@@ -261,7 +290,9 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
                              ymax=(yGasSeq + resultElec$baseload + yElecHeating)[lowerGas:upperGas]), fill=gas_mk_color,
                          alpha=alpha_gas)
   p <- p +
-    ggplot2::xlab(paste0(xLabelPrefix, id)) +
+    ## uncomment to plot building ID
+    ## ggplot2::xlab(paste0(xLabelPrefix, id)) +
+    ggplot2::xlab(NULL) +
     ggplot2::ylab(NULL) +
     ## ggplot2::ylab("kBtu/sqft/mo.") +
     ggplot2::geom_text(ggplot2::aes(x=mean(c(min(x), max(x))), y=0.7*resultElec$baseload, label=fitted_display), size=fitted_display_size)
@@ -281,7 +312,7 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
     p <- p +
       ggplot2::ylim(plotYLimit)
   }
-  print(p)
+  ## print(p)
   return(list(img = p, score=fitted_display, xrange_left=min(x), xrange_right=max(x), yrange_top=max(yTotalSeq)))
 }
 
@@ -303,4 +334,52 @@ test_fit <- function() {
   resultGas <- polynomial_deg_2(y=yGas, x=x)
   plot_fit(yElec=yElec, yGas=yGas, x=x, resultElec=resultElec, resultGas=resultGas, plotType="base",
            id=id, methodName="polynomial degree 2")
+}
+
+#' K fold cross validation with 1d input feature x
+#'
+#' This function computes the k fold cross validation for y and x being one
+#' dimensional, for now it only estimate the error. Later will implement
+#' parameter tuning
+#' @param y the vector of the response variable
+#' @param x the vector of the 1-d covariate variable
+#' @keywords cross validation
+#' @export
+#' @examples
+#' k_fold_cv_1d(y=y, x=x, method=lean.analysis::loess_fit)
+k_fold_cv_1d <- function(y, x, method, kfold=5) {
+  set.seed(0)
+  n = length(y)
+  ## print(sprintf("n = %d", n))
+  rand_idx = sample(n)
+  ## random shuffle
+  y <- y[rand_idx]
+  x <- x[rand_idx]
+  cvrmses = NULL
+  for (i in 1:kfold) {
+    all_idx = 1:n
+    train_idx = all_idx[all_idx %% kfold!=(i - 1)]
+    test_idx = all_idx[all_idx %% kfold==(i - 1)]
+    ## print("train_idx: ")
+    ## print(train_idx)
+    ## print("test_idx")
+    ## print(test_idx)
+    fit_fold = method(y=y[train_idx], x=x[train_idx])$output
+    if (is.null(fit_fold)) {
+      next
+    }
+    ## print(summary(fit_fold))
+    ## print("x[test_idx]")
+    ## print(x[test_idx])
+    y_test_hat = predict(fit_fold, newdata=data.frame(x=x[test_idx]))
+    y_test = y[test_idx]
+    ## could add in other error metrics
+    cvrmse = lean.analysis::CVRMSE(y_test, y_test_hat)
+    ## print(sprintf("cvrmse for iteration %d: %.2f", i, cvrmse))
+    cvrmses = c(cvrmses, cvrmse)
+  }
+  cvrmses = cvrmses[!is.na(cvrmses)]
+  ## finalModel = loess(y ~ x)
+  finalModel = method(y, x)$output
+  return(list(output = finalModel, cvrmse = mean(cvrmses)))
 }

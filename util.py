@@ -6,6 +6,7 @@ import os
 import re
 import calendar
 import requests
+# from geopy.distance import vincenty
 from vincenty import vincenty
 homedir = os.getcwd() + '/csv_FY/'
 master_dir = homedir + 'master_table/' 

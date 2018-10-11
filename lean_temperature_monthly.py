@@ -13,14 +13,15 @@ import time
 import geocoder
 import json
 import util_io as uo
+# from geopy.distance import vincenty
 from vincenty import vincenty
 import calendar
 
 import util
 
 weatherdir = os.getcwd() + '/csv_FY/weather/'
-image_output_dir = os.getcwd() + '/plot_FY_weather/lean/'
-# image_output_dir = os.getcwd() + '/plot_FY_weather/html/single_building/lean_piecewise/'
+# image_output_dir = os.getcwd() + '/plot_FY_weather/lean/'
+image_output_dir = os.getcwd() + '/plot_FY_weather/html/single_building/lean_piecewise/'
 # image_output_dir = os.getcwd() + '/input/FY/interval/ion_0627/lean/'
 # image_output_dir = os.getcwd() + '/plot_FY_weather/html/single_building/lean_interval/'
 # json_output_dir = os.getcwd() + '/plot_FY_weather/lean_piecewise/json/'
@@ -39,7 +40,7 @@ title_dict = {'combined':'Electricity + Gas',
               'base_gas':'Base Gas Load',
               'gas':'Gas Conditioning'}
 
-def plot_lean_one_fromdb(b, s, side, timerange, **kwargs):
+def plot_lean_one_fromdb(b, s, side, timerange, plotPoint=False, **kwargs):
     print 'creating {0} LEAN for building {1} {2} ...'.format(side, b, timerange)
     sns.set_style("whitegrid")
     sns.set_palette("Set2")
@@ -151,8 +152,9 @@ def plot_lean_one_fromdb(b, s, side, timerange, **kwargs):
             if kwargs['gas'] != None and kwargs['elec'] != None:
                 plt.plot(xd_gas, yd_gas, gas_line_color)
                 plt.plot(xd_elec, yd_elec, elec_line_color)
-                # plt.plot(x_gas, y_gas + base_elec, marker_style, markerfacecolor=gas_mk_color, ms=marker_size)
-                # plt.plot(x_elec, y_elec + base_gas, marker_style, markerfacecolor=elec_mk_color, ms=marker_size)
+                if (plotPoint):
+                    plt.plot(x_gas, y_gas + base_elec, marker_style, markerfacecolor=gas_mk_color, ms=marker_size)
+                    plt.plot(x_elec, y_elec + base_gas, marker_style, markerfacecolor=elec_mk_color, ms=marker_size)
                 bx.fill_between(xd_elec, base_elec + base_gas, yd_elec,
                                 facecolor=elec_line_color, alpha=alpha)
                 bx.fill_between(xd_gas, base_elec + base_gas, yd_gas,
@@ -165,7 +167,8 @@ def plot_lean_one_fromdb(b, s, side, timerange, **kwargs):
                           base_gas)
             elif kwargs['gas'] != None:
                 plt.plot(xd_gas, yd_gas, gas_line_color)
-                # plt.plot(x_gas, y_gas, marker_style, markerfacecolor=gas_mk_color, ms=marker_size)
+                if (plotPoint):
+                    plt.plot(x_gas, y_gas, marker_style, markerfacecolor=gas_mk_color, ms=marker_size)
                 bx.fill_between(xd_gas, base_gas, yd_gas,
                                 facecolor=gas_line_color, alpha=alpha)
                 bx.fill_between(xd_elec, 0, base_gas,
@@ -173,7 +176,8 @@ def plot_lean_one_fromdb(b, s, side, timerange, **kwargs):
                 output = (xd_gas, yd_gas, base_gas)
             elif kwargs['elec'] != None:
                 plt.plot(xd_elec, yd_elec, elec_line_color)
-                # plt.plot(x_elec, y_elec, marker_style, markerfacecolor=elec_mk_color, ms=marker_size)
+                if (plotPoint):
+                    plt.plot(x_elec, y_elec, marker_style, markerfacecolor=elec_mk_color, ms=marker_size)
                 bx.fill_between(xd_elec, base_elec, yd_elec,
                                 facecolor=elec_line_color, alpha=alpha)
                 bx.fill_between(xd_elec, 0, base_elec,
@@ -566,7 +570,7 @@ def get_area(d_gas, d_elec, n_par_elec):
             area_total, base_gas, base_elec)
 
 # FIXME: change args to kwargs
-def lean_temperature_fromdb(b, s, n_par_elec, timerange, *args, **kwargs):
+def lean_temperature_fromdb(b, s, n_par_elec, timerange, plotPoint=False, *args, **kwargs):
     print 'creating lean plot ...'
     if len(args) > 0:
         d_gas = piecewise_reg_one_fromdb(b, s, 2, 'eui_gas', True, timerange, args[0])
@@ -599,15 +603,15 @@ def lean_temperature_fromdb(b, s, n_par_elec, timerange, *args, **kwargs):
     # plot_lean_one(b, s, "base_gas", gas=d_gas, elec=d_elec)
     # (xd_elec, yd_elec, xd_gas, yd_gas, base_elec, base_gas) = plot_lean_one(b, s, "combined", gas=d_gas, elec=d_elec)
     if d_gas != None:
-        plot_lean_one_fromdb(b, s, "gas", timerange, gas=d_gas, y_upper=60)
+        plot_lean_one_fromdb(b, s, "gas", timerange, plotPoint=plotPoint, gas=d_gas, y_upper=60)
     if d_elec != None:
-        plot_lean_one_fromdb(b, s, "elec", timerange, elec=d_elec, y_upper=30)
+        plot_lean_one_fromdb(b, s, "elec", timerange, plotPoint=plotPoint, elec=d_elec, y_upper=30)
     # plot_lean_one(b, s, "base_elec", gas=d_gas, elec=d_elec,
     #               y_upper=25)
     # plot_lean_one(b, s, "base_gas", gas=d_gas, elec=d_elec, y_upper=5)
     result = None
     if (d_gas != None) and (d_elec != None):
-        result = plot_lean_one_fromdb(b, s, "combined", timerange, gas=d_gas, elec=d_elec, y_upper=15, action=action)
+        result = plot_lean_one_fromdb(b, s, "combined", timerange, plotPoint=plotPoint, gas=d_gas, elec=d_elec, y_upper=15, action=action)
     if result == None:
         return None
     if len(result) > 3:

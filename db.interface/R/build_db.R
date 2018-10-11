@@ -676,6 +676,55 @@ add_area_lab_datacenter <- function() {
   write_table_to_db(df=df_euas_monthly, dbname="all", tablename="EUAS_monthly", overwrite=TRUE)
 }
 
+add_weather_norm_energy <- function() {
+  df = readxl::read_excel("~/Dropbox/gsa_2017/input/FY/weather_normalized_energy/FY17WeatherNorm_CMU_BldgsOnly.xlsx", sheet=1, skip=5)
+  ## write_table_to_db(df=df, dbname="other_input", "FY17WeatherNorm_CMU_BldgsOnly_sheet_FY18", overwrite=TRUE)
+  df = readxl::read_excel("~/Dropbox/gsa_2017/input/FY/weather_normalized_energy/FY17WeatherNorm_CMU_BldgsOnly.xlsx", sheet=2, skip=5)
+  ## write_table_to_db(df=df, dbname="other_input", "FY17WeatherNorm_CMU_BldgsOnly_sheet_FY17", overwrite=TRUE)
+  df17 <- df %>%
+    tibble::as_data_frame() %>%
+    dplyr::select(`US Agency Designated Covered Facility ID`, `Weather Normalized Site Energy Use (kBtu)`) %>%
+    dplyr::mutate(`Weather Normalized Site Energy Use (kBtu)`=as.numeric(`Weather Normalized Site Energy Use (kBtu)`)) %>%
+    na.omit() %>%
+    dplyr::rename(`Building_Number`=`US Agency Designated Covered Facility ID`) %>%
+    dplyr::group_by(`Building_Number`) %>%
+    dplyr::summarise(`Weather Normalized Site Energy Use (kBtu)` = sum(`Weather Normalized Site Energy Use (kBtu)`)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(`Fiscal_Year`=2017) %>%
+    {.}
+  df = readxl::read_excel("~/Dropbox/gsa_2017/input/FY/weather_normalized_energy/FY17WeatherNorm_CMU_BldgsOnly.xlsx", sheet=3, skip=5)
+  ## write_table_to_db(df=df, dbname="other_input", "FY17WeatherNorm_CMU_BldgsOnly_sheet_FY16", overwrite=TRUE)
+  df16 <- df %>%
+    dplyr::select(`US Agency Designated Covered Facility ID`, `Weather Normalized Site Energy Use (kBtu)`) %>%
+    dplyr::mutate(`Weather Normalized Site Energy Use (kBtu)`=as.numeric(`Weather Normalized Site Energy Use (kBtu)`)) %>%
+    na.omit() %>%
+    dplyr::rename(`Building_Number`=`US Agency Designated Covered Facility ID`) %>%
+    dplyr::group_by(`Building_Number`) %>%
+    dplyr::summarise(`Weather Normalized Site Energy Use (kBtu)` = sum(`Weather Normalized Site Energy Use (kBtu)`)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(`Fiscal_Year`=2016) %>%
+    {.}
+  normalized = df17 %>%
+    dplyr::bind_rows(df16) %>%
+    {.}
+  df = read_table_from_db(dbname="all", tablename="eui_by_fy_tag") %>%
+    dplyr::select(`Building_Number`, `Fiscal_Year`, `Total_(kBtu)`, `Gross_Sq.Ft`, `Region_No.`) %>%
+    dplyr::left_join(normalized, by=c("Building_Number", "Fiscal_Year")) %>%
+    {.}
+  df <- df %>%
+    dplyr::filter(`Fiscal_Year` %in% c(2016, 2017)) %>%
+    dplyr::arrange(`Fiscal_Year`, `Building_Number`) %>%
+    dplyr::rename(`actual`=`Total_(kBtu)`,
+                  `normalized`=`Weather Normalized Site Energy Use (kBtu)`) %>%
+    dplyr::mutate(`normalized_fill_na`=ifelse(is.na(`normalized`), `actual`, `normalized`)) %>%
+    dplyr::mutate(`normalized_only_good`=pmin(`actual`, `normalized_fill_na`)) %>%
+    {.}
+  print(head(df))
+  df %>%
+    readr::write_csv("~/Dropbox/gsa_2017/csv_FY/db_build_temp_csv/actual_vs_weather_normalized.csv")
+  write_table_to_db(df=df, dbname="all", "actual_vs_weather_normalized", overwrite=TRUE)
+}
+
 #' Join EUAS_monthly and EUAS_type
 #'
 #' This function joins EUAS_monthly and EUAS_type
@@ -700,22 +749,23 @@ main_db_build <- function() {
   ## add_occ()
   ## check_duplicates(dbname="all", tablename="EUAS_monthly",
   ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
+  add_weather_norm_energy()
   ## add_area_lab_datacenter()
   ## check_duplicates(dbname="all", tablename="EUAS_monthly",
   ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
-  get_heating_cooling_eui(debugFlag=FALSE)
-  check_duplicates(dbname="all", tablename="EUAS_monthly",
-                   groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
-  recode_euas_type()
-  check_duplicates(dbname="all", tablename="EUAS_type_recode",
-                   groupby_vars=c("Building_Number", "Building_Type", "data_source"))
-  join_type_and_energy()
-  check_duplicates(dbname="all", tablename="EUAS_monthly_with_type",
-                   groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
-  get_eui_by_year("F")
-  check_duplicates(dbname="all", tablename="eui_by_fy",
-                   groupby_vars=c("Building_Number", "Fiscal_Year"))
-  add_quality_tag_energy()
-  check_duplicates(dbname="all", tablename="eui_by_fy_tag",
-                   groupby_vars=c("Building_Number", "Fiscal_Year"))
+  ## get_heating_cooling_eui(debugFlag=FALSE)
+  ## check_duplicates(dbname="all", tablename="EUAS_monthly",
+  ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
+  ## recode_euas_type()
+  ## check_duplicates(dbname="all", tablename="EUAS_type_recode",
+  ##                  groupby_vars=c("Building_Number", "Building_Type", "data_source"))
+  ## join_type_and_energy()
+  ## check_duplicates(dbname="all", tablename="EUAS_monthly_with_type",
+  ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
+  ## get_eui_by_year("F")
+  ## check_duplicates(dbname="all", tablename="eui_by_fy",
+  ##                  groupby_vars=c("Building_Number", "Fiscal_Year"))
+  ## add_quality_tag_energy()
+  ## check_duplicates(dbname="all", tablename="eui_by_fy_tag",
+  ##                  groupby_vars=c("Building_Number", "Fiscal_Year"))
 }

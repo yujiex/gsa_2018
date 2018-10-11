@@ -11,24 +11,6 @@ library("mgcv")
 library("zoo")
 library("readr")
 
-con <- dbConnect(RSQLite::SQLite(), "csv_FY/db/all.db")
-
-alltables = dbListTables(con)
-
-## building = projDate[1, "Building_Number"]
-## projectDate = projDate[1, "Date"]
-
-querystr = paste0("SELECT * FROM EUAS_monthly LIMIT 5")
-dbGetQuery(con,  querystr) %>%
-  as_data_frame() %>%
-  {.}
-
-querystr = paste0("SELECT DISTINCT [Building_Number] [Region_No.] FROM EUAS_monthly WHERE [Region_No.] = '9'")
-dbGetQuery(con,  querystr) %>%
-  as_data_frame() %>%
-  readr::write_csv("csv_FY/region9buildings.csv")
-  ## `eui_elec`, `eui_gas`) %>%
-
 compute_roi <- function(building, projectDate) {
   querystr = paste0("SELECT * FROM EUAS_monthly_weather WHERE [Building_Number] = '", building, "'")
   ## querystr = paste0("SELECT * FROM EUAS_monthly_weather", "")

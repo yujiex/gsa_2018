@@ -23,13 +23,14 @@
 #'   date_min = 20150101, date_max = 20151231)
 get_nearby_ghcnd_stations <- function (lat_lon_df, id_col_name, ghcnd_data, radius=NULL, limit=NULL, date_min=NULL,
                                        date_max=NULL, year=NULL, var="TMIN", testing=FALSE) {
-  print("var")
   print(var)
   lat_lon_df <- lat_lon_df %>%
-    dplyr::rename(`id`=`Name`) %>%
+    dplyr::rename(id=!!rlang::sym(id_col_name)) %>%
     {.}
   if (testing) {
+    print("head of input lat_lon_df after renaming")
     lat_lon_df <- head(lat_lon_df)
+    print(lat_lon_df)
   }
   year_min = NULL
   year_max = NULL
@@ -46,10 +47,19 @@ get_nearby_ghcnd_stations <- function (lat_lon_df, id_col_name, ghcnd_data, radi
   if (testing) {
     lat_lon_df <- head(lat_lon_df)
   }
+  print(sprintf("year_min: %s", year_min))
+  print(sprintf("year_max: %s", year_max))
+  print(head(ghcnd_data))
+  print(head(lat_lon_df))
+  print(var)
+  print(radius)
+  print(limit)
+  print(nrow(ghcnd_data))
   result = rnoaa::meteo_nearby_stations(lat_lon_df=lat_lon_df, station_data=ghcnd_data, var=var,
                                year_min=year_min, radius=radius, limit=limit)
   ## exclude stations with missing data
   ## rnoaa::ghcnd_search(stationid=s, date_min=date_min, date_max=date_max, var=v)[[v]] %>%
+  print(result)
   return(result)
 }
 
@@ -166,11 +176,13 @@ get_nearby_ghcnd_stations_one_loc <- function (lat_lon_df, id_col_name="id", ghc
   print(date_max)
   b = lat_lon_df[[id_col_name]][[1]]
   v_out = tolower(v)
+  print(head(lat_lon_df))
+  print(id_col_name)
   nearbyStations =
-    get_nearby_ghcnd_stations(lat_lon_df=b_loc, ghcnd_data=ghcnd_data, var=v,
+    get_nearby_ghcnd_stations(lat_lon_df=lat_lon_df, id_col_name=id_col_name, ghcnd_data=ghcnd_data, var=v,
                               ## return a lot and filter by whether having data
                               radius=radius, limit=100, date_min=date_min,
-                              date_max=date_max, year=year)[[b]]
+                              date_max=date_max, year=year, testing=TRUE)[[b]]
   print("head of nearby stations")
   print(head(nearbyStations))
   stations = nearbyStations$id
@@ -300,6 +312,8 @@ get_nearby_ghcnd_stations_all_loc <- function (lat_lon_df, id_col_name="id", ghc
 #' @examples
 #' for one building: compile_weather_isd_main(useSavedData=FALSE, years=c(2015, 2016, 2017), building="AK0000ZZ")
 compile_weather_ghcnd_main <- function(building, station_df, date_min=NULL, date_max=NULL, var="TMIN", format_fun=get.noaa.weather::degreeCtoF) {
+  print("station_df ---------------")
+  print(station_df)
   station_df <- station_df %>%
     dplyr::mutate(`inv_dist`=1/`distance`) %>%
     {.}

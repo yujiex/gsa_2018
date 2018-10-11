@@ -25,13 +25,14 @@ NULL
 #' @param facetNcol optional, number of columns in facet plot
 #' @param labelCutoff optional, upper bound for label to be visible
 #' @param manual_legend_order optional, manual order of legend
+#' @param showLabel optional, whether to show count on top and in each section of stacked bar
 #' @keywords query count
 #' @export
 #' @examples
 #' df = tibble::tibble(Fiscal_Year=2013L, Cat=c("A","B","B"))
 #' stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", tit="EUAS Building Count By Category", orderByHeight=TRUE, xlabel="XLABEL", legendloc="bottom", legendOrient="horizontal")
 #' stackbar(df=df, xcol="Fiscal_Year", fillcol="Cat", ylabel="Building Count", tit="EUAS Building Count By Category", orderByHeight=TRUE, xlabel="XLABEL", legendloc="bottom", legendOrient="horizontal", manual_legend_order=c("B","A"))
-stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit, legendloc, legendOrient, pal, pal_values, labelFormat, width, verbose, scaler, facetvar=NULL, facetNcol=NULL, labelCutoff=NULL, manual_legend_order=ggplot2::waiver()) {
+stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit, legendloc, legendOrient, pal, pal_values, labelFormat, width, verbose, scaler, facetvar=NULL, facetNcol=NULL, labelCutoff=NULL, manual_legend_order=ggplot2::waiver(), showLabel=TRUE) {
   ncategory = length(unique(df[[fillcol]]))
   if (missing(labelFormat)) {
     labelFormat = "%s"
@@ -186,10 +187,14 @@ stackbar <- function(df, xcol, fillcol, ycol, orderByHeight, ylabel, xlabel, tit
   g <- g +
     ggplot2::ylab(ylabel) +
     ggplot2::xlab(xlabel) +
-    ggplot2::labs(title=tit) +
-    ggplot2::geom_text(size=3, ggplot2::aes(y=pos, label=barHeightLabel), fontface = "bold", vjust=-0.5) +
-    ggplot2::geom_text(size=2.5, position = ggplot2::position_stack(vjust = 0.5),
-                       ggplot2::aes(label=`total_label`)) +
+    ggplot2::labs(title=tit)
+  if (showLabel) {
+    g <- g +
+      ggplot2::geom_text(size=3, ggplot2::aes(y=pos, label=barHeightLabel), fontface = "bold", vjust=-0.5) +
+      ggplot2::geom_text(size=2.5, position = ggplot2::position_stack(vjust = 0.5),
+                         ggplot2::aes(label=`total_label`))
+  }
+  g <- g +
     ggplot2::guides(fill=ggplot2::guide_legend(nrow=1)) +
     ggplot2::theme()
     ## ggplot2::geom_text(ggplot2::aes(y=mid_y), size=2.5)
@@ -262,6 +267,7 @@ gb_agg_ratio <- function(df, groupvar, numerator_var, denominator_var, aggfun, v
 #' national_overview(category=c("A", "C", "I"), year=2017)
 national_overview_facetRegion <- function(category, type, years, region) {
   pal_values = c("#FFFFB3", "#8DD3C7")
+  showLabel = FALSE
   ## remove 0 sqft and 0 electricity
   df = db.interface::read_table_from_db(dbname = "all", tablename = "eui_by_fy_tag") %>%
     dplyr::filter(`Gross_Sq.Ft` != 0) %>%
@@ -355,7 +361,8 @@ national_overview_facetRegion <- function(category, type, years, region) {
                  legendOrient="v", pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "gray"),
                  tit="kBtu/sqft by region, 2015 vs 2017",
                  labelFormat="%.0f",
-                 orderByHeight=FALSE, verbose=FALSE, facetvar="Region_No.", facetNcol=11, labelCutoff=5)
+                 orderByHeight=FALSE, verbose=FALSE, facetvar="Region_No.", facetNcol=11, labelCutoff=5,
+                 showLabel=showLabel)
     print(p)
     ## get savings
     dftemp = df_agg_eui_region %>%
@@ -478,12 +485,14 @@ national_overview <- function(category, type, year, region, pal_values) {
     dplyr::mutate_at(vars(`Building_Type`), recode,
                      "Other - Public Services"="Other - Public Services\neg Border Stations") %>%
     {.}
+  showLabel=FALSE
   p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Category", ylabel="Building Count", legendloc = "bottom", xlabel="Fiscal Year",orderByHeight=FALSE,
-               pal_values = pal_values, tit="Building Category Count by Fiscal Year", verbose=FALSE, labelCutoff=5)
+               pal_values = pal_values, tit="Building Category Count by Fiscal Year", verbose=FALSE, labelCutoff=5,
+               showLabel=showLabel)
   print(p)
   p = stackbar(df=df, xcol="Fiscal_Year", fillcol="Category", ycol="Gross_Sq.Ft", ylabel="Million Gross Sqft", legendloc = "bottom", xlabel="Fiscal Year",orderByHeight=FALSE,
                pal_values = pal_values, tit="Building Million Gross Sqft by Fiscal Year", labelFormat="%.0f",
-               verbose=FALSE, scaler=1e-6, labelCutoff=5)
+               verbose=FALSE, scaler=1e-6, labelCutoff=5, showLabel=showLabel)
   print(p)
   if (!missing(year)) {
     df <- df %>%
@@ -494,14 +503,14 @@ national_overview <- function(category, type, year, region, pal_values) {
   if (missing(region)) {
     p = stackbar(df=df, xcol="Region_No.", fillcol="Category", ylabel="Building Count", xlabel="region",orderByHeight=FALSE,
                 pal_values = pal_values, tit=sprintf("%s Building Category Count by Region (building count = %s)", year, nrecord),
-                verbose=FALSE, labelCutoff=5)
+                verbose=FALSE, labelCutoff=5, showLabel=showLabel)
     print(p)
     ## ## ## ggsave(file=sprintf("region_report_img/national/cat_cnt_by_region_%s.png", year),
     ## ## ##        width=8, height=4, units="in")
     p = stackbar(df=df, xcol="Region_No.", fillcol="Category", ycol="Gross_Sq.Ft", ylabel="Million Gross Sqft",xlabel="region",
                 orderByHeight=FALSE, pal_values = pal_values,
                 tit=sprintf("%s Building Million Gross Sqft by Region (building count = %s)", year, nrecord), labelFormat="%.0f",
-                verbose=FALSE, scaler=1e-6, labelCutoff=5)
+                verbose=FALSE, scaler=1e-6, labelCutoff=5, showLabel=showLabel)
     print(p)
   }
   if (missing(region)) {
@@ -513,7 +522,7 @@ national_overview <- function(category, type, year, region, pal_values) {
   p = stackbar(df=df, xcol="Building_Type", fillcol="Category", ylabel="Building Count", xlabel="Building Type",
               legendOrient="v", pal_values = pal_values,
               tit=sprintf("%s Building Category Count by Building Type (building count = %s)%s", year, nrecord, regionTag),
-              orderByHeight=TRUE, verbose=FALSE, labelCutoff=cutoff)
+              orderByHeight=TRUE, verbose=FALSE, labelCutoff=cutoff, showLabel=showLabel)
   print(p)
   if (missing(region)) {
     cutoff=40
@@ -525,7 +534,7 @@ national_overview <- function(category, type, year, region, pal_values) {
               legendOrient="v", pal_values = pal_values,
               tit=sprintf("%s Building Category Million Gross Sqft by Building Type (building count = %s)%s", year, nrecord, regionTag),
               labelFormat="%.0f",
-              orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, labelCutoff=cutoff)
+              orderByHeight=TRUE, verbose=FALSE, scaler=1e-6, labelCutoff=cutoff, showLabel=showLabel)
   print(p)
   print(sprintf("total gross square foot: %.2f M", sum(df$Gross_Sq.Ft) * 1e-6))
   print(sprintf("total cost in million dollar: %.2f M", sum(df$`Total_(Cost)`) * 1e-6))
@@ -847,8 +856,10 @@ national_overview_over_years <- function(category, type, years, region, pal) {
                orderByHeight=FALSE, labelFormat="%.0f", width=width, verbose=FALSE,
                ## pal_values = c("#F2B670", "#FFEEBC", "#EB8677", "#BDBBD7", "#8AB0D0", "grey"),
                pal_values = national_over_years_pal,
-               labelCutoff=5, manual_legend_order=c("Electric","Gas","Steam","Chilled Water","Oil","Other"))
+               labelCutoff=5, manual_legend_order=c("Electric","Gas","Steam","Chilled Water","Oil","Other"),
+               showLabel=FALSE)
   print(p)
+  ggplot2::ggsave(sprintf("~/Dropbox/gsa_2017/page_data/region_eui_over_5_years/eui%s.png", regionTag), width=8, height=6, units="in")
   ## first two box info start
   EUIs = df_agg_eui %>%
     dplyr::group_by(`Fiscal_Year`) %>%

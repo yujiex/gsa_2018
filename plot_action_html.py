@@ -5,6 +5,7 @@ import numpy as np
 import seaborn as sns
 import pylab as P
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 import textwrap as tw
 import datetime
 
@@ -15,9 +16,10 @@ import util_seq as useq
 import lean_dd as ld
 import util_io as uo
 import get_building_set as gbs
+from matplotlib.ticker import MaxNLocator
 
 homedir = os.getcwd() + '/csv_FY/'
-master_dir = homedir + 'master_table/' 
+master_dir = homedir + 'master_table/'
 weatherdir = os.getcwd() + '/csv_FY/weather/'
 outputdir = os.getcwd() + '/plot_FY_weather/html/'
 
@@ -139,7 +141,7 @@ def plot_saving_fromdb(b, s, result_pre, result_post):
         fig, (ax_1, ax_2) = plt.subplots(2, 1, sharex=True,
                                          sharey=True)
         d_save['elec_percent'], d_save['elec_before'], d_save['elec_after'] = \
-            plot_saving_aggyear(post_args['df_elec_post'],
+            plot_saving_aggyear(b, post_args['df_elec_post'],
                                 pre_args['timerange_pre'],
                                 post_args['timerange_post'],
                                 'eui_elec', ax_1,
@@ -147,7 +149,7 @@ def plot_saving_fromdb(b, s, result_pre, result_post):
         d_cvrmse['elec'] = round(d_elec_pre['CV(RMSE)'], 3)
         ax_1.set_xlim([1, 12])
         d_save['gas_percent'], d_save['gas_before'], d_save['gas_after'] = \
-            plot_saving_aggyear(post_args['df_gas_post'],
+            plot_saving_aggyear(b, post_args['df_gas_post'],
                                 pre_args['timerange_pre'],
                                 post_args['timerange_post'],
                                 'eui_gas', ax_2,
@@ -158,7 +160,7 @@ def plot_saving_fromdb(b, s, result_pre, result_post):
         if 'gas' in plotlist:
             ax = plt.axes()
             d_save['gas_percent'], d_save['gas_before'], d_save['gas_after'] = \
-                plot_saving_aggyear(post_args['df_gas_post'],
+                plot_saving_aggyear(b, post_args['df_gas_post'],
                                     pre_args['timerange_pre'],
                                     post_args['timerange_post'],
                                     'eui_gas', ax,
@@ -173,7 +175,7 @@ def plot_saving_fromdb(b, s, result_pre, result_post):
         elif 'elec' in plotlist:
             ax = plt.axes()
             d_save['elec_percent'], d_save['elec_before'], d_save['elec_after'] = \
-                plot_saving_aggyear(post_args['df_elec_post'],
+                plot_saving_aggyear(b, post_args['df_elec_post'],
                                     pre_args['timerange_pre'],
                                     post_args['timerange_post'],
                                     'eui_elec', ax,
@@ -234,14 +236,14 @@ def plot_saving(b, s, result_pre, result_post):
         fig, (ax_1, ax_2) = plt.subplots(2, 1, sharex=True,
                                          sharey=True)
         d_save['elec'] = \
-            plot_saving_aggyear(post_args['df_elec_post'],
+            plot_saving_aggyear(b, post_args['df_elec_post'],
                                 pre_args['timerange_pre'],
                                 post_args['timerange_post'],
                                 'eui_elec', ax_1,
                                 d_elec_pre['CV(RMSE)'])
         d_cvrmse['elec'] = round(d_elec_pre['CV(RMSE)'], 3)
         ax_1.set_xlim([1, 12])
-        d_save['gas'] = plot_saving_aggyear(post_args['df_gas_post'],
+        d_save['gas'] = plot_saving_aggyear(b, post_args['df_gas_post'],
                                             pre_args['timerange_pre'],
                                             post_args['timerange_post'],
                                             'eui_gas', ax_2,
@@ -252,7 +254,7 @@ def plot_saving(b, s, result_pre, result_post):
         if 'gas' in plotlist:
             ax = plt.axes()
             d_save['gas'] = \
-                plot_saving_aggyear(post_args['df_gas_post'],
+                plot_saving_aggyear(b, post_args['df_gas_post'],
                                     pre_args['timerange_pre'],
                                     post_args['timerange_post'],
                                     'eui_gas', ax,
@@ -265,7 +267,7 @@ def plot_saving(b, s, result_pre, result_post):
         elif 'elec' in plotlist:
             ax = plt.axes()
             d_save['elec'] = \
-                plot_saving_aggyear(post_args['df_elec_post'],
+                plot_saving_aggyear(b, post_args['df_elec_post'],
                                     pre_args['timerange_pre'],
                                     post_args['timerange_post'],
                                     'eui_elec', ax,
@@ -281,20 +283,28 @@ def plot_saving(b, s, result_pre, result_post):
     plt.close()
     return d_save, d_cvrmse
 
-def plot_saving_aggyear(df, timerange_pre,
-                        timerange_post, theme, ax, cvrmse):
+def plot_saving_aggyear(b, df, timerange_pre, timerange_post, theme, ax, cvrmse):
     yearcol, timefilter = util.get_time_filter(timerange_post)
     df['in_range'] = df[yearcol].map(timefilter)
     df = df[df['in_range']]
+    # green_face_color = 'lime'
+    # red_face_color = 'red'
+    green_face_color = '#94CB89'
+    red_face_color = '#D07969'
+    ylabel_font_name = 'Open Sans'
     if theme == 'eui_gas':
-        c1 = 'brown'
-        c2 = 'lightsalmon'
+        # c1 = 'brown'
+        # c2 = 'lightsalmon'
+        c1 = '#4A4A4A'
+        c2 = '#4A4A4A'
         # location = 'lower left'
         location = 'upper center'
         wrapwidth = 30
     else:
-        c1 = 'navy'
-        c2 = 'lightskyblue'
+        c1 = '#4A4A4A'
+        c2 = '#4A4A4A'
+        # c1 = 'navy'
+        # c2 = 'lightskyblue'
         # location = 'upper left'
         location = 'lower center'
         wrapwidth = 99
@@ -303,6 +313,10 @@ def plot_saving_aggyear(df, timerange_pre,
     x = np.array(energy['month'])
     y = np.array(energy[theme])
     y_hat = np.array(energy[theme + '_hat'])
+    time_in_filename = timerange_post.replace(" ", "_")
+    time_in_filename = time_in_filename.replace("-", "_")
+    # output data to design students
+    pd.DataFrame({'month':x, 'actual':y, 'baseline':y_hat}).to_csv("~/Dropbox/gsa_2017/page_data/case_study/{}_{}_{}.csv".format(b, theme, time_in_filename), index=False)
     save_percent = round((sum(y_hat) - sum(y)) / sum(y_hat) * 100, 1)
     after = sum(y)
     before = sum(y_hat)
@@ -314,26 +328,40 @@ def plot_saving_aggyear(df, timerange_pre,
         else:
             spaceloc = timerange.rfind(' ')
             return "{} -- {}".format(timerange[:4], timerange[spaceloc + 1: spaceloc + 5])
-    line1, = ax.plot(x, y, c=c1, ls='-', lw=2, marker='o')
-    line2, = ax.plot(x, y_hat, c=c2, ls='-', lw=2, marker='o')
+    line1, = ax.plot(x, y, c=c1, ls='-', lw=2, marker='o', markersize=5)
+    # line1, = ax.plot(x, y, c=c1, ls='-', lw=2, marker='o')
+    line2, = ax.plot(x, y_hat, c=c2, ls='--', lw=2, marker='o', markersize=5)
+    # line2, = ax.plot(x, y_hat, c=c2, ls='-', lw=2, marker='o')
     ax.fill_between(x, y, y_hat, where=y_hat >= y,
-                    facecolor='lime', alpha=0.5, interpolate=True)
-    ax.fill_between(x, y, y_hat, where=y_hat < y, facecolor='red',
+                    facecolor=green_face_color, alpha=0.5, interpolate=True)
+    ax.fill_between(x, y, y_hat, where=y_hat < y, facecolor=red_face_color,
                     alpha=0.5, interpolate=True)
-    ax.set_ylabel("kBtu per square foot per month", fontsize=10)
-    ax.legend([line1, line2],
-              ['Actual {1} use in {0}'.format(time_label(timerange_post), lb.title_dict[theme]),
-               '\n'.join(tw.wrap('{1} use given {2} habits but {0} weather'.format(time_label(timerange_post),
-                                                                                   lb.title_dict[theme],
-                                                                                   time_label(timerange_pre)),
-                                 wrapwidth))], loc=location)
+    ax.set_ylabel("Weather Normalized {} Usage\n(kBtu/sq.ft/month)".format(lb.title_dict[theme]), fontsize=7, fontname=ylabel_font_name, fontweight='bold')
+    ya = ax.get_yaxis()
+    ya.set_major_locator(MaxNLocator(integer=True))
+    # ax.set_ylabel("kBtu per square foot per month", fontsize=10)
+    # ax.legend([line1, line2],
+    #           ['Actual {1} use in {0}'.format(time_label(timerange_post), lb.title_dict[theme]),
+    #            '\n'.join(tw.wrap('{1} use given {2} habits but {0} weather'.format(time_label(timerange_post),
+    #                                                                                lb.title_dict[theme],
+    #                                                                                time_label(timerange_pre)),
+                                 # put legend below plot
+                                 # wrapwidth))], loc=9, bbox_to_anchor=(0.5, -0.1))
+                                 # wrapwidth))], loc=location)
                                 # following is for region 9 ppt one building
                                 # wrapwidth))], loc=location, fontsize='xx-small')
-    plt.xticks(range(1, 13), ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+    plt.rcParams["font.weight"] = "bold"
+    plt.xticks(range(1, 13), ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], fontsize=8, fontweight='bold')
+    plt.subplots_adjust(right=0.75)
+    ax.tick_params('y', labelsize=8)
     if save_percent > 0:
-        ax.set_title('{2} after ({0}) vs before ({4}), {1}% less, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)), fontsize=12)
+        ax.set_title('{2} usage after {0} vs before {4}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_post)), fontsize=12, fontweight='bold')
+        ax.text(13, (max(y_hat) + min(y_hat))/2.0, 'Saved\n{0}%\nCVRMSE: {1}'.format(abs(save_percent), round(cvrmse, 2)), fontsize=8)
+        # ax.set_title('{2} after ({0}) vs before ({4}), {1}% less, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)), fontsize=12)
     else:
-        ax.set_title('{2} after ({0}) vs before ({4}), {1}% more, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)), fontsize=12)
+        ax.set_title('{2} usage after ({0}) vs before ({4}), {1}% more, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)), fontsize=12, fontweight='bold')
+        ax.text(13, (max(y_hat) + min(y_hat))/2.0, 'increased\n{0}%\nCVRMSE: {1}'.format(abs(save_percent), round(cvrmse, 2)), fontsize=8)
+        # ax.set_title('{2} usage after ({0}) vs before ({4}), {1}% more, CVRMSE: {3}'.format(time_label(timerange_post), abs(save_percent), lb.title_dict[theme], round(cvrmse, 2), time_label(timerange_pre)), fontsize=12, fontweight='bold')
     ax.grid(linewidth=0.5)
     return save_percent, before, after
 
@@ -526,7 +554,7 @@ def plot_trend_per_dd(b, s, df_energy, breakpoints):
     P.savefig(os.getcwd() + '/plot_FY_weather/html/single_building/trend/{0}_{1}_year_perdd.png'.format(b, s), dpi = 70)
     plt.close()
     return
-    
+
 def plot_trend_fromdb(b, s, breakpoints):
     conn = uo.connect('all')
     with conn:
@@ -676,7 +704,11 @@ def plot_action_fromdb():
     del names[153]
     # names = ['CA0154ZZ']
     # names = ['CA0306ZZ']
-    names = ['IL0302ZZ', 'IN1703ZZ']
+    # names = ['IN1703ZZ', 'IL0302ZZ']
+    # names = ['UT0032ZZ']
+    # names = ['OK0063ZZ']
+    df_to_plot = pd.read_csv("~/Dropbox/gsa_2017/input/FY/region_case_study_to_plot.csv")
+    names = df_to_plot['Building_Number'].tolist()
     for i, name in enumerate(names):
         print i, name, '222222222222222222222222222222'
         group = gr.get_group(name)
@@ -709,7 +741,7 @@ def plot_action_fromdb():
 
         results = []
         for a, r in zip(actions, ranges):
-            result = ltm.lean_temperature_fromdb(b, s, 2, r, action=a)
+            result = ltm.lean_temperature_fromdb(b, s, 2, r, plotPoint=True, action=a)
             if result == None:
                 result = (None, None, None)
             d = {'building': b, 'station': s, 'timerange': r, 'action': a}
