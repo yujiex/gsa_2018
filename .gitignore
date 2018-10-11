@@ -2,6 +2,10 @@
 .RData
 csv/
 csv_FY/
+building_TAVG/
+page_data/
+tikz/
+weather_normalization/
 manual_image/
 plot_FY/
 plot_dynamic/
