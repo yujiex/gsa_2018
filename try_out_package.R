@@ -1132,6 +1132,32 @@ for (b in buildings) {
 devtools::load_all("get.noaa.weather")
 print(getMonthlyNormalHDD(s="GHCND:USC00503163")$data)
 
+buildings = readr::read_csv("~/Dropbox/gsa_2017/input/FY/region_case_study_to_plot.csv") %>%
+  distinct(`Building_Number`) %>%
+  .$`Building_Number`
+
+dfarea =
+  db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly",
+                                   cols=c("Building_Number", "Fiscal_Year", "Gross_Sq.Ft")) %>%
+  ## dplyr::filter(`Building_Number` %in% buildings) %>%
+  dplyr::group_by(`Building_Number`) %>%
+  dplyr::slice(1) %>%
+  dplyr::ungroup() %>%
+  {.}
+
+dfbuiltyear =
+  db.interface::read_table_from_db(dbname = "other_input", tablename="Entire_GSA_Building_Portfolio_input") %>%
+  dplyr::select(`Building Number`, `Year Built`) %>%
+  dplyr::rename(`Building_Number`=`Building Number`) %>%
+  {.}
+
+## get case study building year built
+  readr::read_csv("~/Dropbox/gsa_2017/input/FY/.csv") %>%
+  dplyr::left_join(readr::read_csv("~/Dropbox/gsa_2017/plot_FY_weather/html/table/action_saving.csv")) %>%
+  dplyr::left_join(dfbuiltyear) %>%
+  dplyr::left_join(dfarea) %>%
+  readr::write_csv("~/Dropbox/gsa_2017/page_data/fill_case_study_table.csv")
+
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 ## weather normalized page 10, use weather_normalize.R
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
