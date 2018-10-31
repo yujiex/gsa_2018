@@ -319,16 +319,23 @@ def plot_saving_aggyear(b, df, timerange_pre, timerange_post, theme, ax, cvrmse)
     # output data to design students
     pd.DataFrame({'month':x, 'actual':y, 'baseline':y_hat}).to_csv("~/Dropbox/gsa_2017/page_data/case_study/{}_{}_{}.csv".format(b, theme, time_in_filename), index=False)
     save_percent = round((sum(y_hat) - sum(y)) / sum(y_hat) * 100, 1)
+    # this is total of monthly mean, the one used in the saving chart
     after = sum(y)
     before = sum(y_hat)
+    print after, before
+    # this is total of all data
+    # after = sum(np.array(df[theme]))
+    # before = sum(np.array(df[theme + '_hat']))
+    # print after, before
     print save_percent, after, before, '################'
     def time_label(timerange):
         if 'before' in timerange or 'after' in timerange:
             spaceloc = timerange.find(' ')
-            return timerange[spaceloc + 1:spaceloc + 5]
+            year = int(timerange[spaceloc + 1:spaceloc + 5])
+            return '{}-{}'.format(year, year % 100 + 2)
         else:
             spaceloc = timerange.rfind(' ')
-            return "{} -- {}".format(timerange[:4], timerange[spaceloc + 1: spaceloc + 5])
+            return "{}--{}".format(timerange[:4], timerange[spaceloc + 3: spaceloc + 5])
     # line1, = ax.plot(x, y, c=c1, ls='-', lw=2, marker='o', markersize=5)
     line1, = ax.plot(x, y, c=c1, ls='-', lw=2, marker='o')
     # line2, = ax.plot(x, y_hat, c=c2, ls='--', lw=2, marker='o', markersize=5)
@@ -341,13 +348,17 @@ def plot_saving_aggyear(b, df, timerange_pre, timerange_post, theme, ax, cvrmse)
     # ya = ax.get_yaxis()
     # ya.set_major_locator(MaxNLocator(integer=True))
     # ax.set_ylabel("kBtu per square foot per month", fontsize=10)
+    legend_label_1 = time_label(timerange_post)
+    print(legend_label_1)
     ax.legend([line1, line2],
               # ['Actual {1} use in {0}'.format(time_label(timerange_post), lb.title_dict[theme]),
               #  '\n'.join(tw.wrap('{1} use given {2} habits but {0} weather'.format(time_label(timerange_post),
                                                                                    # lb.title_dict[theme],
                                                                                    # time_label(timerange_pre)),
-              ['Actual {1} {0}'.format(time_label(timerange_post), lb.title_dict[theme]),
-               '\n'.join(tw.wrap('Predicted {1} past 3 yr performance at {0} weather CVRMSE {2}'.format(time_label(timerange_post), lb.title_dict[theme], round(cvrmse, 2)), wrapwidth)
+              # ['Actual {1} {0}'.format(time_label(timerange_post), lb.title_dict[theme]),
+              #  '\n'.join(tw.wrap('Predicted {1} past 3 yr performance at {0} weather CVRMSE {2}'.format(time_label(timerange_post), lb.title_dict[theme], round(cvrmse, 2)), wrapwidth)
+              ['Average actual monthly {1} {0}'.format(time_label(timerange_post),lb.title_dict[theme]),
+               '\n'.join(tw.wrap('Predicted monthly {1} at 3yr prior perf. CVRMSE {2}'.format(time_label(timerange_post), lb.title_dict[theme], round(cvrmse, 2)), wrapwidth)
                                  # put legend below plot
                                  )], loc='upper center', bbox_to_anchor=(0.5, 1.15), prop={'size': 8}, ncol=2)
                                  # wrapwidth))], loc=9, bbox_to_anchor=(0.5, -0.1))
@@ -711,6 +722,8 @@ def plot_action_fromdb():
     # names = ['OK0063ZZ']
     df_to_plot = pd.read_csv("~/Dropbox/gsa_2017/input/FY/region_case_study_to_plot.csv")
     names = df_to_plot['Building_Number'].tolist()
+    names = names + ["NV0294ZZ", "IA0087ZZ"]
+    # names = ["DC0007ZZ", "NV0294ZZ", "IA0087ZZ"]
     for i, name in enumerate(names):
         print i, name, '222222222222222222222222222222'
         group = gr.get_group(name)
