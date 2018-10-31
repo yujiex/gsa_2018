@@ -217,8 +217,10 @@ df_all %>%
     facet_grid(. ~ new_old) +
     coord_flip() +
     geom_text(stat='count', aes(label=..count..)) +
-    ggtitle("comparing detail_level_ECM record count") +
+    ggtitle("comparing detail level ECM record count") +
+    ## ggtitle("comparing detail_level_ECM record count") +
     ylab("record count") +
+    xlab("detail level ECM")
     scale_fill_brewer(palette="Set2") +
     theme(axis.text.y = element_text(size=5)) +
     theme(legend.position="bottom") +
@@ -230,15 +232,17 @@ df_all %>%
     distinct(`Building_Number`, `high_level_ECM`, `detail_level_ECM`, `new_old`) %>%
     dplyr::arrange(high_level_ECM, detail_level_ECM) %>%
     dplyr::mutate(detail_level_ECM = factor(detail_level_ECM, unique(detail_level_ECM))) %>%
-    ggplot(aes(detail_level_ECM, fill=high_level_ECM)) +
+    dplyr::rename(`detail level ECM`=`detail_level_ECM`,
+                  `high level ECM`=`high_level_ECM`) %>%
+    ggplot(aes(`detail level ECM`, fill=`high level ECM`)) +
     geom_bar() +
     facet_grid(. ~ new_old) +
     coord_flip() +
-    ggtitle("comparing detail_level_ECM building count") +
+    ggtitle("comparing detail level ECM building count") +
     ylab("building count") +
     scale_fill_brewer(palette="Set2") +
     theme(legend.position="bottom") +
     theme(axis.text.y = element_text(size=5)) +
     theme()
-ggsave(file="writeup/images/building_cnt_newOldECM_detail_level.pdf",
+ggsave(file="writeup/images/building_cnt_newOldECM_detail_level.png",
        width=8, height=6, units="in")
