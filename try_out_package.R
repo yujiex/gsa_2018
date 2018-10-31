@@ -17,7 +17,28 @@ lat_lon_df = db.interface::get_lat_lon_df()
 devtools::load_all("db.interface")
 db.interface::main_db_build()
 
-df = db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly_with_type")
+ecm_program = db.interface::read_table_from_db(dbname="all", tablename="EUAS_ecm_program") %>%
+  {.}
+
+head(ecm_program)
+
+unique(ecm_program$`ECM_program`)
+
+dfregion = 
+  db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_monthly", cols = c("Building_Number", "Region_No.")) %>%
+  distinct(`Region_No.`, `Building_Number`) %>%
+  {.}
+
+db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_ecm", cols = c("Building_Number", "high_level_ECM", "Substantial_Completion_Date")) %>%
+  dplyr::filter(!is.na(`Substantial_Completion_Date`)) %>%
+    dplyr::left_join(dfregion, by="Building_Number") %>%
+    dplyr::filter(`Region_No.`==3) %>%
+    dplyr::distinct(`Building_Number`)
+
+db.interface::read_table_from_db(dbname="all", tablename="EUAS_monthly", cols=c("Building_Number", "Electric_(kBtu)", "Fiscal_Year", "Fiscal_Month")) %>%
+  dplyr::filter(`Building_Number`=="ND0018ZZ",
+                `Fiscal_Year`=="2017") %>%
+  print()
 
 study_set = get_buildings(year=2017, category=c("A", "I"))
 
