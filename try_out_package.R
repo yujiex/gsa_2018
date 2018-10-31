@@ -112,31 +112,45 @@ df_regional %>%
   ## ggplot2::facet_wrap(`type`~`Region_No.`, ncol=11) +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1),
                  legend.position = "bottom")
+
 ggplot2::ggsave("~/Dropbox/gsa_2017/plot_temp/normalized_eui_regional.png", width=10, height=5)
 
 ## plot for just region 5
-df_regional %>%
-  dplyr::filter(`Fiscal_Year` %in% c(2015, 2017), `Region_No.`==5) %>%
-  dplyr::mutate(`Region_No.`=factor(`Region_No.`, levels=as.character(1:11)),
-                `Fiscal_Year`=factor(as.integer(`Fiscal_Year`))) %>%
-  dplyr::group_by(`Region_No.`, `Fiscal_Year`) %>%
-  dplyr::mutate(`eui`=ifelse(`Fiscal_Year`==2015, first(`eui`), `eui`)) %>%
-  dplyr::ungroup() %>%
-  ## dplyr::mutate(`type`=recode(`type`, "actual"="EUAS", "normalized_only_good"="normalized w/ credits only",
-  ##                             "normalized_fill_na"="normalized w/debit + credit")) %>%
-  ## dplyr::mutate(`type`=factor(`type`, levels=c("EUAS", "normalized w/ credits only", "normalized w/debit + credit"))) %>%
-  ggplot2::ggplot(ggplot2::aes(x=Fiscal_Year, y=`eui`, fill=`type`, label=sprintf("%.0f", `eui`))) +
-  ggplot2::geom_bar(stat="identity", position="dodge") +
-  ggplot2::scale_fill_brewer(palette="Set2") +
-  ggplot2::geom_text(vjust=-1) +
-  ggplot2::xlab("Fiscal Year") +
-  ggplot2::ylab("GSF weighted average EUI") +
-  ggplot2::expand_limits(y=85) +
-  ggplot2::facet_wrap(.~`type`, ncol=11) +
-  ## ggplot2::facet_wrap(`type`~`Region_No.`, ncol=11) +
-  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1),
-                 legend.position = "bottom", text = ggplot2::element_text(size=10))
-ggplot2::ggsave("~/Dropbox/gsa_2017/plot_temp/normalized_eui_regional_5.png", width=5, height=5)
+for (region in 1:11) {
+  print(region)
+  df_plot <- df_regional %>%
+    dplyr::filter(`Fiscal_Year` %in% c(2015, 2017), `Region_No.`==region) %>%
+    dplyr::mutate(`Region_No.`=factor(`Region_No.`, levels=as.character(1:11)),
+                  `Fiscal_Year`=factor(as.integer(`Fiscal_Year`))) %>%
+    dplyr::group_by(`Region_No.`, `Fiscal_Year`) %>%
+    dplyr::mutate(`eui`=ifelse(`Fiscal_Year`==2015, first(`eui`), `eui`)) %>%
+    dplyr::ungroup() %>%
+    {.}
+  percentSaving <- df_plot %>%
+    dplyr::arrange(`Fiscal_Year`, `type`) %>%
+    dplyr::group_by(`type`) %>%
+    dplyr::summarise(`percent saving`=(first(`eui`)-last(`eui`)) / first(`eui`) * 100) %>%
+    dplyr::ungroup() %>%
+    .$`percent saving`
+  df_plot %>%
+    ## dplyr::mutate(`type`=recode(`type`, "actual"="EUAS", "normalized_only_good"="normalized w/ credits only",
+    ##                             "normalized_fill_na"="normalized w/debit + credit")) %>%
+    ## dplyr::mutate(`type`=factor(`type`, levels=c("EUAS", "normalized w/ credits only", "normalized w/debit + credit"))) %>%
+    ggplot2::ggplot(ggplot2::aes(x=Fiscal_Year, y=`eui`, label=sprintf("%.0f", `eui`))) +
+    ## ggplot2::ggplot(ggplot2::aes(x=Fiscal_Year, y=`eui`, fill=`type`, label=sprintf("%.0f", `eui`))) +
+    ggplot2::geom_bar(stat="identity", position="dodge", fill="#458676") +
+    ## ggplot2::scale_fill_manual(values=c("#66C2A5", "#8DA0CB", "#FC8D62")) +
+    ## ggplot2::scale_fill_brewer(palette="Set2") +
+    ggplot2::geom_text(vjust=-1, fontface = "bold") +
+    ggplot2::xlab(paste0("Fiscal Year\n\nsaving percent: ", paste(sprintf("%.1f%%", percentSaving), collapse=" "))) +
+    ggplot2::ylab("GSF weighted average EUI") +
+    ggplot2::expand_limits(y=90) +
+    ggplot2::facet_wrap(.~`type`, ncol=11) +
+    ## ggplot2::facet_wrap(`type`~`Region_No.`, ncol=11) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1),
+                  legend.position = "bottom", text = ggplot2::element_text(size=10))
+  ggplot2::ggsave(sprintf("~/Dropbox/gsa_2017/plot_temp/normalized_eui_regional_%s.png", region), width=5, height=5)
+}
 
 ## national
 df_national <- df %>%
