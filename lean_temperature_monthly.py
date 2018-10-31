@@ -603,9 +603,9 @@ def lean_temperature_fromdb(b, s, n_par_elec, timerange, plotPoint=False, *args,
     # plot_lean_one(b, s, "base_gas", gas=d_gas, elec=d_elec)
     # (xd_elec, yd_elec, xd_gas, yd_gas, base_elec, base_gas) = plot_lean_one(b, s, "combined", gas=d_gas, elec=d_elec)
     if d_gas != None:
-        plot_lean_one_fromdb(b, s, "gas", timerange, plotPoint=plotPoint, gas=d_gas, y_upper=60)
+        result_gas = plot_lean_one_fromdb(b, s, "gas", timerange, plotPoint=plotPoint, gas=d_gas, y_upper=60)
     if d_elec != None:
-        plot_lean_one_fromdb(b, s, "elec", timerange, plotPoint=plotPoint, elec=d_elec, y_upper=30)
+        result_elec = plot_lean_one_fromdb(b, s, "elec", timerange, plotPoint=plotPoint, elec=d_elec, y_upper=30)
     # plot_lean_one(b, s, "base_elec", gas=d_gas, elec=d_elec,
     #               y_upper=25)
     # plot_lean_one(b, s, "base_gas", gas=d_gas, elec=d_elec, y_upper=5)
