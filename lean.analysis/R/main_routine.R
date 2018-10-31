@@ -394,6 +394,7 @@ stacked_fit_plot <- function(region=NULL, buildingType=NULL, year=NULL, category
     ## this assumes other region and buildingType etc. variables have proper values
     if (is.null(buildingNumber)) {
       buildings = db.interface::get_buildings(region=region, buildingType=buildingType, year=year, category=category)
+      print(buildings)
     } else {
       buildings = c(buildingNumber)
     }
@@ -419,8 +420,9 @@ stacked_fit_plot <- function(region=NULL, buildingType=NULL, year=NULL, category
       }
       y <- df[[plot_col]]
       print(head(y))
-      if (sum(y == 0) > 32/36) {
-        print(sprintf("too man zero y values for building %s", building))
+      print(sum(y == 0))
+      if (sum(y == 0)/length(y) > 32/36) {
+        print(sprintf("too many zero y values for building %s", building))
         next
       }
       x <- df$`wt_temperatureFmonth`
