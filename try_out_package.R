@@ -1073,11 +1073,36 @@ print("asdfasdf")
 
 
 
+devtools::load_all("roiForECM")
+
+building = "FL0061ZZ"
+getAvgTemp(b=building, path="~/Dropbox/gsa_2017/roiForECM/data-raw")
 
 devtools::load_all("roiForECM")
 roiForECM::roiBuilding(building="UT0032ZZ")
 ## roiForECM::roiBuilding(building="IN1703ZZ")
 ## roiForECM::add_lean(building="IN1703ZZ")
+
+## compile results of the 10 buildings in the roi calculation into one table
+dfecm =
+  db.interface::read_table_from_db(dbname="all", tablename="EUAS_ecm",
+                                   cols=c("Building_Number", "ECM_combined_header",
+                                          "Substantial_Completion_Date")) %>%
+  dplyr::filter(!is.na(`Substantial_Completion_Date`)) %>%
+  dplyr::rename(`building`=`Building_Number`, `action_time`=`Substantial_Completion_Date`) %>%
+  dplyr::mutate(`action_time`=as.Date(`action_time`)) %>%
+  {.}
+head(dfecm)
+buildings = c("DC0028ZZ", "LA0098ZZ", "NY0300ZZ", "NY0351ZZ", "NY0399ZZ", "SC0028ZZ", "NC0028ZZ",
+              "FL0061ZZ", "OK0063ZZ", "UT0032ZZ")
+acc=NULL
+for (b in buildings) {
+  df = readr::read_csv(sprintf("~/Dropbox/gsa_2017/roiForECM/data-raw/roi_result/%s.csv", b))
+  acc <- rbind(acc, df)
+}
+acc %>%
+  left_join(dfecm, by=c("building", "action_time")) %>%
+  readr::write_csv("~/Dropbox/gsa_2017/roiForECM/data-raw/roi_for_10_buildings.csv")
 
 library("dplyr")
 
