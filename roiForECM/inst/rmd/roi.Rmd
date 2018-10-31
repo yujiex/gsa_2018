@@ -7,7 +7,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(message = FALSE, warning=FALSE)
 ```
 
 ## Introduction
@@ -18,13 +18,25 @@ The following information are needed for the retrofit ROI calculation: retrofit 
 
 Following we'll demonstrate for a single building how the ROI analysis is conducted.
 
-The building is "XXXXXXXX" (placeholder)
+<!-- replace this -->
+The building is "UT0032ZZ"
 ```{r ecm, echo=FALSE}
 # building = "UT0032ZZ"
 # building = "OK0063ZZ"
 # building = "IL0302ZZ"
 # building = "IN1703ZZ"
-building = "GA0138ZZ"
+# building = "GA0138ZZ"
+# 10 ROI ---------------
+# building = "DC0028ZZ"
+# building = "LA0098ZZ"
+# building = "NY0300ZZ"
+# building = "NY0351ZZ"
+# building = "NY0399ZZ"
+# building = "SC0028ZZ"
+# building = "NC0028ZZ"
+# building = "FL0061ZZ"
+# building = "OK0063ZZ"
+building = "UT0032ZZ"
 library("devtools")
 library("dplyr")
 #getwd()
