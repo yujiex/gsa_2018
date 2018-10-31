@@ -72,10 +72,16 @@ df %>%
 df = readr::read_csv("temp/cmp_normalized_actual_671building.csv")
 
 head(df)
-## regional
+thresh = 0.05
+
 df_regional <-
   df %>%
-  dplyr::select(`Building_Number`, `Fiscal_Year`, `Gross_Sq.Ft`, `Region_No.`, `EUAS Site Energy (kBtu)`, `normalized w/ credits only`, `normalized w/debit + credits`) %>%
+  dplyr::mutate(`percent_diff`=(`Site Energy Use (kBtu)` - `EUAS Site Energy (kBtu)`) / `EUAS Site Energy (kBtu)`) %>%
+  dplyr::mutate(`percent_diff`=ifelse(is.na(`percent_diff`), 0, `percent_diff`)) %>%
+  dplyr::select(`Building_Number`, `Fiscal_Year`, `Gross_Sq.Ft`, `Region_No.`, `EUAS Site Energy (kBtu)`, `normalized w/ credits only`, `normalized w/debit + credits`, `percent_diff`) %>%
+  dplyr::mutate(`normalized w/ credits only` = ifelse(`percent_diff` > thresh, `EUAS Site Energy (kBtu)`, `normalized w/ credits only`)) %>%
+  dplyr::mutate(`normalized w/debit + credits` = ifelse(`percent_diff` > thresh, `EUAS Site Energy (kBtu)`, `normalized w/debit + credits`)) %>%
+  dplyr::select(-`percent_diff`) %>%
   tidyr::gather(`type`, `kbtu`, `EUAS Site Energy (kBtu)`:`normalized w/debit + credits`) %>%
   na.omit() %>%
   dplyr::group_by(`Fiscal_Year`, `Region_No.`, `type`) %>%
