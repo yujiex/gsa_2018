@@ -95,7 +95,8 @@ df_regional %>%
                 `Fiscal_Year`=factor(as.integer(`Fiscal_Year`))) %>%
   dplyr::select(-`kbtu`, -`Gross_Sq.Ft`) %>%
   tidyr::spread(`type`, `eui`) %>%
-  readr::write_csv("~/Dropbox/gsa_2017/csv_FY/db_build_temp_csv/cmp_table_normalize_1617_regional.csv")
+  ## readr::write_csv("~/Dropbox/gsa_2017/temp/cmp_table_normalize_1617_regional.csv")
+  readr::write_csv("~/Dropbox/gsa_2017/temp/cmp_table_normalize_1617_regional_overwrite_highPMdiff.csv")
 
 df_regional %>%
   dplyr::filter(`Fiscal_Year` %in% c(2015, 2017)) %>%
@@ -186,7 +187,7 @@ df %>%
 
 db.interface::dump_static()
 
-db.interface::get_all_tables(dbname="all")
+db.interface::get_all_tables(dbname="other_input")
 
 db.interface::read_table_from_db(dbname = "all", tablename = "EUAS_monthly", cols=c("Building_Number", "Fiscal_Year", "Fiscal_Month", "datacenter_sqft", "lab_sqft", "Gross_Sq.Ft")) %>%
   dplyr::filter(`datacenter_sqft` + `lab_sqft` > `Gross_Sq.Ft`) %>%
@@ -714,12 +715,13 @@ stacked_fit_plot(buildingNumber = "MO0039ZZ", plotType="gas",
 
 devtools::load_all("lean.analysis")
 fontSizeStackLean = 10
-region="5"
+region="6"
 ## lowRange = NULL
 ## highRange = NULL
 plotXLimits = NULL
 ## for source eui
-cvrmse_upper = 0.35
+cvrmse_upper = 1e5
+## cvrmse_upper = 0.35
 if (region == "1") {
   yupper = 20
   plotYLimits = c(-0.5, yupper)
@@ -846,6 +848,7 @@ stacked_fit_plot(region=region, buildingType="Office", year=2017,
                  plot_col="eui_elec_source",
                  majorgrid=majorgrid, minorgrid=minorgrid, cvrmse_upper=cvrmse_upper)
 
+devtools::load_all("lean.analysis")
 stacked_fit_plot(region=region, buildingType="Office", year=2017,
                  category=c("I", "A"), plotType="gas",
                  method=lean.analysis::piecewise_linear,
@@ -854,7 +857,7 @@ stacked_fit_plot(region=region, buildingType="Office", year=2017,
                  legendloc="right", vline_position_elec=vline_elec, vline_position_gas=vline_gas,
                  ## plot_col="eui_heating_source", majorgrid=majorgrid,
                  plot_col="eui_gas_source", majorgrid=majorgrid,
-                 minorgrid=minorgrid, cvrmse_upper=cvrmse_upper)
+                 minorgrid=minorgrid, cvrmse_upper=cvrmse_upper, debugFlag = FALSE)
 
 fontSizeStackLean = 10
 region = "1"
@@ -1010,14 +1013,14 @@ stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I"
 
 devtools::load_all("lean.analysis")
 ## plot lean image
-for (region in 5:5) {
+for (region in c(1:4, 6:11)) {
   plot_regional (region=region, suffix="source_heating_cooling", elec_col="eui_cooling_source", gas_col="eui_heating_source")
   ## plot_regional (region=region, suffix="source_electric_gas", elec_col="eui_elec_source", gas_col="eui_gas_source")
 }
 
 ## copy the top 20 images to page_data using their ranks as name
 devtools::load_all("lean.analysis")
-for (regionnum in 5:5) {
+for (regionnum in c(1:4, 6:11)) {
   copy_image_rename_with_rank (region=regionnum, suffix="source_heating_cooling", plotType="elec", pagedatakey="cooling")
   copy_image_rename_with_rank (region=regionnum, suffix="source_heating_cooling", plotType="gas", pagedatakey="heating")
   copy_image_rename_with_rank (region=regionnum, suffix="source_heating_cooling", plotType="base", pagedatakey="baseload")
