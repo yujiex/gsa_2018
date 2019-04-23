@@ -25,6 +25,10 @@ get_lat_lon_df <- function(path, building) {
       tibble::as_data_frame() %>%
       {.}
   }
+  if (nrow(lat_lon_df) == 0) {
+    print("cannot find building's lat lon")
+    return(NULL)
+  }
   lat_lon_df <- lat_lon_df %>%
     dplyr::mutate(`latlng`=gsub("\\[|\\]", "", `latlng`)) %>%
     dplyr::rowwise() %>%
