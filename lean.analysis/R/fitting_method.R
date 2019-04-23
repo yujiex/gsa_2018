@@ -208,6 +208,12 @@ plot_fit <- function(yElec, yGas, x, resultElec, resultGas, plotType, id, method
                      rep(0, upperElec - lowerElec))
     yElecHeatingFitted = yElecFitted[which(x < yElecSeq[lowerElec])]
     yElecHeatingFitted = c(yElecHeatingFitted, rep(0, 36 - length(yElecHeatingFitted)))
+  } else if (yElecSeq[lowerElec] > yElecSeq[upperElec]) {
+    lowerElec = upperElec
+    yElecHeating = c((yElecSeq - resultElec$baseload)[1:lowerElec],
+                     rep(0, upperElec - lowerElec))
+    yElecHeatingFitted = yElecFitted[which(x < yElecSeq[lowerElec])]
+    yElecHeatingFitted = c(yElecHeatingFitted, rep(0, 36 - length(yElecHeatingFitted)))
   }
   ## if ((resultGas$b2 > 0) && ((min(x) < resultGas$argmin) && (resultGas$argmin < max(x)))) {
   ##   upperGas = max(which(xseq < resultGas$argmin))
