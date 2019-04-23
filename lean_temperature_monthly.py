@@ -578,6 +578,7 @@ def lean_temperature_fromdb(b, s, n_par_elec, timerange, plotPoint=False, *args,
                                           'eui_elec', timerange,
                                           args[0])
     else:
+        print b, s, timerange
         d_gas = piecewise_reg_one_fromdb(b, s, 2, 'eui_gas', True,
                                          timerange)
         d_elec = piecewise_reg_one_fromdb(b, s, n_par_elec, 'eui_elec',
@@ -602,16 +603,16 @@ def lean_temperature_fromdb(b, s, n_par_elec, timerange, plotPoint=False, *args,
     # plot_lean_one(b, s, "base_elec", gas=d_gas, elec=d_elec)
     # plot_lean_one(b, s, "base_gas", gas=d_gas, elec=d_elec)
     # (xd_elec, yd_elec, xd_gas, yd_gas, base_elec, base_gas) = plot_lean_one(b, s, "combined", gas=d_gas, elec=d_elec)
-    if d_gas != None:
-        result_gas = plot_lean_one_fromdb(b, s, "gas", timerange, plotPoint=plotPoint, gas=d_gas, y_upper=60)
-    if d_elec != None:
-        result_elec = plot_lean_one_fromdb(b, s, "elec", timerange, plotPoint=plotPoint, elec=d_elec, y_upper=30)
-    # plot_lean_one(b, s, "base_elec", gas=d_gas, elec=d_elec,
-    #               y_upper=25)
-    # plot_lean_one(b, s, "base_gas", gas=d_gas, elec=d_elec, y_upper=5)
     result = None
     if (d_gas != None) and (d_elec != None):
         result = plot_lean_one_fromdb(b, s, "combined", timerange, plotPoint=plotPoint, gas=d_gas, elec=d_elec, y_upper=15, action=action)
+    elif d_gas != None:
+        result = plot_lean_one_fromdb(b, s, "combined", timerange, plotPoint=plotPoint, gas=d_gas, elec=None, y_upper=60)
+    elif d_elec != None:
+        result = plot_lean_one_fromdb(b, s, "combined", timerange, plotPoint=plotPoint, gas=None, elec=d_elec, y_upper=30)
+    # plot_lean_one(b, s, "base_elec", gas=d_gas, elec=d_elec,
+    #               y_upper=25)
+    # plot_lean_one(b, s, "base_gas", gas=d_gas, elec=d_elec, y_upper=5)
     if result == None:
         return None
     if len(result) > 3:
@@ -777,8 +778,10 @@ def piecewise_reg_one_fromdb(b, s, n_par, theme, cuttail, timerange=None, *args)
         yearcol, timefilter = util.get_time_filter(timerange)
         df['in_range'] = df[yearcol].map(timefilter)
         df = df[df['in_range']]
-    if len(df) > 36 and cuttail:
+    if (len(df) > 36 and cuttail and ("before" in timerange)):
         df = df.tail(n=36)
+    if (len(df) > 36 and cuttail and ("after" in timerange)):
+        df = df.head(n=36)
     if len(df) < 6:
         print 'not enough data points in {0}'.format(timerange)
         return None
