@@ -11,12 +11,16 @@
 #' @export
 #' @examples
 #' getAvgTemp(building="UT0032ZZ", start_str="2012-01-05", end_str="2015-01-30")
-getAvgTemp <- function(b, path=NULL) {
+getAvgTemp <- function(b, path=NULL, resolution="daily") {
   dfbuilding = downloadWeatherStartEnd %>%
     dplyr::filter(`Building_Number`==b) %>%
     {.}
   start_str = as.character(dfbuilding$start)
   end_str = as.character(dfbuilding$end)
   v = "TAVG"
-  getWeightedDaily(b=b, start_str=start_str, end_str=end_str, v=v, path=path, radius=500)
+  if (resolution == "hourly") {
+    getWeightedHourly(b=b, start_str=start_str, end_str=end_str, v=v, path=path, radius=500)
+  } else {
+    getWeightedDaily(b=b, start_str=start_str, end_str=end_str, v=v, path=path, radius=500)
+  }
 }
