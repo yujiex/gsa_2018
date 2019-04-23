@@ -1,0 +1,90 @@
+---
+title: "Rule start stop and electricity plot"
+author: "Yujie Xu"
+date: "3/22/2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+A simplified ridge regression model is fitted
+
+$$Electricity_{t} = \beta_0 + \sum_{c, r}\beta_{c,r}(\text{# component of type c with rule r triggered}) + \gamma \text{temperature}_t$$
+
+# Occupied period
+
+```{r occ, fig.height=3}
+library("dplyr")
+library("ggplot2")
+library("DBI")
+library("pipeR")
+
+library("glmnet")
+
+energytype = "kWh Del Int"
+## restrict to summer
+gsalink_buildings 
+time.min.str="2018-06-01"
+time.max.str="2018-09-01"
+
+# change this to the list of buildings you want to analyze
+gsalink_buildings = c("TN0088ZZ")
+
+set.seed(0)
+
+fitting <- function(method, y, x) {
+  if (nrow(df) > 0) {
+    ## this usually return NA's for some coef, meaning there are colinear input features
+    if (method == "linear") {
+      occ_out = lm(y ~ x)
+      print(summary(occ_out))
+      fitted.values = fitted.values(occ_out)
+      print(head(fitted.values))
+      print(sum(fitted.values))
+      newdata = x.to.predict %>%
+        tibble:::as.tibble()
+      print(sum(predicted.values))
+    } else if (method == "ridge") {
+      lambdas <- 10^seq(3, -2, by = -.1)
+      cv_fit <- cv.glmnet(x, y, alpha = 0, lambda = lambdas)
+      print(coef(cv_fit, s="lambda.min") %>>%
+            `[`(rownames(.) != "(Intercept)",,drop=FALSE) %>>%
+            round(4-ceiling(max(log10(abs(.)))))
+            )
+    }
+  }
+}
+
+method = "ridge"
+component = ""
+# change to your path
+filepath = "../data-raw"
+for (b in gsalink_buildings) {
+  df = readr::read_csv(sprintf("%s/building_rule_energy_weather/%s_%s_2018.csv",
+                               filepath, b, energytype)) %>%
+    tibble::as.tibble() %>%
+    {.}
+  if (nrow(df) == 0) {
+    next
+  }
+  print(b)
+  df_occ = df %>%
+    dplyr::filter(is.occupied == "Occupied") %>%
+    dplyr::select(-is.occupied, -hour, -day) %>%
+    {.}
+  time = df_occ$Timestamp
+  y = df_occ[[energytype]]
+  x = df_occ %>%
+    dplyr::select(-!!rlang::sym(energytype), -Timestamp) %>%
+    as.matrix()
+  result = fitting(method, y, x)
+}
+```
+
+After getting the served area, we can fit another model with percent area as follows
+
+$$Electricity_{t} = \beta_0 + \sum_{c, r}\beta_{c,r}(\text{percent area for component of type c with rule r triggered}) + \gamma \text{temperature}_t$$

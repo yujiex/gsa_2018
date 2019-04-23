@@ -1,0 +1,225 @@
+---
+title: "skysparkEDA_0103"
+author: "Yujie Xu"
+date: "1/3/2019"
+output:
+  powerpoint_presentation: default
+  ioslides_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+## Tasks completed
+
+- Finished downloading 2018 sparks rules data for all buildings
+- Summary statistics of the above
+
+---
+
+## Presence of rule data
+
+:::::::::::::: {.columns}
+::: {.column}
+According to the skyspark interface, there are 153 buildings with GSALink. Among them 89 buildings have spark rules triggered in 2018.
+:::
+::: {.column}
+```{r buildingSet}
+library("dplyr")
+library("readxl")
+library("ggplot2")
+library("purrr")
+gsalink_building =
+  readxl::read_excel("../data-raw/list_of_gsalink_buildings.xlsx",
+                     sheet=2) %>%
+  tibble::as.tibble() %>%
+  dplyr::mutate(`building`=substr(`spark_entry`, 1, 8)) %>%
+  dplyr::select(-`spark_entry`) %>%
+  {.}
+to_print = gsalink_building %>%
+  dplyr::group_by(`status`) %>%
+  dplyr::summarise(`building count` = n()) %>%
+  {.}
+knitr::kable(to_print)
+```
+:::
+::::::::::::::
+
+---
+
+# 2018 Rule data by building
+
+---
+
+<!-- result='asis' makes kable print look normal -->
+```{r rule, results='asis'}
+library("dplyr")
+library("ggplot2")
+dfrule = readr::read_csv("../data-raw/rule_summary.csv") %>%
+  tibble::as.tibble() %>%
+  {.}
+dfname = readr::read_csv("../data-raw/downloaded_building_name.csv") %>%
+  dplyr::select(`Building_Number`, `name_last`) %>%
+  dplyr::rename(`building`=`Building_Number`, `name`=`name_last`) %>%
+  {.}
+dfrule <- dfrule %>%
+  dplyr::left_join(dfname, by="building") %>%
+  {.}
+sumByBuilding = dfrule %>%
+  dplyr::group_by(`building`) %>%
+  summarise(`# rules`=n(), count=sum(count),
+            `total cost`=sum(Cost),
+            `total duration`=sum(`duration_hour`)) %>%
+  dplyr::ungroup() %>%
+  {.}
+rowPerPage = 12
+numPages = floor(nrow(sumByBuilding) / rowPerPage)
+for (i in 1:(numPages)) {
+  tmp <- sumByBuilding %>%
+    dplyr::arrange(desc(`total cost`)) %>%
+    slice((i * rowPerPage):((i + 1) * rowPerPage)) %>%
+    knitr::kable(format.args=list(big.mark = ','), digits = 1) %>%
+    {.}
+  print(tmp)
+}
+```
+
+# top ranking rules based on three criteria
+
+## 2018 Rule data top 10 by number of buildings affected
+
+```{r ruleMostBuilding}
+sumByRule = dfrule %>%
+  dplyr::group_by(`rule`) %>%
+  summarise(`# buildings`=n(), count=sum(count), `total cost`=sum(Cost), `total duration`=sum(`duration_hour`)) %>%
+  dplyr::ungroup() %>%
+  {.}
+top10 = sumByRule %>%
+  dplyr::select(`rule`, `# buildings`) %>%
+  dplyr::arrange(desc(`# buildings`)) %>%
+  head(n=10) %>%
+  {.}
+top10 %>%
+  knitr::kable(format.args=list(big.mark = ','))
+```
+
+## 2018 Rule data top 10 by total duration (hour)
+
+```{r ruleMostDuration}
+top10 = sumByRule %>%
+  dplyr::select(`rule`, `total duration`) %>%
+  dplyr::arrange(desc(`total duration`)) %>%
+  head(n=10) %>%
+  {.}
+top10 %>%
+  knitr::kable(format.args=list(big.mark = ','))
+```
+
+## Most affected buildings
+
+```{r top5, results='asis'}
+rules = top10$rule[1:5]
+for (r in rules) {
+  tmp <- dfrule %>%
+    dplyr::filter(rule == r) %>%
+    dplyr::arrange(desc(`duration_hour`)) %>%
+    dplyr::select(`building`, `name`, `rule`, `duration_hour`) %>%
+    head(n=5) %>%
+    knitr::kable(format.args=list(big.mark = ','), digits = 1) %>%
+    {.}
+  print(tmp)
+}
+```
+
+## 2018 Rule data top 10 by highest cost
+
+```{r ruleMostCost}
+top10 <- sumByRule %>%
+  dplyr::select(`rule`, `total cost`) %>%
+  dplyr::arrange(desc(`total cost`)) %>%
+  head(n=10) %>%
+  {.}
+top10 %>%
+  knitr::kable(format.args=list(big.mark = ','))
+```
+
+## Most affected buildings
+
+```{r top5cost, results='asis'}
+rules <- top10$rule[1:5]
+for (r in rules) {
+  tmp <- dfrule %>%
+    dplyr::filter(rule == r) %>%
+    dplyr::arrange(desc(`Cost`)) %>%
+    dplyr::select(`building`, `name`, `rule`, `Cost`) %>%
+    head(n=5) %>%
+    knitr::kable(format.args=list(big.mark = ','), digits = 1) %>%
+    {.}
+  print(tmp)
+}
+```
+
+# Rankings excluding sensor or data related rules: "Missing Data", "Sensor Out Of Range", "Sensor Failure", and "Bad Energy Data"
+
+## 2018 Rule data top 10 by number of buildings affected
+
+```{r ruleMostBuildingFilter}
+rulesToExclude = c("Missing Data", "Sensor Out Of Range", "Sensor Failure", "Bad Energy Data")
+top10_nbuilding = sumByRule %>%
+  dplyr::select(`rule`, `# buildings`) %>%
+  dplyr::filter(!(`rule` %in% rulesToExclude)) %>%
+  dplyr::arrange(desc(`# buildings`)) %>%
+  head(n=10) %>%
+  {.}
+top10_nbuilding %>%
+  knitr::kable(format.args=list(big.mark = ','))
+```
+
+## 2018 Rule data top 10 by total duration (excluding data error)
+
+```{r ruleMostDurationFilter}
+top10_dur = sumByRule %>%
+  dplyr::select(`rule`, `total duration`) %>%
+  dplyr::filter(!(`rule` %in% rulesToExclude)) %>%
+  dplyr::arrange(desc(`total duration`)) %>%
+  head(n=10) %>%
+  {.}
+top10_dur %>%
+  knitr::kable(format.args=list(big.mark = ','))
+```
+
+## 2018 Rule data top 10 by highest cost (excluding data error)
+
+```{r ruleMostCostFilter}
+top10_cost = sumByRule %>%
+  dplyr::select(`rule`, `total cost`) %>%
+  dplyr::filter(!(`rule` %in% rulesToExclude)) %>%
+  dplyr::arrange(desc(`total cost`)) %>%
+  head(n=10) %>%
+  {.}
+top10_cost %>%
+  knitr::kable(format.args=list(big.mark = ','))
+```
+
+# 20 Rules show up in at least one of the criteria, and 3 Rules show up in all three criteria
+
+## 20 Rules show up in at least one of the criteria
+
+```{r distinctRules, size='tiny'}
+list(top10_nbuilding$rule, top10_dur$rule, top10_cost$rule) %>%
+  reduce(union) %>%
+  sort() %>%
+  print()
+```
+
+## 3 Rules show up in all three criteria
+
+```{r commonRules}
+list(top10_nbuilding$rule, top10_dur$rule, top10_cost$rule) %>%
+  reduce(intersect) %>%
+  sort() %>%
+  print()
+```

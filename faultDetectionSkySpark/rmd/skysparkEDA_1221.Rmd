@@ -1,0 +1,230 @@
+---
+title: "spark data EDA"
+author: "Yujie"
+date: "12/21/2018"
+header-includes:
+  \usepackage{array}
+  \usepackage{booktabs}
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+## Tasks completed
+
+- Finished downloading 2018 sparks rules data for all buildings
+- Summary statistics of the above
+
+## Presence of rule data
+
+According to the skyspark interface, there are 153 buildings with GSALink. Among them 89 buildings have spark rules triggered in 2018.
+
+\center
+```{r buildingSet}
+library("dplyr")
+library("readxl")
+library("ggplot2")
+library("purrr")
+gsalink_building =
+  readxl::read_excel("../data-raw/list_of_gsalink_buildings.xlsx",
+                     sheet=2) %>%
+  tibble::as.tibble() %>%
+  dplyr::mutate(`building`=substr(`spark_entry`, 1, 8)) %>%
+  dplyr::select(-`spark_entry`) %>%
+  {.}
+gsalink_building %>%
+  dplyr::group_by(`status`) %>%
+  dplyr::summarise(`building count` = n()) %>%
+  knitr::kable("latex", booktabs = T, format.args=list(big.mark = ','))
+```
+
+# The following 6 pages show the summary of the spark rule data summary of the downloaded 89 buildings
+
+## 2018 Rule data by building
+
+\center
+\small
+```{r rule}
+library("dplyr")
+library("ggplot2")
+dfrule = readr::read_csv("../data-raw/rule_summary_with_na.csv") %>%
+  tibble::as.tibble() %>%
+  {.}
+sumByBuilding = dfrule %>%
+  dplyr::group_by(`building`) %>%
+  summarise(`# rules`=n(), count=sum(count),
+            `total cost`=sum(Cost),
+            `total duration`=sum(`duration_hour`)) %>%
+  dplyr::ungroup() %>%
+  {.}
+sumByBuilding %>%
+  dplyr::arrange(desc(`total cost`)) %>%
+  head(n=15) %>%
+  knitr::kable("latex", booktabs = T, format.args=list(big.mark = ','), digits = 1)
+```
+\normalsize
+
+## 2018 Rule data by building
+
+\center
+\small
+```{r rule2}
+sumByBuilding %>%
+  dplyr::arrange(desc(`total cost`)) %>%
+  slice(16:30) %>%
+  knitr::kable("latex", booktabs = T, format.args=list(big.mark = ','), digits = 1)
+```
+\normalsize
+
+## 2018 Rule data by building
+
+\center
+\small
+```{r rule3}
+sumByBuilding %>%
+  dplyr::arrange(desc(`total cost`)) %>%
+  slice(31:45) %>%
+  knitr::kable("latex", booktabs = T, format.args=list(big.mark = ','), digits = 1)
+```
+\normalsize
+
+## 2018 Rule data by building
+
+\center
+\small
+```{r rule4}
+sumByBuilding %>%
+  dplyr::arrange(desc(`total cost`)) %>%
+  slice(46:60) %>%
+  knitr::kable("latex", booktabs = T, format.args=list(big.mark = ','), digits = 1)
+```
+\normalsize
+
+## 2018 Rule data by building
+
+\center
+\small
+```{r rule5}
+sumByBuilding %>%
+  dplyr::arrange(desc(`total cost`)) %>%
+  slice(61:75) %>%
+  knitr::kable("latex", booktabs = T, format.args=list(big.mark = ','), digits = 1)
+```
+\normalsize
+
+## 2018 Rule data by building
+
+\center
+\small
+```{r rule6}
+sumByBuilding %>%
+  dplyr::arrange(desc(`total cost`)) %>%
+  slice(76:n()) %>%
+  knitr::kable("latex", booktabs = T, format.args=list(big.mark = ','), digits = 1)
+```
+\normalsize
+
+# The following 3 pages show the top ranking rules based on three different criteria: the number of distinct buildings being affected by the rule, total duration, total cost estimated in the skyspark system
+
+## 2018 Rule data top 10 by # buildings affected
+
+```{r ruleMostBuilding}
+sumByRule = dfrule %>%
+  dplyr::group_by(`rule`) %>%
+  summarise(`# buildings`=n(), count=sum(count), `total cost`=sum(Cost), `total duration`=sum(`duration_hour`)) %>%
+  dplyr::ungroup() %>%
+  {.}
+sumByRule %>%
+  dplyr::select(`rule`, `# buildings`) %>%
+  dplyr::arrange(desc(`# buildings`)) %>%
+  head(n=10) %>%
+  knitr::kable("latex", booktabs = T)
+```
+
+## 2018 Rule data top 10 by total duration (hour)
+
+```{r ruleMostDuration}
+sumByRule %>%
+  dplyr::select(`rule`, `total duration`) %>%
+  dplyr::arrange(desc(`total duration`)) %>%
+  head(n=10) %>%
+  knitr::kable("latex", booktabs = T, format.args=list(big.mark = ','), digits = 1)
+```
+
+## 2018 Rule data top 10 by highest cost
+
+```{r ruleMostCost}
+sumByRule %>%
+  dplyr::select(`rule`, `total cost`) %>%
+  dplyr::arrange(desc(`total cost`)) %>%
+  head(n=10) %>%
+  knitr::kable("latex", booktabs = T, format.args=list(big.mark = ','), digits = 1)
+```
+
+# The following three pages display the rankings using the same three criteria above but excluding sensor or data related rules: "Missing Data", "Sensor Out Of Range", "Sensor Failure", and "Bad Energy Data"
+
+## 2018 Rule data top 10 by # buildings affected (excluding data error)
+
+```{r ruleMostBuildingFilter}
+rulesToExclude = c("Missing Data", "Sensor Out Of Range", "Sensor Failure", "Bad Energy Data")
+top10_nbuilding = sumByRule %>%
+  dplyr::select(`rule`, `# buildings`) %>%
+  dplyr::filter(!(`rule` %in% rulesToExclude)) %>%
+  dplyr::arrange(desc(`# buildings`)) %>%
+  head(n=10) %>%
+  {.}
+top10_nbuilding %>%
+  knitr::kable("latex", booktabs = T)
+```
+
+## 2018 Rule data top 10 by total duration (excluding data error)
+
+```{r ruleMostDurationFilter}
+top10_dur = sumByRule %>%
+  dplyr::select(`rule`, `total duration`) %>%
+  dplyr::filter(!(`rule` %in% rulesToExclude)) %>%
+  dplyr::arrange(desc(`total duration`)) %>%
+  head(n=10) %>%
+  {.}
+top10_dur %>%
+  knitr::kable("latex", booktabs = T, format.args=list(big.mark = ','), digits = 1)
+```
+
+## 2018 Rule data top 10 by highest cost (excluding data error)
+
+```{r ruleMostCostFilter}
+top10_cost = sumByRule %>%
+  dplyr::select(`rule`, `total cost`) %>%
+  dplyr::filter(!(`rule` %in% rulesToExclude)) %>%
+  dplyr::arrange(desc(`total cost`)) %>%
+  head(n=10) %>%
+  {.}
+top10_cost %>%
+  knitr::kable("latex", booktabs = T, format.args=list(big.mark = ','), digits = 1)
+```
+
+# 20 Rules show up in at least one of the criteria, and 3 Rules show up in all three criteria
+
+## 20 Rules show up in at least one of the criteria
+
+\scriptsize
+```{r distinctRules}
+list(top10_nbuilding$rule, top10_dur$rule, top10_cost$rule) %>%
+  reduce(union) %>%
+  sort() %>%
+  print()
+```
+\normalsize
+
+## 3 Rules show up in all three criteria
+
+```{r commonRules}
+list(top10_nbuilding$rule, top10_dur$rule, top10_cost$rule) %>%
+  reduce(intersect) %>%
+  sort() %>%
+  print()
+```

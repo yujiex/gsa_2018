@@ -6,7 +6,7 @@ df_to_plot = pd.read_csv("~/Dropbox/gsa_2017/input/FY/region_case_study_to_plot.
 
 # copy csv files from /page_data folder to corresponding folders fillbetween folders
 # modify region_case_study_to_plot to change the building or case number of the plots
-num = 2
+num = 1
 case_building = df_to_plot[df_to_plot['caseNumber'] == num]['Building_Number'].tolist()
 for (i, b) in enumerate(case_building):
     print(b)
