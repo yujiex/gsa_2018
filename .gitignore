@@ -60,10 +60,13 @@ region_report_img/
 *.aux
 *.out
 
-# office #
+# Rmd generated #
 ###################
 *.pptx
 *.docx
+*.nav
+*.snm
+*.vrb
 
 # Compiled source #
 ###################
