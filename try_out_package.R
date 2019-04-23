@@ -69,7 +69,11 @@ df <- df %>%
 df %>%
   readr::write_csv("~/Dropbox/gsa_2017/csv_FY/db_build_temp_csv/actual_vs_weather_normalized_671.csv")
 
-df = readr::read_csv("temp/cmp_normalized_actual_671building.csv")
+## df = readr::read_csv("temp/cmp_normalized_actual_671building.csv")
+
+df = readr::read_csv("temp/cmp_normalized_actual_positiveElecGSF.csv")
+
+length(unique(df %>% dplyr::filter(`Region_No.`==2) %>%.$`Building_Number`))
 
 head(df)
 thresh = 0.05
@@ -83,12 +87,18 @@ df_regional <-
   dplyr::mutate(`normalized w/debit + credits` = ifelse(`percent_diff` > thresh, `EUAS Site Energy (kBtu)`, `normalized w/debit + credits`)) %>%
   dplyr::select(-`percent_diff`) %>%
   tidyr::gather(`type`, `kbtu`, `EUAS Site Energy (kBtu)`:`normalized w/debit + credits`) %>%
-  na.omit() %>%
+  ## na.omit() %>%
   dplyr::group_by(`Fiscal_Year`, `Region_No.`, `type`) %>%
   dplyr::summarise(kbtu = sum(kbtu), `Gross_Sq.Ft`=sum(`Gross_Sq.Ft`)) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(eui = `kbtu`/`Gross_Sq.Ft`) %>%
   {.}
+
+df_regional %>%
+  dplyr::filter(`Region_No.`=="2") %>%
+  head(n=15)
+
+print(df_regional, n=30)
 
 df_regional %>%
   dplyr::mutate(`Region_No.`=factor(`Region_No.`, levels=as.character(1:11)),
@@ -127,10 +137,12 @@ for (region in 1:11) {
     dplyr::mutate(`eui`=ifelse(`Fiscal_Year`==2015, first(`eui`), `eui`)) %>%
     dplyr::ungroup() %>%
     {.}
-  percentSaving <- df_plot %>%
+  ## print(head(df_plot))
+  percentSaving <-
+    df_plot %>%
     dplyr::arrange(`Fiscal_Year`, `type`) %>%
     dplyr::group_by(`type`) %>%
-    dplyr::summarise(`percent saving`=(first(`eui`)-last(`eui`)) / first(`eui`) * 100) %>%
+    dplyr::summarise(`percent saving`=(-1)*(first(`eui`)-last(`eui`)) / first(`eui`) * 100) %>%
     dplyr::ungroup() %>%
     .$`percent saving`
   df_plot %>%
@@ -325,14 +337,24 @@ normalized = df13 %>%
   dplyr::bind_rows(df16) %>%
   dplyr::bind_rows(df17) %>%
   {.}
+
 df = read_table_from_db(dbname="all", tablename="eui_by_fy_tag") %>%
-  dplyr::select(`Building_Number`, `Fiscal_Year`, `Total_(kBtu)`, `Gross_Sq.Ft`, `Region_No.`) %>%
+  dplyr::select(`Building_Number`, `Cat`, `Fiscal_Year`, `Total_(kBtu)`, `Gross_Sq.Ft`, `eui_elec`, `Region_No.`) %>%
   dplyr::left_join(normalized, by=c("Building_Number", "Fiscal_Year")) %>%
   {.}
-study_set = get_buildings(year=2017, category=c("A", "I"))
-df <- df %>%
-  dplyr::filter(`Fiscal_Year` %in% 2013:2017,
-                `Building_Number` %in% study_set) %>%
+## study_set = get_buildings(year=2017, category=c("A", "I"))
+
+devtools::load_all("summarise.and.plot")
+national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), pal="Set3", region=2)
+
+tail(df)
+
+df <-
+  df %>%
+  dplyr::filter(`Fiscal_Year` %in% c(2013, 2014, 2015, 2016, 2017)) %>%
+  dplyr::filter(`Gross_Sq.Ft` != 0) %>%
+  dplyr::filter(`eui_elec` != 0) %>%
+  dplyr::filter(`Cat` %in% c("I", "A")) %>%
   dplyr::arrange(`Fiscal_Year`, `Building_Number`) %>%
   dplyr::rename(`EUAS Site Energy (kBtu)`=`Total_(kBtu)`,
                 `PM Weather Normalized Site Energy Use (kBtu)`=`Weather Normalized Site Energy Use (kBtu)`) %>%
@@ -345,9 +367,19 @@ df <- df %>%
 print(head(df))
 
 df %>%
-  readr::write_csv("temp/cmp_normalized_actual_671building.csv")
+  readr::write_csv("temp/cmp_normalized_actual_positiveElecGSF.csv")
 
-df = readr::read_csv("temp/cmp_normalized_actual_671building.csv")
+## df %>%
+##   readr::write_csv("temp/cmp_normalized_actual_671building.csv")
+
+## df = readr::read_csv("temp/cmp_normalized_actual_671building.csv")
+df = readr::read_csv("temp/cmp_normalized_actual_positiveElecGSF.csv")
+
+length(unique(df %>% dplyr::filter(`Region_No.`==2, `Fiscal_Year`==2015) %>%.$`Building_Number`))
+
+df %>%
+  dplyr::filter(`Region_No.`==2, `Fiscal_Year`==2015) %>%
+  readr::write_csv("green.csv")
 
 ## df <- df %>%
 ##     dplyr::filter(`Fiscal_Year` %in% 2013:2017) %>%
@@ -585,7 +617,7 @@ df1 %>%
 head(db.interface::get_lat_lon_df())
 
 devtools::load_all("summarise.and.plot")
-national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), pal="Set3")
+national_overview_over_years(category=c("I", "A"), years=c(2013, 2014, 2015, 2016, 2017), pal="Set3", region=2)
 
 devtools::load_all("summarise.and.plot")
 national_overview_facetRegion(category=c("I", "A"), years=c(2015, 2017))
@@ -715,7 +747,7 @@ stacked_fit_plot(buildingNumber = "MO0039ZZ", plotType="gas",
 
 devtools::load_all("lean.analysis")
 fontSizeStackLean = 10
-region="6"
+region="7"
 ## lowRange = NULL
 ## highRange = NULL
 plotXLimits = NULL
@@ -1011,16 +1043,22 @@ stacked_fit_plot(region=region, buildingType="Office", year=2017, category=c("I"
 ## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(44, 100), plotYLimits=c(1.7, 16.6), minorgrid=seq(2, 14, 2), majorgrid=seq(4, 16, 4))
 ## stacked_fit_plot(region="9", buildingType="Office", year=2017, category=c("I", "A"), plotType="gas", method=lean.analysis::piecewise_linear, methodLabel="piecewise", plotXLimits=c(40, 90))
 
+xlimits=NULL
+ylimits=NULL
+devtools::load_all("lean.analysis")
+plot_lean_subset(region=region, buildingType="Office", year=2017, plotType="gas", category=c("I", "A"), plotXLimit=xlimits, plotYLimit=ylimits, plotTitle=TRUE, elec_col="eui_cooling_source", gas_col="eui_heating_source", suffix="source_heating_cooling", buildingNumber = "ME0091ZZ")
+
 devtools::load_all("lean.analysis")
 ## plot lean image
-for (region in c(1:4, 6:11)) {
+for (region in c(8, 10)) {
   plot_regional (region=region, suffix="source_heating_cooling", elec_col="eui_cooling_source", gas_col="eui_heating_source")
   ## plot_regional (region=region, suffix="source_electric_gas", elec_col="eui_elec_source", gas_col="eui_gas_source")
 }
 
 ## copy the top 20 images to page_data using their ranks as name
 devtools::load_all("lean.analysis")
-for (regionnum in c(1:4, 6:11)) {
+for (regionnum in c(2:2)) {
+  ## for (regionnum in c(1:4, 6:11)) {
   copy_image_rename_with_rank (region=regionnum, suffix="source_heating_cooling", plotType="elec", pagedatakey="cooling")
   copy_image_rename_with_rank (region=regionnum, suffix="source_heating_cooling", plotType="gas", pagedatakey="heating")
   copy_image_rename_with_rank (region=regionnum, suffix="source_heating_cooling", plotType="base", pagedatakey="baseload")
