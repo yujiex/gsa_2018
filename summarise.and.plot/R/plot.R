@@ -819,6 +819,7 @@ national_overview_over_years <- function(category, type, years, region, pal) {
   if (missing(pal)) {
     pal="Set3"
   }
+  print(length(unique(df$Building_Number)))
   ## total cost and energy drop without divided by sqft
   df %>% dplyr::group_by(`Fiscal_Year`) %>%
     dplyr::summarise_if(is.numeric, funs(sum)) %>%
@@ -830,7 +831,6 @@ national_overview_over_years <- function(category, type, years, region, pal) {
     dplyr::left_join(dfsummary) %>%
     dplyr::mutate(`Fiscal_Year` = sprintf("%s\n(building count = %s)", `Fiscal_Year`, `count`)) %>%
     {.}
-  ## print(head(df))
   ## plot bar width
   width = 0.4
   df_agg_eui = gb_agg_ratio(df, groupvar = "Fiscal_Year", numerator_var = c("Electric_(kBtu)", "Gas_(kBtu)", "Oil_(kBtu)", "Steam_(kBtu)", "Chilled_Water_(kBtu)", "Other_(kBtu)"), denominator_var = "Gross_Sq.Ft", aggfun=sum, valuename="kBtu/sqft", varname="FuelType") %>%
