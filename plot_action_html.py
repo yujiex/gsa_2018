@@ -350,6 +350,9 @@ def plot_saving_aggyear(b, df, timerange_pre, timerange_post, theme, ax, cvrmse)
     # ax.set_ylabel("kBtu per square foot per month", fontsize=10)
     legend_label_1 = time_label(timerange_post)
     print(legend_label_1)
+    bboxtop = 1.15
+    if (b == "DC0007ZZ"):
+        bboxtop = 1.07
     ax.legend([line1, line2],
               # ['Actual {1} use in {0}'.format(time_label(timerange_post), lb.title_dict[theme]),
               #  '\n'.join(tw.wrap('{1} use given {2} habits but {0} weather'.format(time_label(timerange_post),
@@ -360,7 +363,7 @@ def plot_saving_aggyear(b, df, timerange_pre, timerange_post, theme, ax, cvrmse)
               ['Average actual monthly {1} {0}'.format(time_label(timerange_post),lb.title_dict[theme]),
                '\n'.join(tw.wrap('Predicted monthly {1} at 3yr prior perf. CVRMSE {2}'.format(time_label(timerange_post), lb.title_dict[theme], round(cvrmse, 2)), wrapwidth)
                                  # put legend below plot
-                                 )], loc='upper center', bbox_to_anchor=(0.5, 1.15), prop={'size': 8}, ncol=2)
+                                 )], loc='upper center', bbox_to_anchor=(0.5, bboxtop), prop={'size': 8}, ncol=2)
                                  # wrapwidth))], loc=9, bbox_to_anchor=(0.5, -0.1))
                                  # wrapwidth))], loc=location)
                                 # following is for region 9 ppt one building
@@ -722,8 +725,10 @@ def plot_action_fromdb():
     # names = ['OK0063ZZ']
     df_to_plot = pd.read_csv("~/Dropbox/gsa_2017/input/FY/region_case_study_to_plot.csv")
     names = df_to_plot['Building_Number'].tolist()
-    names = names + ["NV0294ZZ", "IA0087ZZ"]
+    # names = names + ["NV0294ZZ", "IA0087ZZ"]
     # names = ["DC0007ZZ", "NV0294ZZ", "IA0087ZZ"]
+    # names = ["DC0007ZZ"]
+    names = ["DE0016ZZ"]
     for i, name in enumerate(names):
         print i, name, '222222222222222222222222222222'
         group = gr.get_group(name)
