@@ -1,2 +1,0 @@
-load("/Users/yujiex/Dropbox/gsa_2017/faultDetectionSkySpark/data-raw/buildling_fault_start_end/AR0030RK.rda")
-head(AR0030RK)

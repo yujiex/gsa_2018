@@ -1,9 +1,0 @@
-\frametitle{3 Rules show up in all three criteria}
-\protect\hypertarget{rules-show-up-in-all-three-criteria}{}
-
-\begin{verbatim}
-## [1] "AHU Cooling Valve Leaking"
-## [2] "AHU Discharge Pressure Setpoint Unreachable"
-## [3] "AHU Discharge Temperature Setpoint Unreachable"
-\end{verbatim}
-

@@ -725,6 +725,23 @@ add_weather_norm_energy <- function() {
   write_table_to_db(df=df, dbname="all", "actual_vs_weather_normalized", overwrite=TRUE)
 }
 
+#' Compute the latest record of area from EUAS data
+#'
+#' Compute the latest record of area from EUAS data
+#' @keywords latest area
+#' @export
+#' @examples
+#' compute_latest_area()
+compute_latest_area <- function() {
+  df=read_table_from_db(dbname="all", tablename="EUAS_monthly", cols=c("Building_Number", "Fiscal_Year", "Fiscal_Month", "Gross_Sq.Ft")) %>%
+    dplyr::arrange(`Building_Number`, desc(`Fiscal_Year`), desc(`Fiscal_Month`)) %>%
+    dplyr::group_by(`Building_Number`) %>%
+    slice(1) %>%
+    dplyr::ungroup() %>%
+    {.}
+  write_table_to_db(df, dbname="all", tablename="EUAS_area_latest", overwrite = TRUE)
+}
+
 #' Join EUAS_monthly and EUAS_type
 #'
 #' This function joins EUAS_monthly and EUAS_type
@@ -743,13 +760,14 @@ main_db_build <- function() {
   ## unify_euas_type()
   ## check_duplicates(dbname="all", tablename="EUAS_type",
   ##                  groupby_vars=c("Building_Number", "Building_Type", "data_source"))
+  compute_latest_area()
   ## add_chilled_water_eui()
   ## check_duplicates(dbname="all", tablename="EUAS_monthly",
   ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
   ## add_occ()
   ## check_duplicates(dbname="all", tablename="EUAS_monthly",
   ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
-  add_weather_norm_energy()
+  ## add_weather_norm_energy()
   ## add_area_lab_datacenter()
   ## check_duplicates(dbname="all", tablename="EUAS_monthly",
   ##                  groupby_vars=c("Building_Number", "Fiscal_Year", "Fiscal_Month"))
