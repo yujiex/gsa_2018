@@ -4,7 +4,7 @@
 \alias{getWeightedDaily}
 \title{Get average temperature for a single building}
 \usage{
-getWeightedDaily(b, start_str, end_str, v, path = NULL)
+getWeightedDaily(b, start_str, end_str, v, path = NULL, radius = 100)
 }
 \arguments{
 \item{b}{required, 8 digit building number}

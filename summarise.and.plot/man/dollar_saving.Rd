@@ -4,14 +4,39 @@
 \alias{dollar_saving}
 \title{Potential dollar saving based on median}
 \usage{
-dollar_saving(category, type, year, region, method = "own")
+dollar_saving(category, type, year, region, method = "own", topn = 10,
+  botn = 10, legendloc = "bottom", yleftLimit = 0, yrightLimit = 0,
+  expLimit = 0, hjust, fontFamily = "System Font", mod = 1000,
+  fontsize = 10, yadjust = 0, plotGreen = FALSE)
 }
 \arguments{
 \item{category}{optional, a subset of A, B, C, D, E, I to include}
 
-\item{type}{optional, a string (e.g. "Office"), or a string vector (e.g. c("Office", "Courthouse")) of building type}
+\item{type}{optional, a string (e.g. "Office"), or a string vector (e.g.
+c("Office", "Courthouse")) of building type}
 
 \item{region}{optional, the region to plot}
+
+\item{topn}{optional, plot top n records}
+
+\item{botn}{optional, plot bottom n records}
+
+\item{legendloc}{optional, default to bottom}
+
+\item{yleftLimit}{optional, horizontal left limit of the plot}
+
+\item{yrightLimit}{optional, horizontal right limit of the plot}
+
+\item{expLimit}{optional, expanded limit to include}
+
+\item{fontFamily}{optional, the font family}
+
+\item{mod}{optional, savings will be rounded to "mod" number of 0's, e.g. 1000}
+
+\item{fontsize}{optional, font size for all text
+will make Potential_Saving return in thousands}
+
+\item{plotGreen}{optional, whether to plot the green bars, default to FALSE}
 
 \item{years}{optional, the years to plot}
 

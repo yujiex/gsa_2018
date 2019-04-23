@@ -4,18 +4,18 @@
 \alias{getAvgTemp}
 \title{Get average temperature for a single building}
 \usage{
-getAvgTemp(b)
+getAvgTemp(b, path = NULL, resolution = "daily")
 }
 \arguments{
 \item{b}{required, 8 digit building number}
+
+\item{path}{optional, directory to save downloaded data.}
 
 \item{start_str}{time to start downloading, a date string of yyyy-mm-dd format}
 
 \item{end_str}{time to end downloading, a date string of yyyy-mm-dd format}
 
 \item{v}{variable to compile}
-
-\item{path}{optional, directory to save downloaded data.}
 }
 \description{
 This function downloads 3 closest GHCND weather station data for variable v, and
