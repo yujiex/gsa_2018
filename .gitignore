@@ -1,5 +1,6 @@
 .Rhistory
 .RData
+.Rapp.history
 csv/
 csv_FY/
 building_TAVG/
@@ -58,6 +59,11 @@ region_report_img/
 *.pdf
 *.aux
 *.out
+
+# office #
+###################
+*.pptx
+*.docx
 
 # Compiled source #
 ###################
