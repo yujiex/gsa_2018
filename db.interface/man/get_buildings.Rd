@@ -11,7 +11,7 @@ get_buildings(region, buildingType, year, category)
 
 \item{buildingType}{optional, building type}
 
-\item{year}{optional, restrict to data with fiscal year = year}
+\item{year}{optional, restrict to data with fiscal year = year, or in the vector of years}
 
 \item{category}{optional, restrict to data with category in a vector of
 categories, c(a vector of categories, e.g. "A", "I")}
