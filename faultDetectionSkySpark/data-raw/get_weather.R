@@ -196,6 +196,7 @@ for (b in gsalink_buildings[4:4]) {
 
 ## write to data files group by component and rule
 for (b in gsalink_buildings[4:4]) {
+
   b = gsalink_buildings[4]
 
   ## change here when got real occ hour info
@@ -206,10 +207,8 @@ for (b in gsalink_buildings[4:4]) {
 
   dfleft = tibble::tibble(Timestamp=seq(from=time.min, to=time.max, by="mins"))
   dfleft.whole = tibble::tibble(Timestamp=seq(from=min(dfrule$startPosix), to=max(dfrule$endPosix), by="mins"))
-
   dfrule = readr::read_csv(sprintf("ruleStartEndByBuilding/%s_2018.csv", b))
   print(head(dfrule))
-
   ## change to setpoint temperature
   dfweather = readr::read_csv(sprintf("gsalink_weather/%s_2018.csv", b))
   dfweather <- dfweather %>%
@@ -220,11 +219,9 @@ for (b in gsalink_buildings[4:4]) {
     dplyr::filter(Timestamp>=time.min) %>%
     dplyr::filter(Timestamp<=time.max) %>%
     {.}
-
   tz = dfrule[["tz"]][1]
   time.min=as.POSIXct(time.min.str, tz=tz)
   time.max=as.POSIXct(time.max.str, tz=tz)
-
   dfenergy = readr::read_csv(sprintf("building_energy/%s_%s.csv", b, energytype))
   dfenergy <- dfenergy %>%
     dplyr::mutate(Timestamp=as.POSIXct(Timestamp, format="%m/%d/%Y %I:%M:%S %p", tz=tz)) %>>%
