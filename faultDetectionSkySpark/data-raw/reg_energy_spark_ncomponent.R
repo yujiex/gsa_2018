@@ -77,9 +77,10 @@ for (b in gsalink_buildings[13:13]) {
   tz = dfrule[["tz"]][1]
   time.min=as.POSIXct(time.min.str, tz=tz)
   time.max=as.POSIXct(time.max.str, tz=tz)
+  print(time.min)
+  print(time.max)
   dfleft = tibble::tibble(Timestamp=seq(from=time.min, to=time.max, by="mins"))
-  dfleft.whole = tibble::tibble(Timestamp=seq(from=min(dfrule$startPosix), to=max(dfrule$endPosix), by="mins"))
-  ## change to setpoint temperature
+  ## dfleft.whole = tibble::tibble(Timestamp=seq(from=min(dfrule$startPosix), to=max(dfrule$endPosix), by="mins"))
   dfweather = readr::read_csv(sprintf("gsalink_weather/%s_2018.csv", b))
   dfweather <- dfweather %>%
     dplyr::mutate(Timestamp=sprintf("%s %s:00:00", date, hour)) %>%
