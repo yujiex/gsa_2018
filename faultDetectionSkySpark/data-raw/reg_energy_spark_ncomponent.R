@@ -6,11 +6,16 @@ library("pipeR")
 library("glmnet")
 
 energytype = "kWh Del Int"
-## restrict to summer
-time.min.str="2018-06-01"
-time.max.str="2018-09-01"
+## restrict to summer, change this to the time range you wanted
+## time.min.str="2018-06-01"
+## time.max.str="2018-09-01"
+time.min.str="2018-01-01"
+time.max.str="2018-12-31"
 
-## get top 3 buildings
+if ((as.integer(substr(time.min.str, 1, 4)) != 2018) && (as.integer(substr(time.max.str, 1, 4)) != 2018)) {
+  print("Wrong time range")
+}
+
 allbuilding = readr::read_csv("../data/has_energy_ecost.csv") %>%
   tibble::as_data_frame() %>%
   dplyr::select(building) %>%
