@@ -29,6 +29,7 @@ has_lat_lon =
   .$`Building_Number`
 DBI::dbDisconnect(con)
 
+## get the set of buildings with lat lon
 gsalink_buildings <- allbuilding %>%
   dplyr::filter(building %in% has_lat_lon) %>%
   .$building
@@ -40,6 +41,7 @@ namelookup = readr::read_csv("../data/gsalink_name_in_rulefile.csv") %>%
 component.group.lookup = readr::read_csv("building_component.csv") %>%
   tibble::as_data_frame() %>%
   dplyr::rename(equipRef=equipRefBackup) %>%
+  dplyr::select(-equip) %>%
   {.}
 
 start_str = "2018-01-01"
@@ -54,7 +56,7 @@ devtools::load_all("../../get.noaa.weather")
 devtools::load_all("../../summarise.and.plot")
 
 ## get weather data
-for (b in gsalink_buildings[3:56]) {
+for (b in gsalink_buildings) {
   print(b)
   years = as.integer(substr(start_str, 1, 4)):(as.integer(substr(end_str, 1, 4)))
   print(years)
@@ -65,9 +67,10 @@ for (b in gsalink_buildings[3:56]) {
   }
 }
 
-for (b in gsalink_buildings[13:13]) {
+for (b in gsalink_buildings) {
   print(b)
-  ## change here when got real occ hour info
+  print("-------------------------------------------")
+  ## change the following when you get real occ hour info for each building
   occ_hour_start = 8
   occ_hour_end = 17
   weekdays = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
