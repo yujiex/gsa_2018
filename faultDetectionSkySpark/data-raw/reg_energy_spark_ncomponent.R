@@ -90,11 +90,13 @@ for (b in gsalink_buildings[13:13]) {
     dplyr::filter(Timestamp>=time.min) %>%
     dplyr::filter(Timestamp<=time.max) %>%
     {.}
+  attr(dfweather$Timestamp, "tzone") <- tz
   dfenergy = readr::read_csv(sprintf("building_energy/%s_%s.csv", b, energytype))
   dfenergy <- dfenergy %>%
     dplyr::mutate(Timestamp=as.POSIXct(Timestamp, format="%m/%d/%Y %I:%M:%S %p", tz=tz)) %>>%
     dplyr::filter(Timestamp>=time.min) %>%
     dplyr::filter(Timestamp<=time.max) %>%
+    ## fill 0 for negative energy value
     dplyr::mutate(!!rlang::sym(energytype) := pmax(!!rlang::sym(energytype), 0)) %>%
     dplyr::mutate(Timestamp=as.POSIXct(round(Timestamp, "hours"), tz=tz)) %>>%
     dplyr::group_by(Timestamp) %>%
