@@ -104,28 +104,32 @@ for (b in gsalink_buildings[13:13]) {
     dplyr::ungroup() %>%
     {.}
   dfrule <- dfrule %>%
-    ## dplyr::filter(rule==r) %>%
     dplyr::mutate(equipRef=substr(equipRef, 32, nchar(equipRef))) %>%
     dplyr::mutate(equipRef=gsub(name, "", equipRef)) %>%
     dplyr::left_join(component.group.lookup, by=c("building", "equipRef")) %>%
     dplyr::mutate(count=1) %>%
-    dplyr::mutate(eCost=as.numeric(gsub("$", "", eCost, fixed=TRUE))) %>%
-    dplyr::mutate(ecost.per.min=eCost/(durationSecond/60)) %>%
-    tidyr::unite(`groupvar`, `rule`, `group`, sep="----") %>%
+    dplyr::mutate(eCost=ifelse(is.na(eCost), NA, as.numeric(gsub("$", "", eCost, fixed=TRUE)))) %>%
+    ## following groups by component group (group) and rule
+    ## tidyr::unite(`groupvar`, `rule`, `group`, sep="----") %>%
+    ## following two lines group by rule
+    dplyr::mutate(groupvar=rule) %>%
+    dplyr::select(-rule, -group) %>%
     {.}
-  print(head(dfrule))
+  ## change groupvar to rule if you do not want to group by both rule and group, and only want to group by rule
   dfresult = summarise.and.plot::agg_interval(df=dfrule, start="startPosix", end="endPosix",
                                               group="groupvar", value="count",
                                               time.epsilon=0) %>%
     dplyr::rename(Timestamp=time)
-  extra.times = setdiff(dfresult[["Timestamp"]], dfleft.whole[["Timestamp"]])
+  extra.times = setdiff(dfresult[["Timestamp"]], dfleft[["Timestamp"]])
+  ## extra.times = setdiff(dfresult[["Timestamp"]], dfleft.whole[["Timestamp"]])
   if (length(extra.times) != 0L) {
     stop (paste0("The data had unexpected values in the time column; some are: ",
                  paste(head(extra.times), collapse=", ")))
   }
   dfresult <- dfresult %>%
     dplyr::filter(row.kind!="pre-delta") %>%
-    tidyr::complete(groupvar, Timestamp=dfleft.whole$Timestamp) %>%
+    tidyr::complete(groupvar, Timestamp=dfleft$Timestamp) %>%
+    ## tidyr::complete(groupvar, Timestamp=dfleft.whole$Timestamp) %>%
     dplyr::group_by(groupvar) %>%
     dplyr::arrange(Timestamp) %>%
     dplyr::mutate(value.agg=zoo::na.locf0(value.agg)) %>%
