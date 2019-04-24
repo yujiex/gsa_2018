@@ -31,6 +31,12 @@ acc %>%
   dplyr::mutate(group=substr(equipRef, 1, regexpr("[- ._]", equipRef)[[1]] - 1)) %>%
   dplyr::mutate(group=ifelse(nchar(group)==0, substr(equipRef, 1, regexpr("[0-9]", equipRef)[[1]] - 1), group)) %>%
   dplyr::mutate(group=ifelse(nchar(group)==0, equipRef, group)) %>%
+  dplyr::mutate_at(vars(group), funs(recode),
+                   "AHUs"="AHU",
+                   "AHU1"="AHU",
+                   "AHU2"="AHU",
+                   "Air"="AHU"
+                   ) %>%
   dplyr::ungroup() %>%
   dplyr::rename(equip=equipRef) %>%
   readr::write_csv("building_component.csv")
