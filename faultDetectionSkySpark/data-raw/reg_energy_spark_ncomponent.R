@@ -143,18 +143,18 @@ for (b in gsalink_buildings[13:13]) {
     dplyr::ungroup() %>%
     {.}
   df <- dfenergy %>%
-    dplyr::left_join(dfresult, by="Timestamp") %>%
-    dplyr::left_join(dfweather, by="Timestamp") %>%
-    dplyr::mutate(`rulePresent`=ifelse(value.agg>0, "Yes", "No")) %>%
     dplyr::mutate(hour=as.numeric(format(Timestamp, "%H"))) %>%
     dplyr::mutate(day=format(Timestamp, "%A")) %>%
     dplyr::mutate(is.occupied=ifelse((hour <= occ_hour_end) & (hour >= occ_hour_start) & (day %in% weekdays), "Occupied", "Un-occupied")) %>%
+    dplyr::left_join(dfresult, by="Timestamp") %>%
+    dplyr::left_join(dfweather, by="Timestamp") %>%
     {.}
   df %>%
-    dplyr::rename(`num.component.has.warning`=`value.agg`) %>%
-    dplyr::select(-rulePresent) %>%
-    tidyr::spread(groupvar, num.component.has.warning) %>%
-    readr::write_csv(sprintf("building_rule_energy_weather/%s_%s_2018.csv",
+    dplyr::mutate(`local.time`=format(Timestamp, tz=tz)) %>%
+    dplyr::select(Timestamp, local.time, everything()) %>%
+    dplyr::rename(`total.duration.minutes`=`value.agg`) %>%
+    tidyr::spread(groupvar, `total.duration.minutes`) %>%
+    readr::write_csv(sprintf("building_rule_energy_weather/hourly/%s_%s_2018.csv",
                              b, energytype))
 }
 
