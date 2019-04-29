@@ -135,7 +135,9 @@ for (b in gsalink_buildings) {
     ## tidyr::complete(groupvar, Timestamp=dfleft.whole$Timestamp) %>%
     dplyr::group_by(groupvar) %>%
     dplyr::arrange(Timestamp) %>%
+    ## fill counters from start to end of an event
     dplyr::mutate(value.agg=zoo::na.locf0(value.agg)) %>%
+    ## fill na for the very beginning
     dplyr::mutate(value.agg=zoo::na.fill(value.agg, 0)) %>%
     dplyr::ungroup(groupvar) %>%
     dplyr::filter(Timestamp>=time.min) %>%
@@ -283,3 +285,33 @@ for (b in gsalink_buildings) {
   ##   unocc_out = lm(`kWh Del Int` ~ .)
   ## }
 }
+
+allrules = acc %>%
+  dplyr::filter(!(covariate %in% c("(Intercept)", "F"))) %>%
+  distinct(covariate) %>%
+  .$covariate
+
+acc %>%
+  readr::write_csv("reg_result/allrules.csv")
+
+for (r in allrules[1:1]) {
+  r = allrules[1]
+  p <- acc %>%
+    dplyr::filter(covariate == r) %>%
+    ggplot2::ggplot(ggplot2::aes(x=building, y=coefficient)) +
+    ggplot2::geom_bar(stat="identity") +
+    ggplot2::facet_wrap(.~occtype, nrow=2) +
+    ggplot2::ggtitle(sprintf("Regression coefficient for %s", r)) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1))
+  print(p)
+}
+
+head(acc)
+
+acc %>%
+  dplyr::filter(!(covariate %in% c("(Intercept)", "F"))) %>%
+  dplyr::group_by(covariate) %>%
+  dplyr::summarise(median=median(coefficient), n=n()) %>%
+  dplyr::ungroup() %>%
+  dplyr::arrange(desc(median)) %>%
+  readr::write_csv("individual_building_reg_summary.csv")
