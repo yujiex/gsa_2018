@@ -161,7 +161,7 @@ for (b in gsalink_buildings) {
                              b, energytype))
 }
 
-fitting <- function(method, y, x, x.to.predict) {
+fitting <- function(method, y, x, x.to.predict=NA) {
   if (nrow(df) > 0) {
     ## this usually return NA's for some coef, meaning there are colinear input features
     if (method == "linear") {
@@ -170,12 +170,14 @@ fitting <- function(method, y, x, x.to.predict) {
       fitted.values = fitted.values(occ_out)
       print(head(fitted.values))
       print(sum(fitted.values))
-      newdata = x.to.predict %>%
-        tibble:::as.tibble()
-      predicted.values = predict(occ_out, newdata=newdata)
-      print(head(predicted.values))
-      print(sum(predicted.values))
-      return(list("fitted.values"=fitted.values, "predicted.values"=predicted.values))
+      if (!is.na(x.to.predict)) {
+        newdata = x.to.predict %>%
+          tibble:::as.tibble()
+        predicted.values = predict(occ_out, newdata=newdata)
+        print(head(predicted.values))
+        print(sum(predicted.values))
+        return(list("fitted.values"=fitted.values, "predicted.values"=predicted.values))
+      }
     } else if (method == "ridge") {
       lambdas <- 10^seq(3, -2, by = -.1)
       cv_fit <- cv.glmnet(x, y, alpha = 0, lambda = lambdas)
@@ -191,23 +193,33 @@ fitting <- function(method, y, x, x.to.predict) {
       ##                          {dplyr::if_else(.==0, NA_real_, .)}
       ##                        )
       ##       }, n=Inf)
-      print(coef(cv_fit, s="lambda.min") %>>%
-            round(4-ceiling(max(log10(abs(.)))))
-            )
       fitted.values = as.vector(predict(cv_fit, newx=x, type="response"))
-      predicted.values = as.vector(predict(cv_fit, newx=x.to.predict, type="response"))
-      return(list("fitted.values"=fitted.values, "predicted.values"=predicted.values))
+      if (!is.na(x.to.predict)) {
+        predicted.values = as.vector(predict(cv_fit, newx=x.to.predict, type="response"))
+        return(list("fitted.values"=fitted.values, "predicted.values"=predicted.values))
+      } else {
+        print(coef(cv_fit, s="lambda.min") %>>%
+              round(4-ceiling(max(log10(abs(.)))))
+              )
+        return(coef(cv_fit, s="lambda.min"))
+      }
     }
   }
 }
 
 method = "ridge"
 ## method = "linear"
-r = "AHU Cooling Valve Leaking"
-component = "AHU"
-gsalink_buildings="OH0192ZZ"
-for (b in gsalink_buildings[1:1]) {
-  df = readr::read_csv(sprintf("building_rule_energy_weather/%s_%s_2018.csv",
+## r = "AHU Cooling Valve Leaking"
+## component = "AHU"
+component = NA
+r = NA
+## occtype = "Occupied"
+occtype = "Un-occupied"
+
+acc = NULL
+
+for (b in gsalink_buildings) {
+  df = readr::read_csv(sprintf("building_rule_energy_weather/hourly/%s_%s_2018.csv",
                                b, energytype)) %>%
     tibble::as.tibble() %>%
     {.}
