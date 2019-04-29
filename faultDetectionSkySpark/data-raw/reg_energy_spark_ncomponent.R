@@ -227,35 +227,54 @@ for (b in gsalink_buildings) {
     next
   }
   print(b)
-  ## print(head(df))
+  print(head(df))
   df_occ = df %>%
-    dplyr::filter(is.occupied == "Occupied") %>%
-    dplyr::select(-is.occupied, -hour, -day) %>%
+    dplyr::filter(is.occupied == occtype) %>%
+    dplyr::select(-is.occupied, -hour, -day, -local.time) %>%
     na.omit() %>%
     {.}
+  print(head(df_occ))
   time = df_occ$Timestamp
   y = df_occ[[energytype]]
   x = df_occ %>%
     dplyr::select(-!!rlang::sym(energytype), -Timestamp) %>%
     as.matrix()
-  x.to.predict = df_occ %>%
-    dplyr::select(-!!rlang::sym(energytype), -Timestamp) %>%
-    dplyr::mutate_at(vars(starts_with(sprintf("%s----%s", r, component))), funs({0})) %>%
+  ## if (!is.na(component)) {
+  ##   x.to.predict = df_occ %>%
+  ##     dplyr::select(-!!rlang::sym(energytype), -Timestamp) %>%
+  ##     dplyr::mutate_at(vars(starts_with(sprintf("%s----%s", r, component))), funs({0})) %>%
+  ##     as.matrix() %>%
+  ##     {.}
+  ## } else {
+  ##   x.to.predict = df_occ %>%
+  ##     dplyr::select(-!!rlang::sym(energytype), -Timestamp) %>%
+  ##     dplyr::mutate_at(vars(r), funs({0})) %>%
+  ##     as.matrix() %>%
+  ##     {.}
+  ## }
+  result = fitting(method, y, x, x.to.predict=NA)
+  dfresult <- result %>%
     as.matrix() %>%
+    as.data.frame() %>%
+    dplyr::rename(`coefficient`=`1`) %>%
+    tibble::rownames_to_column(var="covariate") %>%
+    dplyr::mutate(building=b, occtype=occtype) %>%
     {.}
-  result = fitting(method, y, x, x.to.predict)
-  to.plot =
-    tibble(time = time, y=result$fitted.values, type="predicted with rule") %>%
-    dplyr::bind_rows(tibble(time = time, y=result$predicted.values, type="predicted without rule")) %>%
-    dplyr::bind_rows(tibble(time = time, y=y, type="actual")) %>%
-    {.}
-  p <- to.plot %>%
-    ggplot2::ggplot(ggplot2::aes(x=time, y=y, colour=type)) +
-    ggplot2::geom_line() +
-    ## ggplot2::geom_point(ggplot2::aes(x=time, y=y, type="actual"), data=tibble(time = time, y=y)) +
-    ## ggplot2::ylim(c(0, 5000)) +
-    ggplot2::theme()
-  print(p)
+  dfresult %>%
+    readr::write_csv(sprintf("reg_result/energy_rule_%s_%s_%s.csv", b, occtype, energytype))
+  acc <- rbind(acc, dfresult)
+  ## to.plot =
+  ##   tibble(time = time, y=result$fitted.values, type="predicted with rule") %>%
+  ##   dplyr::bind_rows(tibble(time = time, y=result$predicted.values, type="predicted without rule")) %>%
+  ##   dplyr::bind_rows(tibble(time = time, y=y, type="actual")) %>%
+  ##   {.}
+  ## p <- to.plot %>%
+  ##   ggplot2::ggplot(ggplot2::aes(x=time, y=y, colour=type)) +
+  ##   ggplot2::geom_line() +
+  ##   ## ggplot2::geom_point(ggplot2::aes(x=time, y=y, type="actual"), data=tibble(time = time, y=y)) +
+  ##   ## ggplot2::ylim(c(0, 5000)) +
+  ##   ggplot2::theme()
+  ## print(p)
   ## df_unocc = df %>%
   ##   dplyr::filter(is.occupied == "Un-occupied") %>%
   ##   dplyr::select(-is.occupied) %>%
