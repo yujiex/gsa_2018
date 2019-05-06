@@ -215,76 +215,122 @@ method = "ridge"
 ## component = "AHU"
 component = NA
 r = NA
+occtype = "allday"
 ## occtype = "Occupied"
-occtype = "Un-occupied"
+## occtype = "Un-occupied"
+## seasontype = "allyear"
+## seasontype = "summer"
+## seasontype = "winter"
 
 acc = NULL
-
 for (b in gsalink_buildings) {
-  df = readr::read_csv(sprintf("building_rule_energy_weather/hourly/%s_%s_2018.csv",
-                               b, energytype)) %>%
-    tibble::as.tibble() %>%
-    {.}
-  if (nrow(df) == 0) {
-    next
+  for (occtype in c("allday", "Occupied", "Un-occupied")) {
+    for (seasontype in c("allyear", "winter", "summer")) {
+      print(b)
+      print(occtype)
+      print(seasontype)
+      df_occ = readr::read_csv(sprintf("building_rule_energy_weather/hourly/%s_%s_2018.csv",
+                                  b, energytype)) %>%
+        tibble::as.tibble() %>%
+        {.}
+      if (nrow(df_occ) == 0) {
+        next
+      }
+      print(b)
+      if (!(occtype == "allday")) {
+        df_occ <- df_occ %>%
+          dplyr::filter(is.occupied == occtype) %>%
+          {.}
+      }
+      df_occ <- df_occ %>%
+        dplyr::mutate(month=format(local.time, "%m")) %>%
+        {.}
+      print(head(df_occ))
+      if (seasontype == "winter") {
+        df_occ <- df_occ %>%
+          dplyr::filter(month %in% c("11", "12", "01", "02"))
+      } else if (seasontype == "summer") {
+        df_occ <- df_occ %>%
+          dplyr::filter(month %in% c("06", "07", "08"))
+      }
+      df_occ <- df_occ %>%
+        dplyr::select(-is.occupied, -hour, -day, -local.time, -month) %>%
+        na.omit() %>%
+        {.}
+      if (nrow(df_occ) == 0) {
+        print(sprintf("no data for %s during %s for %s hours", b, seasontype, occtype))
+        next
+      }
+      time = df_occ$Timestamp
+      y = df_occ[[energytype]]
+      x = df_occ %>%
+        dplyr::select(-!!rlang::sym(energytype), -Timestamp) %>%
+        as.matrix()
+      ## if (!is.na(component)) {
+      ##   x.to.predict = df_occ %>%
+      ##     dplyr::select(-!!rlang::sym(energytype), -Timestamp) %>%
+      ##     dplyr::mutate_at(vars(starts_with(sprintf("%s----%s", r, component))), funs({0})) %>%
+      ##     as.matrix() %>%
+      ##     {.}
+      ## } else {
+      ##   x.to.predict = df_occ %>%
+      ##     dplyr::select(-!!rlang::sym(energytype), -Timestamp) %>%
+      ##     dplyr::mutate_at(vars(r), funs({0})) %>%
+      ##     as.matrix() %>%
+      ##     {.}
+      ## }
+      result = tryCatch({
+        fitting(method="ridge", y, x, x.to.predict=NA)
+      },
+      error = function(e) {
+        print(e)
+        return(NULL)
+      },
+      warning = function(w) {
+        print(w)
+        return(NULL)
+      },
+      finally = {}
+      )
+      if(is.null(result)) {
+        next
+      }
+      dfresult <- result %>%
+        as.matrix() %>%
+        as.data.frame() %>%
+        dplyr::rename(`coefficient`=`1`) %>%
+        tibble::rownames_to_column(var="covariate") %>%
+        dplyr::mutate(building=b, occtype=occtype, seasontype=seasontype) %>%
+        {.}
+      dfresult %>%
+        readr::write_csv(sprintf("reg_result/energy_rule_%s_%s_%s_%s.csv", b, occtype, energytype, seasontype))
+      acc <- rbind(acc, dfresult)
+      ## to.plot =
+      ##   tibble(time = time, y=result$fitted.values, type="predicted with rule") %>%
+      ##   dplyr::bind_rows(tibble(time = time, y=result$predicted.values, type="predicted without rule")) %>%
+      ##   dplyr::bind_rows(tibble(time = time, y=y, type="actual")) %>%
+      ##   {.}
+      ## p <- to.plot %>%
+      ##   ggplot2::ggplot(ggplot2::aes(x=time, y=y, colour=type)) +
+      ##   ggplot2::geom_line() +
+      ##   ## ggplot2::geom_point(ggplot2::aes(x=time, y=y, type="actual"), data=tibble(time = time, y=y)) +
+      ##   ## ggplot2::ylim(c(0, 5000)) +
+      ##   ggplot2::theme()
+      ## print(p)
+      ## df_unocc = df %>%
+      ##   dplyr::filter(is.occupied == "Un-occupied") %>%
+      ##   dplyr::select(-is.occupied) %>%
+      ##   {.}
+      ## if (nrow(df_occ) > 0) {
+      ##   unocc_out = lm(`kWh Del Int` ~ .)
+      ## }
+    }
   }
-  print(b)
-  print(head(df))
-  df_occ = df %>%
-    dplyr::filter(is.occupied == occtype) %>%
-    dplyr::select(-is.occupied, -hour, -day, -local.time) %>%
-    na.omit() %>%
-    {.}
-  print(head(df_occ))
-  time = df_occ$Timestamp
-  y = df_occ[[energytype]]
-  x = df_occ %>%
-    dplyr::select(-!!rlang::sym(energytype), -Timestamp) %>%
-    as.matrix()
-  ## if (!is.na(component)) {
-  ##   x.to.predict = df_occ %>%
-  ##     dplyr::select(-!!rlang::sym(energytype), -Timestamp) %>%
-  ##     dplyr::mutate_at(vars(starts_with(sprintf("%s----%s", r, component))), funs({0})) %>%
-  ##     as.matrix() %>%
-  ##     {.}
-  ## } else {
-  ##   x.to.predict = df_occ %>%
-  ##     dplyr::select(-!!rlang::sym(energytype), -Timestamp) %>%
-  ##     dplyr::mutate_at(vars(r), funs({0})) %>%
-  ##     as.matrix() %>%
-  ##     {.}
-  ## }
-  result = fitting(method, y, x, x.to.predict=NA)
-  dfresult <- result %>%
-    as.matrix() %>%
-    as.data.frame() %>%
-    dplyr::rename(`coefficient`=`1`) %>%
-    tibble::rownames_to_column(var="covariate") %>%
-    dplyr::mutate(building=b, occtype=occtype) %>%
-    {.}
-  dfresult %>%
-    readr::write_csv(sprintf("reg_result/energy_rule_%s_%s_%s.csv", b, occtype, energytype))
-  acc <- rbind(acc, dfresult)
-  ## to.plot =
-  ##   tibble(time = time, y=result$fitted.values, type="predicted with rule") %>%
-  ##   dplyr::bind_rows(tibble(time = time, y=result$predicted.values, type="predicted without rule")) %>%
-  ##   dplyr::bind_rows(tibble(time = time, y=y, type="actual")) %>%
-  ##   {.}
-  ## p <- to.plot %>%
-  ##   ggplot2::ggplot(ggplot2::aes(x=time, y=y, colour=type)) +
-  ##   ggplot2::geom_line() +
-  ##   ## ggplot2::geom_point(ggplot2::aes(x=time, y=y, type="actual"), data=tibble(time = time, y=y)) +
-  ##   ## ggplot2::ylim(c(0, 5000)) +
-  ##   ggplot2::theme()
-  ## print(p)
-  ## df_unocc = df %>%
-  ##   dplyr::filter(is.occupied == "Un-occupied") %>%
-  ##   dplyr::select(-is.occupied) %>%
-  ##   {.}
-  ## if (nrow(df_occ) > 0) {
-  ##   unocc_out = lm(`kWh Del Int` ~ .)
-  ## }
 }
+
+nrow(acc)
+
+tail(acc)
 
 allrules = acc %>%
   dplyr::filter(!(covariate %in% c("(Intercept)", "F"))) %>%
@@ -310,8 +356,18 @@ head(acc)
 
 acc %>%
   dplyr::filter(!(covariate %in% c("(Intercept)", "F"))) %>%
-  dplyr::group_by(covariate) %>%
-  dplyr::summarise(median=median(coefficient), n=n()) %>%
+  dplyr::group_by(covariate, seasontype, occtype) %>%
+  dplyr::summarise(median=median(coefficient)) %>%
   dplyr::ungroup() %>%
-  dplyr::arrange(desc(median)) %>%
-  readr::write_csv("individual_building_reg_summary.csv")
+  dplyr::arrange(covariate, seasontype, occtype) %>%
+  tidyr::unite(`condition`, `seasontype`, `occtype`, sep="----") %>%
+  tidyr::spread(`condition`, `median`) %>%
+  readr::write_csv("individual_building_reg_summary_all_condition.csv")
+
+## acc %>%
+##   dplyr::filter(!(covariate %in% c("(Intercept)", "F"))) %>%
+##   dplyr::group_by(covariate, seasontype, occtype) %>%
+##   dplyr::summarise(median=median(coefficient), n=n()) %>%
+##   dplyr::ungroup() %>%
+##   dplyr::arrange(desc(median)) %>%
+##   readr::write_csv("individual_building_reg_summary.csv")
