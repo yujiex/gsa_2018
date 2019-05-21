@@ -2,17 +2,27 @@ library("dplyr")
 library("readr")
 library("tidyr")
 
-setwd("ion download/")
+## ## single enrgy type data
+## setwd("ion download/")
+## varname = NA
+
+## all utilities
+setwd("../NEW Data with ALL Utilities/")
 
 files = list.files(pattern="*.csv")
-files
+varname = "BTU - From Utility Int"
 
 ## split energy into single files of building by energy type
 for (f in files) {
   print(sprintf("--------------%s---------------", f))
-  varname = substr(f, 1, regexpr("_", f)[[1]] - 1)
-  df = readr::read_csv(f) %>%
+  if (is.na(varname)) {
+    varname = substr(f, 1, regexpr("_", f)[[1]] - 1)
+  }
+  df =
+    readr::read_csv(f) %>%
     dplyr::select(-starts_with("X")) %>%
+    ## readr::problems() %>%
+    ## print()
     tidyr::gather(`building`, !!rlang::sym(varname), -`Timestamp`) %>%
     na.omit() %>%
     {.}
