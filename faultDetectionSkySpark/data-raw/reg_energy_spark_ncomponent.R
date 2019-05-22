@@ -2,10 +2,12 @@ library("dplyr")
 library("ggplot2")
 library("DBI")
 library("pipeR")
+library("readr")
 
 library("glmnet")
 
-energytype = "kWh Del Int"
+energytype = "BTU - From Utility Int"
+## energytype = "kWh Del Int"
 ## restrict to summer, change this to the time range you wanted
 ## time.min.str="2018-06-01"
 ## time.max.str="2018-09-01"
@@ -177,8 +179,7 @@ for (b in gsalink_buildings) {
     dplyr::select(Timestamp, local.time, everything()) %>%
     dplyr::rename(`total.duration.minutes`=`value.agg`) %>%
     tidyr::spread(groupvar, `total.duration.minutes`) %>%
-    readr::write_csv(sprintf("building_rule_energy_weather/hourly/%s_%s_2018.csv",
-                             b, energytype))
+    readr::write_csv(result.file)
 }
 
 fitting <- function(method, y, x, x.to.predict=NA) {
@@ -240,15 +241,31 @@ occtype = "allday"
 ## seasontype = "summer"
 ## seasontype = "winter"
 
+which(gsalink_buildings == "TX0224ZZ")
+
+length(gsalink_buildings )
+
 acc = NULL
+
+acc = readr::read_csv(sprintf("reg_result/allrules_%s.csv", energytype))
+
 for (b in gsalink_buildings) {
   for (occtype in c("allday", "Occupied", "Un-occupied")) {
     for (seasontype in c("allyear", "winter", "summer")) {
+      result.file = sprintf("reg_result/energy_rule_%s_%s_%s_%s.csv", b, occtype, energytype, seasontype)
+      if (file.exists(result.file)) {
+        print(sprintf("result file exist: %s", result.file))
+        next
+      }
       print(b)
       print(occtype)
       print(seasontype)
-      df_occ = readr::read_csv(sprintf("building_rule_energy_weather/hourly/%s_%s_2018.csv",
-                                  b, energytype)) %>%
+      data.file = sprintf("building_rule_energy_weather/hourly/%s_%s_2018.csv", b, energytype)
+      if (!(file.exists(data.file))) {
+        print(sprintf("data file does not exist for building %s", b))
+        next
+      }
+      df_occ = readr::read_csv(data.file) %>%
         tibble::as.tibble() %>%
         {.}
       if (nrow(df_occ) == 0) {
@@ -356,7 +373,7 @@ allrules = acc %>%
   .$covariate
 
 acc %>%
-  readr::write_csv("reg_result/allrules.csv")
+  readr::write_csv(sprintf("reg_result/allrules_%s.csv", energytype))
 
 for (r in allrules[1:1]) {
   r = allrules[1]
@@ -380,7 +397,7 @@ acc %>%
   dplyr::arrange(covariate, seasontype, occtype) %>%
   tidyr::unite(`condition`, `seasontype`, `occtype`, sep="----") %>%
   tidyr::spread(`condition`, `median`) %>%
-  readr::write_csv("individual_building_reg_summary_all_condition.csv")
+  readr::write_csv(sprintf("%s_individual_building_reg_summary_all_condition.csv", energytype))
 
 ## acc %>%
 ##   dplyr::filter(!(covariate %in% c("(Intercept)", "F"))) %>%
