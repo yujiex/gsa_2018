@@ -70,12 +70,22 @@ for (b in gsalink_buildings) {
 for (b in gsalink_buildings) {
   print(b)
   print("-------------------------------------------")
+  result.file = sprintf("building_rule_energy_weather/hourly/%s_%s_2018.csv", b, energytype)
+  if (file.exists(result.file)) {
+    print(sprintf("result file exist: %s", result.file))
+    next
+  }
   ## change the following when you get real occ hour info for each building
   occ_hour_start = 8
   occ_hour_end = 17
   weekdays = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
   name = paste0(namelookup[namelookup$building==b,]$name, " ")
-  dfrule = readr::read_csv(sprintf("ruleStartEndByBuilding/%s_2018.csv", b))
+  dfrule = readr::read_csv(sprintf("ruleStartEndByBuilding/%s_2018.csv", b),
+                           col_types = readr::cols(Cost = col_double(),
+                                                   eCost = col_double(),
+                                                   mCost = col_double(),
+                                                   sCost = col_double(),
+                                                   durationSecond = col_double())) %>%
   print(head(dfrule))
   tz = dfrule[["tz"]][1]
   time.min=as.POSIXct(time.min.str, tz=tz)
@@ -94,7 +104,15 @@ for (b in gsalink_buildings) {
     dplyr::filter(Timestamp<=time.max) %>%
     {.}
   attr(dfweather$Timestamp, "tzone") <- tz
-  dfenergy = readr::read_csv(sprintf("building_energy/%s_%s.csv", b, energytype))
+  energy.file = sprintf("building_energy/%s_%s.csv", b, energytype)
+  if (!file.exists(energy.file)) {
+    print(sprintf("energy file doesn't exist for %s", b))
+    next
+  }
+  dfenergy = readr::read_csv(energy.file,
+                             col_names = c("Timestamp", energytype),
+                             col_types = cols(col_character(), col_double())) %>%
+    {.}
   dfenergy <- dfenergy %>%
     dplyr::mutate(Timestamp=as.POSIXct(Timestamp, format="%m/%d/%Y %I:%M:%S %p", tz=tz)) %>>%
     dplyr::filter(Timestamp>=time.min) %>%
