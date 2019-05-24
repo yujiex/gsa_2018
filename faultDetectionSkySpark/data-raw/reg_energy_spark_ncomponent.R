@@ -310,7 +310,6 @@ for (b in gsalink_buildings) {
       df_occ <- df_occ %>%
         dplyr::mutate(month=format(local.time, "%m")) %>%
         {.}
-      print(head(df_occ))
       if (seasontype == "winter") {
         df_occ <- df_occ %>%
           dplyr::filter(month %in% c("11", "12", "01", "02"))
@@ -368,7 +367,7 @@ for (b in gsalink_buildings) {
         dplyr::mutate(building=b, occtype=occtype, seasontype=seasontype) %>%
         {.}
       dfresult %>%
-        readr::write_csv(sprintf("reg_result/energy_rule_%s_%s_%s_%s.csv", b, occtype, energytype, seasontype))
+        readr::write_csv(result.file)
       acc <- rbind(acc, dfresult)
       ## to.plot =
       ##   tibble(time = time, y=result$fitted.values, type="predicted with rule") %>%
