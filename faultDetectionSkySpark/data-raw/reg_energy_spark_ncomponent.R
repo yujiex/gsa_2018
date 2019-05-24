@@ -19,7 +19,7 @@ if ((as.integer(substr(time.min.str, 1, 4)) != 2018) && (as.integer(substr(time.
 }
 
 allbuilding = readr::read_csv("../data/has_energy_ecost.csv") %>%
-  tibble::as_data_frame() %>%
+  tibble::as_tibble() %>%
   dplyr::select(building) %>%
   {.}
 
@@ -27,7 +27,7 @@ con <- DBI::dbConnect(RSQLite::SQLite(), "../../csv_FY/db/all.db")
 has_lat_lon =
   DBI::dbGetQuery(con, sprintf("SELECT * FROM EUAS_latlng_2")) %>%
   dplyr::filter(`Building_Number` %in% allbuilding$building) %>%
-  tibble::as_data_frame() %>%
+  tibble::as_tibble() %>%
   .$`Building_Number`
 DBI::dbDisconnect(con)
 
@@ -37,11 +37,11 @@ gsalink_buildings <- allbuilding %>%
   .$building
 
 namelookup = readr::read_csv("../data/gsalink_name_in_rulefile.csv") %>%
-  tibble::as_data_frame() %>%
+  tibble::as_tibble() %>%
   {.}
 
 component.group.lookup = readr::read_csv("building_component.csv") %>%
-  tibble::as_data_frame() %>%
+  tibble::as_tibble() %>%
   dplyr::rename(equipRef=equipRefBackup) %>%
   dplyr::select(-equip) %>%
   {.}
@@ -193,7 +193,7 @@ fitting <- function(method, y, x, x.to.predict=NA) {
       print(sum(fitted.values))
       if (!is.na(x.to.predict)) {
         newdata = x.to.predict %>%
-          tibble:::as.tibble()
+          tibble::as_tibble()
         predicted.values = predict(occ_out, newdata=newdata)
         print(head(predicted.values))
         print(sum(predicted.values))
@@ -206,7 +206,7 @@ fitting <- function(method, y, x, x.to.predict=NA) {
       ## plot(cv_fit)
       ## fit <- cv_fit$glmnet.fit
       ## print(summary(fit))
-      ## print(tibble::as.tibble(as.matrix(coef(cv_fit, s = "lambda.min"))))
+      ## print(tibble::as_tibble(as.matrix(coef(cv_fit, s = "lambda.min"))))
       ## print(coef(cv_fit, s = "lambda.min") %>>%
       ##       {
       ##         tibble::tibble(Covariate=rownames(.),
