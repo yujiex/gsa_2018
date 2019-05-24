@@ -396,13 +396,40 @@ nrow(acc)
 
 tail(acc)
 
+## get acc from individual result files
+acc = NULL
+for (b in gsalink_buildings) {
+  for (occtype in c("allday", "Occupied", "Un-occupied")) {
+    for (seasontype in c("allyear", "winter", "summer")) {
+      ## b = "OH0192ZZ"
+      ## occtype = "allday"
+      ## seasontype = "summer"
+      if (chopped) {
+        result.file = sprintf("reg_result_chopped/energy_rule_%s_%s_%s_%s.csv", b, occtype, energytype, seasontype)
+      } else {
+        result.file = sprintf("reg_result/energy_rule_%s_%s_%s_%s.csv", b, occtype, energytype, seasontype)
+      }
+      if (file.exists(result.file)) {
+        print(result.file)
+        df <- readr::read_csv(result.file)
+        acc <- rbind(acc, df)
+      }
+    }
+  }
+}
+
 allrules = acc %>%
   dplyr::filter(!(covariate %in% c("(Intercept)", "F"))) %>%
   distinct(covariate) %>%
   .$covariate
 
-acc %>%
-  readr::write_csv(sprintf("reg_result/allrules_%s.csv", energytype))
+if (chopped) {
+  acc %>%
+    readr::write_csv(sprintf("reg_result_chopped/allrules_%s.csv", energytype))
+} else {
+  acc %>%
+    readr::write_csv(sprintf("reg_result/allrules_%s.csv", energytype))
+}
 
 for (r in allrules[1:1]) {
   r = allrules[1]
