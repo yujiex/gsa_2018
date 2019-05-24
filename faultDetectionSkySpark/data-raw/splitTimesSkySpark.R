@@ -6,14 +6,17 @@ library("readxl")
 setwd("~/Dropbox/gsa_2017/faultDetectionSkySpark/data-raw/skyspark fault detection sparks download/")
 
 files = list.files()
+## check files of one building
+## files = list.files(pattern = "OH0192ZZ_2018*")
 
 ## get timestamp and duration
 acc_rule = NULL
+
 for (f in files) {
   b = substr(f, 1, 8)
   print(sprintf("---------------%s---------------", b))
   df = readr::read_csv(f, col_types=cols()) %>%
-    tibble::as_data_frame() %>%
+    tibble::as_tibble() %>%
     {.}
   if (!("eCost" %in% names(df))) {
     df$eCost = NA
