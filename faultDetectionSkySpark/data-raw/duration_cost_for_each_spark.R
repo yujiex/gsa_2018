@@ -2,7 +2,7 @@ library("dplyr")
 library("readr")
 
 reg.result = readr::read_csv("reg_result/allrules.csv") %>%
-  tibble::as.tibble() %>%
+  tibble::as_tibble() %>%
   {.}
 
 reg.result <- reg.result %>%
@@ -18,7 +18,7 @@ buildings = reg.result %>%
 length(buildings)
 
 all.rule <- readr::read_csv("all_building_rule_2018.csv") %>%
-  tibble::as.tibble() %>%
+  tibble::as_tibble() %>%
   dplyr::filter(building %in% buildings) %>%
   {.}
 
@@ -33,6 +33,6 @@ all.rule %>%
   head()
 
 rule.summary <- readr::read_csv("rule_summary.csv") %>%
-  tibble::as.tibble() %>%
+  tibble::as_tibble() %>%
   {.}
 
