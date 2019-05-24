@@ -77,19 +77,30 @@ to_combine = data.frame(filename=files) %>%
   distinct(building) %>%
   .$building
 
-head(files)
-
 for (b in to_combine) {
   bfiles = files[which(substr(files, 1, 8)==b)]
   acc=lapply(bfiles, function(x) {
-    readr::read_csv(sprintf("../ruleStartEndByBuilding/%s", x)) %>%
-    tibble::as_data_frame() %>%
-    {.}
+    ## readr::read_csv(sprintf("../ruleStartEndByBuilding/%s", x)) %>%
+    readr::read_csv(sprintf("../ruleStartEndByBuilding/%s", x), col_types=cols(durationSecond=col_double(),
+                                                                               mCost=col_double(),
+                                                                               sCost=col_double(),
+                                                                               eCost=col_double(),
+                                                                               Cost=col_double())) %>%
+      tibble::as_tibble() %>%
+        ## {print(head(.));.} %>%
+        ## {
+        ##   print(head(.))
+        ##   .
+        ## } %>%
+        {print(names(.));.} %>%
+        {print(readr::problems(.));.} %>%
+        {.}
   })
   df = do.call(rbind, acc)
   df %>%
     readr::write_csv(sprintf("../ruleStartEndByBuilding/%s_2018.csv", b))
 }
+
 
 to_remove = files[which(substr(files, 1, 8) %in% to_combine)]
 to_remove = to_remove[which(nchar(to_remove) > 17)]
