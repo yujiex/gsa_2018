@@ -286,18 +286,22 @@ for (b in gsalink_buildings) {
       print(b)
       print(occtype)
       print(seasontype)
-      data.file = sprintf("building_rule_energy_weather/hourly/%s_%s_2018.csv", b, energytype)
+      if (chopped) {
+        data.file = sprintf("building_rule_energy_weather/hourly/%s_%s_2018_chopped.csv", b, energytype)
+      } else {
+        data.file = sprintf("building_rule_energy_weather/hourly/%s_%s_2018.csv", b, energytype)
+      }
       if (!(file.exists(data.file))) {
         print(sprintf("data file does not exist for building %s", b))
         next
       }
-      df_occ = readr::read_csv(data.file) %>%
-        tibble::as.tibble() %>%
+      df_occ =
+        readr::read_csv(data.file, guess_max = 15000) %>%
+        tibble::as_tibble() %>%
         {.}
       if (nrow(df_occ) == 0) {
         next
       }
-      print(b)
       if (!(occtype == "allday")) {
         df_occ <- df_occ %>%
           dplyr::filter(is.occupied == occtype) %>%
