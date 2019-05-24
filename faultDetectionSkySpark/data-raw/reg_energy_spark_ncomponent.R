@@ -69,10 +69,16 @@ for (b in gsalink_buildings) {
   }
 }
 
+chopped = TRUE
+
 for (b in gsalink_buildings) {
   print(b)
   print("-------------------------------------------")
-  result.file = sprintf("building_rule_energy_weather/hourly/%s_%s_2018.csv", b, energytype)
+  if (chopped) {
+    result.file = sprintf("building_rule_energy_weather/hourly/%s_%s_2018_chopped.csv", b, energytype)
+  } else {
+    result.file = sprintf("building_rule_energy_weather/hourly/%s_%s_2018.csv", b, energytype)
+  }
   if (file.exists(result.file)) {
     print(sprintf("result file exist: %s", result.file))
     next
@@ -106,15 +112,28 @@ for (b in gsalink_buildings) {
     dplyr::filter(Timestamp<=time.max) %>%
     {.}
   attr(dfweather$Timestamp, "tzone") <- tz
-  energy.file = sprintf("building_energy/%s_%s.csv", b, energytype)
+  if (chopped) {
+    energy.file = sprintf("building_energy_chopped/%s_%s.csv", b, energytype)
+  } else {
+    energy.file = sprintf("building_energy/%s_%s.csv", b, energytype)
+  }
   if (!file.exists(energy.file)) {
     print(sprintf("energy file doesn't exist for %s", b))
     next
   }
-  dfenergy = readr::read_csv(energy.file,
-                             col_names = c("Timestamp", energytype),
-                             col_types = cols(col_character(), col_double())) %>%
-    {.}
+  if (chopped) {
+    dfenergy = readr::read_csv(energy.file,
+                               col_names = c("id", "Timestamp", energytype),
+                               col_types = cols(col_integer(), col_character(), col_double())) %>%
+      dplyr::select(-id) %>%
+      dplyr::slice(2:n()) %>%
+      {.}
+  } else {
+    dfenergy = readr::read_csv(energy.file,
+                               col_names = c("Timestamp", energytype),
+                               col_types = cols(col_character(), col_double())) %>%
+      {.}
+  }
   dfenergy <- dfenergy %>%
     dplyr::mutate(Timestamp=as.POSIXct(Timestamp, format="%m/%d/%Y %I:%M:%S %p", tz=tz)) %>>%
     dplyr::filter(Timestamp>=time.min) %>%
@@ -245,14 +264,21 @@ which(gsalink_buildings == "TX0224ZZ")
 
 length(gsalink_buildings )
 
-acc = NULL
-
 acc = readr::read_csv(sprintf("reg_result/allrules_%s.csv", energytype))
+
+acc = NULL
 
 for (b in gsalink_buildings) {
   for (occtype in c("allday", "Occupied", "Un-occupied")) {
     for (seasontype in c("allyear", "winter", "summer")) {
-      result.file = sprintf("reg_result/energy_rule_%s_%s_%s_%s.csv", b, occtype, energytype, seasontype)
+      ## b = "OH0192ZZ"
+      ## occtype = "allday"
+      ## seasontype = "summer"
+      if (chopped) {
+        result.file = sprintf("reg_result_chopped/energy_rule_%s_%s_%s_%s.csv", b, occtype, energytype, seasontype)
+      } else {
+        result.file = sprintf("reg_result/energy_rule_%s_%s_%s_%s.csv", b, occtype, energytype, seasontype)
+      }
       if (file.exists(result.file)) {
         print(sprintf("result file exist: %s", result.file))
         next
@@ -397,7 +423,8 @@ acc %>%
   dplyr::arrange(covariate, seasontype, occtype) %>%
   tidyr::unite(`condition`, `seasontype`, `occtype`, sep="----") %>%
   tidyr::spread(`condition`, `median`) %>%
-  readr::write_csv(sprintf("%s_individual_building_reg_summary_all_condition.csv", energytype))
+  readr::write_csv(sprintf("median_%s_individual_building_reg_summary_all_condition_chopped.csv", energytype))
+## readr::write_csv(sprintf("%s_individual_building_reg_summary_all_condition.csv", energytype))
 
 ## acc %>%
 ##   dplyr::filter(!(covariate %in% c("(Intercept)", "F"))) %>%
